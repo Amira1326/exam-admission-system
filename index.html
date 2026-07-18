@@ -1,10 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>نظام التقييم والقبول المتطور</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+    <!-- خط عصرية وأنيقة -->
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -18,7 +20,7 @@
             --navy: #10233F;
             --navy-light: #18365E;
             --bg: #F7F4EC;
-            --card: rgba(255,255,255,0.85);
+            --card: rgba(255,255,255,0.9);
             --text: #1E1B16;
             --muted: #817761;
             --success: #1FA774;
@@ -27,9 +29,7 @@
             --shadow: 0 20px 60px rgba(16,35,63,.12);
             --shadow-hover: 0 30px 80px rgba(16,35,63,.22);
             --gold-gradient: linear-gradient(135deg, #8A641F, #C89B3C, #F2D889);
-            --main-gradient: linear-gradient(135deg, #10233F, #18365E);
-            --font-main: 'Tajawal', sans-serif;
-            --font-title: 'Amiri', serif;
+            --font-main: 'Alexandria', sans-serif;
             --radius: 24px;
             --radius-sm: 14px;
             --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -37,7 +37,7 @@
 
         [data-theme="dark"] {
             --bg: #12100C;
-            --card: rgba(35,30,20,.88);
+            --card: rgba(35,30,20,.9);
             --text: #F5EBD5;
             --muted: #B4A582;
             --border: rgba(200,155,60,.25);
@@ -49,26 +49,34 @@
             width: 100%;
             min-height: 100%;
             font-family: var(--font-main);
-            background: radial-gradient(circle at top right, rgba(200,155,60,.12), transparent 35%), var(--bg);
             color: var(--text);
             overflow-x: hidden;
+            background: var(--bg);
         }
 
-        body::before {
-            content: "";
+        /* ===== خلفية متحركة للصفحات ===== */
+        .animated-bg {
             position: fixed;
             inset: 0;
-            pointer-events: none;
-            opacity: .03;
-            background-image: linear-gradient(45deg, #C89B3C 25%, transparent 25%);
-            background-size: 40px 40px;
+            z-index: -1;
+            background: linear-gradient(-45deg, #f5f0e8, #e8e0d5, #f0ebe0, #e5ddd0);
+            background-size: 400% 400%;
+            animation: gradientMove 18s ease infinite;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        [data-theme="dark"] .animated-bg {
+            background: linear-gradient(-45deg, #1a1a1a, #2a2a2a, #1e1e1e, #252525);
         }
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
-        h1, h2, h3, h4, .page-title, .splash-title { font-family: var(--font-title); }
+        h1, h2, h3, h4, .page-title { font-family: var(--font-main); font-weight: 800; }
 
         .app-wrapper {
             min-height: 100vh;
@@ -95,18 +103,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .bg-particles span {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(70px);
-            opacity: .4;
-            pointer-events: none;
-        }
-        .bg-particles span:nth-child(1) { width: 400px; height: 400px; background: rgba(200,155,60,.25); top: -150px; right: -100px; }
-        .bg-particles span:nth-child(2) { width: 350px; height: 350px; background: rgba(16,35,63,.2); bottom: -120px; left: -100px; }
-        .bg-particles span:nth-child(3) { width: 220px; height: 220px; background: rgba(200,155,60,.18); top: 50%; left: 45%; }
-
-        /* ===== SPLASH - NEW DESIGN ===== */
+        /* ===== SPLASH - فقط الصورة ===== */
         #pageSplash {
             max-width: 100% !important;
             width: 100%;
@@ -117,7 +114,7 @@
             position: fixed;
             inset: 0;
             z-index: 1000;
-            background: var(--navy);
+            background: #000;
         }
         #pageSplash.active {
             display: flex;
@@ -128,18 +125,7 @@
             background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
             background-size: cover;
             background-position: center;
-            filter: brightness(0.7) saturate(1.2);
-            transform: scale(1.05);
-            transition: transform 8s ease;
-        }
-        #pageSplash.active .splash-bg {
-            transform: scale(1);
-        }
-        .splash-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(16,35,63,0.85) 0%, rgba(16,35,63,0.4) 100%);
-            backdrop-filter: blur(2px);
+            filter: brightness(0.8);
         }
         .splash-content {
             position: relative;
@@ -151,47 +137,37 @@
             animation: fadeUp 1s var(--transition) forwards;
         }
         .splash-content .logo-icon {
-            font-size: 64px;
-            color: var(--primary);
+            font-size: 72px;
+            color: #fff;
             margin-bottom: 16px;
             display: inline-block;
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 50%;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(200,155,60,0.3);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-shadow: 0 4px 30px rgba(0,0,0,0.5);
         }
         .splash-title {
-            font-size: 42px;
-            font-weight: 700;
+            font-size: 44px;
+            font-weight: 800;
             color: #fff;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-shadow: 0 4px 30px rgba(0,0,0,0.5);
             line-height: 1.2;
             margin-bottom: 8px;
-            font-family: 'Amiri', serif;
+            font-family: var(--font-main);
         }
         .splash-title .gold {
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #F2D889;
+            text-shadow: 0 0 30px rgba(200,155,60,0.3);
         }
         .splash-title .light {
             display: block;
-            font-size: 20px;
-            font-weight: 400;
-            color: rgba(255,255,255,0.8);
-            font-family: var(--font-main);
-            -webkit-text-fill-color: rgba(255,255,255,0.8);
-            margin-top: 4px;
+            font-size: 22px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.85);
             letter-spacing: 2px;
         }
         .splash-sub {
-            font-size: 16px;
+            font-size: 18px;
             color: rgba(255,255,255,0.7);
             margin: 10px 0 28px;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             font-weight: 300;
         }
         .splash-loader {
@@ -200,20 +176,20 @@
             gap: 12px;
         }
         .splash-loader span {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: var(--primary);
+            background: #F2D889;
             animation: dotPulse 1.2s ease-in-out infinite;
-            box-shadow: 0 0 12px rgba(200,155,60,0.4);
+            box-shadow: 0 0 20px rgba(200,155,60,0.3);
         }
         .splash-loader span:nth-child(2) { animation-delay: .15s; }
         .splash-loader span:nth-child(3) { animation-delay: .3s; }
         .splash-loader span:nth-child(4) { animation-delay: .45s; }
         @keyframes dotPulse { 0%,80%,100%{ opacity:.3; transform:scale(.7);} 40%{ opacity:1; transform:scale(1);} }
 
-        /* ===== REST OF STYLES (unchanged) ===== */
-        .page-title { font-size: 26px; font-weight: 900; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        /* ===== بقية الأنماط ===== */
+        .page-title { font-size: 26px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
         .page-title i { color: var(--primary); }
         .page-sub { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
 
@@ -245,7 +221,7 @@
         .branch-card h3 { font-size: 16px; margin-top: 6px; }
         .branch-card p { font-size: 12px; color: var(--muted); margin-top: 2px; }
         .role-btn .icon { font-size: 32px; display: block; margin-bottom: 6px; color: var(--primary-dark); }
-        .role-btn { font-weight: 700; font-size: 15px; }
+        .role-btn { font-weight: 600; font-size: 15px; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         .btn {
@@ -281,7 +257,7 @@
             border-radius: var(--radius-sm);
             background: var(--gold-gradient);
             color: #fff;
-            font-weight: 900;
+            font-weight: 700;
             font-size: 16px;
             cursor: pointer;
             box-shadow: 0 15px 35px rgba(200,155,60,.35);
@@ -293,7 +269,7 @@
             border: 2px solid var(--border);
             border-radius: 10px;
             background: var(--card);
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             font-family: var(--font-main);
             transition: var(--transition);
@@ -306,7 +282,7 @@
             align-items: center;
             gap: 8px;
             margin-bottom: 8px;
-            font-weight: 800;
+            font-weight: 600;
             font-size: 14px;
             color: var(--navy);
         }
@@ -347,13 +323,32 @@
         }
         .student-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
+        /* ===== شعار المدرسة في تسجيل الدخول ===== */
+        .login-school-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-school-logo img {
+            max-height: 80px;
+            width: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .login-school-logo .school-name {
+            display: block;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--navy);
+            margin-top: 6px;
+        }
+
         .age-display {
             margin-top: 8px;
             display: inline-block;
             padding: 4px 14px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 600;
         }
         .age-display.valid { background: rgba(31,167,116,.15); color: #1FA774; }
         .age-display.invalid { background: rgba(217,83,79,.15); color: #D9534F; }
@@ -372,7 +367,7 @@
             border-radius: 30px;
             background: #fff;
             border: 1px solid var(--border);
-            font-weight: 800;
+            font-weight: 600;
             box-shadow: 0 4px 12px rgba(0,0,0,.04);
         }
 
@@ -399,7 +394,7 @@
         .status-badge {
             padding: 10px 28px;
             border-radius: 30px;
-            font-weight: 900;
+            font-weight: 600;
             display: inline-block;
         }
         .status-badge.pending { background: rgba(196,154,53,.15); color: var(--primary-dark); }
@@ -447,7 +442,7 @@
             font-size: 12px;
             color: var(--muted);
             margin-top: 4px;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .dashboard-section {
@@ -461,7 +456,7 @@
         }
         .dashboard-section h4 {
             margin-bottom: 14px;
-            font-family: var(--font-title);
+            font-weight: 800;
             font-size: 19px;
             display: flex;
             align-items: center;
@@ -487,7 +482,7 @@
             padding: 4px 14px;
             border-radius: 20px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 600;
             display: inline-block;
         }
         .badge-status.pending { background: rgba(196,154,53,.15); color: var(--primary-dark); }
@@ -501,7 +496,7 @@
             border: none;
             border-radius: 8px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             font-family: var(--font-main);
             transition: .2s;
@@ -529,7 +524,7 @@
             padding: 6px 16px;
             border: none;
             border-radius: 8px;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 12px;
             cursor: pointer;
             font-family: var(--font-main);
@@ -551,21 +546,8 @@
             border-radius: var(--radius-sm);
             padding: 14px;
         }
-        .chart-box h5 { font-size: 13px; margin-bottom: 8px; color: var(--muted); }
+        .chart-box h5 { font-size: 13px; margin-bottom: 8px; color: var(--muted); font-weight: 500; }
         .chart-box canvas { max-height: 180px; width: 100% !important; }
-
-        .admin-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .admin-link-card {
-            padding: 16px;
-            border-radius: var(--radius-sm);
-            background: var(--card);
-            border: 1px solid var(--border);
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .admin-link-card:hover { border-color: var(--primary); transform: translateY(-3px); }
-        .admin-link-card i { font-size: 24px; color: var(--primary); display: block; margin-bottom: 6px; }
 
         .admin-question-form { display: grid; gap: 10px; margin-top: 10px; }
 
@@ -595,7 +577,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 900;
+            font-weight: 800;
             font-size: 19px;
             margin-bottom: 14px;
         }
@@ -625,7 +607,7 @@
             background: #fff;
             border: 1px solid var(--border);
             border-right: 5px solid var(--primary);
-            font-weight: 700;
+            font-weight: 600;
             font-size: 13px;
             box-shadow: var(--shadow-hover);
             display: flex;
@@ -691,7 +673,7 @@
         .theme-toggle:hover { transform: scale(1.1); }
 
         @media (max-width: 768px) {
-            .stats-grid, .chart-grid, .admin-links { grid-template-columns: 1fr 1fr; }
+            .stats-grid, .chart-grid { grid-template-columns: 1fr 1fr; }
             .student-form .form-row { grid-template-columns: 1fr; }
             .splash-title { font-size: 32px; }
             .splash-title .light { font-size: 17px; }
@@ -705,26 +687,25 @@
             .app-wrapper { padding: 16px 10px; }
             .modal-box { padding: 20px; }
             .splash-title { font-size: 26px; }
-            .splash-content .logo-icon { font-size: 48px; padding: 16px; }
+            .splash-content .logo-icon { font-size: 48px; }
         }
     </style>
 </head>
 <body>
+    <div class="animated-bg"></div>
     <div class="toast-container" id="toastContainer"></div>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle"><i class="fas fa-moon"></i></button>
-    <div class="bg-particles"><span></span><span></span><span></span></div>
 
     <div class="exam-loader" id="examLoader">
         <div class="spinner" style="width:50px;height:50px;border-width:5px;"></div>
-        <div style="font-weight:800;font-size:20px;color:var(--text);">جاري التحضير...</div>
+        <div style="font-weight:700;font-size:20px;color:var(--text);">جاري التحضير...</div>
         <div class="loader-progress"><div class="bar" id="loaderBar"></div></div>
     </div>
 
     <div class="app-wrapper">
-        <!-- SPLASH - NEW DESIGN with Background Image -->
+        <!-- SPLASH - فقط الصورة -->
         <div class="page active" id="pageSplash">
             <div class="splash-bg"></div>
-            <div class="splash-overlay"></div>
             <div class="splash-content">
                 <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
                 <div class="splash-title">
@@ -771,8 +752,12 @@
             </div>
         </div>
 
-        <!-- LOGIN -->
+        <!-- LOGIN مع شعار المدرسة -->
         <div class="page" id="pageLogin">
+            <div class="login-school-logo" id="schoolLogoContainer">
+                <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
+                <span class="school-name" id="schoolNameDisplay">المدرسة</span>
+            </div>
             <div style="text-align:center; margin-bottom: 20px;">
                 <div style="font-size:48px; color:var(--primary);"><i class="fas fa-lock"></i></div>
                 <div class="page-title" style="justify-content:center;">تسجيل الدخول</div>
@@ -1021,4 +1006,4 @@
 
     <script src="./app.js"></script>
 </body>
-    </html>
+</html>
