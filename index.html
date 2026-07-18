@@ -11,264 +11,373 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #f8fafc;
+            --primary: #2B4570;
+            --primary-dark: #1D2F4E;
+            --primary-gold: #c29b47;
+            --primary-deep: #121E33;
+            --primary-light: #F0F4FA;
+            --navy: #1F2A24;
+            --bg: #FAF9F6;
             --card: #ffffff;
-            --text: #0f172a;
-            --muted: #64748b;
-            --primary: #1e3a8a;
-            --primary-dark: #0f172a;
-            --primary-light: #eff6ff;
-            --gold-solid: #b45309;
-            --gold-gradient: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
-            --border: #e2e8f0;
-            --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 12px -4px rgba(15, 23, 42, 0.04);
-            --shadow-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --radius: 16px;
-            --radius-sm: 12px;
+            --text: #1E293B;
+            --muted: #64748B;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -5px rgba(0, 0, 0, 0.02);
+            --shadow-hover: 0 20px 40px -10px rgba(43, 69, 112, 0.12), 0 8px 16px -8px rgba(0, 0, 0, 0.04);
+            --gold-gradient: linear-gradient(135deg, #1D2F4E, #2B4570, #3A5B8F);
+            --gold-solid: #2B4570;
+            --redpen: #D64545;
             --font-main: 'IBM Plex Sans Arabic', sans-serif;
-            --font-display: 'Lalezar', cursive;
+            --font-display: 'Lalezar', 'IBM Plex Sans Arabic', cursive;
             --font-mono: 'IBM Plex Mono', monospace;
-            --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+            --radius: 20px;
+            --radius-sm: 12px;
+            --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         [data-theme="dark"] {
-            --bg: #0b0f19;
-            --card: #111827;
-            --text: #f8fafc;
-            --muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-dark: #60a5fa;
-            --primary-light: #1e293b;
-            --gold-solid: #f59e0b;
-            --border: #1f2937;
-            --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
-            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+            --bg: #0F172A;
+            --card: #1E293B;
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #60A5FA;
+            --primary-dark: #3B82F6;
+            --primary-light: #1E293B;
+            --gold-solid: #60A5FA;
+            --navy: #F8FAFC;
+            --shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 20px 50px rgba(0, 0, 0, 0.4);
+            --gold-gradient: linear-gradient(135deg, #1E293B, #334155);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
+        html, body {
             width: 100%;
-            min-height: 100vh;
+            min-height: 100%;
             font-family: var(--font-main);
             color: var(--text);
-            background: var(--bg);
             overflow-x: hidden;
-            transition: background var(--transition), color var(--transition);
+            background: var(--bg);
+            transition: background-color var(--transition);
         }
 
+        html[dir="ltr"] body { text-align: left; }
+
+        /* خلفية ناعمة وشبكة مريحة */
         .animated-bg {
             position: fixed;
             inset: 0;
             z-index: -1;
-            background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
-            background-size: 32px 32px;
-            opacity: 0.7;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(rgba(43, 69, 112, 0.03) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
         }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 10px; border: 2px solid var(--bg); }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; border: 2px solid var(--bg); }
 
-        h1, h2, h3, h4, .page-title { font-weight: 700; letter-spacing: -0.02em; }
+        h1, h2, h3, h4, .page-title { font-family: var(--font-main); font-weight: 700; color: var(--navy); }
 
         .app-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; position: relative; z-index: 1; }
 
-        .page { display: none; width: 100%; max-width: 600px; }
-        .page.active { display: block; animation: slideUp 0.5s var(--transition) forwards; }
+        .page { display: none; width: 100%; max-width: 620px; margin: 0; padding: 0; }
+        .page.active { display: block; animation: fadeUp .5s var(--transition) forwards; }
         .dashboard-page.active { max-width: 1200px; }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeUp { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
 
-        /* ===== SPLASH SCREEN ===== */
+        /* ===== SPLASH STYLE ===== */
         #pageSplash {
             max-width: 100% !important; width: 100%; height: 100vh;
             display: none; align-items: center; justify-content: center;
             position: fixed; inset: 0; z-index: 1000; background: var(--bg);
         }
         #pageSplash.active { display: flex; }
-        .splash-content { text-align: center; padding: 40px; max-width: 600px; width: 100%; z-index: 2; }
-        .splash-content .logo-icon { font-size: 72px; color: var(--primary); margin-bottom: 24px; animation: pulse 2s infinite; }
-        .splash-title { font-family: var(--font-display); font-size: 48px; color: var(--primary); line-height: 1.2; margin-bottom: 12px; }
-        .splash-title .gold { color: var(--gold-solid); }
-        .splash-title .light { display: block; font-family: var(--font-main); font-size: 18px; font-weight: 500; color: var(--muted); margin-top: 12px; }
-        .splash-sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; }
+        .splash-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at center, var(--primary-light) 0%, var(--bg) 100%);
+            opacity: 0.8;
+        }
+        .splash-content { position: relative; z-index: 2; text-align: center; padding: 40px; max-width: 600px; width: 100%; }
+        .splash-content .logo-icon {
+            font-size: 64px; color: var(--gold-solid); margin-bottom: 24px; display: inline-block;
+            animation: bounce 2s infinite ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .splash-title {
+            font-family: var(--font-main); font-size: 34px; font-weight: 800; color: var(--navy);
+            line-height: 1.4; margin-bottom: 12px;
+        }
+        .splash-title .gold { color: #c29b47; }
+        .splash-title .light { display: block; font-size: 16px; font-weight: 500; color: var(--muted); margin-top: 12px; letter-spacing: 0.5px; }
+        .splash-sub {
+            font-family: var(--font-main); font-size: 14px; color: var(--muted); margin: 12px 0 32px; font-weight: 500;
+        }
         .splash-loader { display: flex; justify-content: center; gap: 8px; }
-        .splash-loader span { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); animation: dotPulse 1.2s infinite ease-in-out; }
-        .splash-loader span:nth-child(2) { animation-delay: 0.2s; }
-        .splash-loader span:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.2); } }
+        .splash-loader span { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); animation: dotPulse 1.2s ease-in-out infinite; }
+        .splash-loader span:nth-child(2) { animation-delay: .15s; }
+        .splash-loader span:nth-child(3) { animation-delay: .3s; }
+        .splash-loader span:nth-child(4) { animation-delay: .45s; }
+        @keyframes dotPulse { 0%,80%,100%{ opacity:.2; transform:scale(.8);} 40%{ opacity:1; transform:scale(1.1);} }
 
-        /* ===== CONTROLS & HEADERS ===== */
-        .page-title { font-size: 28px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; color: var(--text); }
-        .page-title i { color: var(--primary); }
-        .page-sub { color: var(--muted); margin-bottom: 32px; font-size: 15px; }
+        /* عناوين الصفحات */
+        .page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .page-title i { color: var(--gold-solid); }
+        .page-sub { color: var(--muted); margin-bottom: 24px; font-size: 14px; font-weight: 400; }
 
-        /* ===== GRIDS & CARDS ===== */
-        .branch-grid, .role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 24px 0; }
+        /* بطاقات الفروع والصلاحيات */
+        .branch-grid, .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
         .branch-card, .role-btn {
-            padding: 32px 24px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border);
-            cursor: pointer; text-align: center; position: relative; box-shadow: var(--shadow);
-            transition: var(--transition); display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px 20px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border);
+            cursor: pointer; text-align: center; position: relative; overflow: hidden; box-shadow: var(--shadow);
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
         }
         .branch-card:hover, .role-btn:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary); }
-        .branch-card.active, .role-btn.active { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
-        
+        .branch-card.active, .role-btn.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(43, 69, 112, 0.15), var(--shadow-hover); transform: translateY(-4px); }
         .branch-card::after, .role-btn::after {
-            content: '✓'; position: absolute; top: 12px; left: 12px; width: 28px; height: 28px; border-radius: 50%;
-            background: var(--primary); color: #fff; font-weight: 700; font-size: 14px;
-            display: flex; align-items: center; justify-content: center; transform: scale(0); transition: var(--transition);
+            content: '✓'; position: absolute; top: 12px; left: 12px; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--primary); color: #fff; font-weight: 700; font-size: 12px;
+            display: flex; align-items: center; justify-content: center; transform: scale(0);
+            transition: transform .3s cubic-bezier(.34,1.56,.64,1);
         }
         .branch-card.active::after, .role-btn.active::after { transform: scale(1); }
-        .branch-card .branch-logo img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 16px; }
-        .branch-card h3 { font-size: 18px; color: var(--text); font-weight: 600; }
-        .branch-card p { font-size: 13px; color: var(--muted); margin-top: 4px; }
-        .role-btn .icon { font-size: 36px; margin-bottom: 12px; color: var(--primary); }
-        .role-btn span { font-weight: 600; font-size: 16px; }
+        .branch-card .branch-logo img { width: 80px; height: 80px; object-fit: contain; display: block; margin: 0 auto 12px; transition: transform var(--transition); }
+        .branch-card:hover .branch-logo img { transform: scale(1.05); }
+        .branch-card h3 { font-size: 16px; font-weight: 700; color: var(--navy); }
+        .branch-card p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .role-btn .icon { font-size: 36px; display: block; margin-bottom: 12px; color: var(--gold-solid); transition: transform var(--transition); }
+        .role-btn:hover .icon { transform: scale(1.1); }
+        .role-btn { font-weight: 600; font-size: 15px; }
 
-        /* ===== BUTTONS ===== */
-        .btn-group { display: flex; gap: 16px; margin-top: 32px; }
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; border: none; border-radius: var(--radius-sm); font-weight: 600; font-family: var(--font-main); font-size: 15px; cursor: pointer; transition: var(--transition); }
-        .btn-primary { background: var(--gold-gradient); color: #fff; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3); }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* الأزرار الأساسية والثانوية */
+        .btn-group { display: flex; gap: 12px; margin-top: 24px; }
+        .btn { flex: 1; padding: 14px 22px; border: none; border-radius: var(--radius-sm); font-weight: 600; font-family: var(--font-main); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .2s ease, box-shadow .2s ease, opacity .2s; }
+        .btn-primary { background: var(--gold-gradient); color: #fff; box-shadow: 0 4px 12px rgba(43, 69, 112, 0.2); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(43, 69, 112, 0.3); }
+        .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
         .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); box-shadow: var(--shadow); }
-        .btn-secondary:hover { background: var(--border); transform: translateY(-2px); }
+        .btn-secondary:hover { background: var(--primary-light); transform: translateY(-2px); }
         .btn-success { background: var(--success); color: #fff; }
-        .btn-success:hover { opacity: 0.9; }
-        .btn-login { width: 100%; padding: 16px; border: none; border-radius: var(--radius-sm); background: var(--gold-gradient); color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3); transition: var(--transition); }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4); }
-        .btn-logout { padding: 10px 20px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; transition: var(--transition); font-family: var(--font-main); }
+        .btn-success:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .btn-login { width: 100%; padding: 16px; border: none; border-radius: var(--radius-sm); background: var(--gold-gradient); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px rgba(43, 69, 112, 0.2); }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(43, 69, 112, 0.3); }
+        .btn-login:disabled { opacity:.5; cursor:not-allowed; }
+        .btn-logout { padding: 10px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); font-weight: 600; font-size: 13px; color: var(--text); cursor: pointer; font-family: var(--font-main); transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
         .btn-logout:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
 
-        /* ===== FORMS & INPUTS ===== */
-        .form-group { margin-bottom: 24px; text-align: right; }
+        /* حقول الإدخال */
+        .form-group { margin-bottom: 20px; text-align: right; }
         html[dir="ltr"] .form-group { text-align: left; }
-        .form-group label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: var(--text); }
-        .form-group label i { color: var(--muted); }
+        .form-group label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; font-size: 13.5px; color: var(--navy); }
+        .form-group label i { color: var(--gold-solid); }
         .form-group input, .form-group select, .form-group textarea {
             width: 100%; padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-            background: var(--card); color: var(--text); font-family: var(--font-main); font-size: 15px; outline: none; transition: var(--transition);
+            background: var(--card); color: var(--text); font-family: var(--font-main); font-size: 14.5px; outline: none; transition: var(--transition);
         }
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(43, 69, 112, 0.1); }
 
-        .student-form, .login-box { background: var(--card); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .form-section-label { display: flex; align-items: center; gap: 12px; margin: 32px 0 16px; font-weight: 700; font-size: 15px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .form-section-label:first-child { margin-top: 0; }
-        .form-section-label .num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: var(--font-mono); }
-        
-        .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        /* نموذج تسجيل الطالب المطور */
+        .student-form { background: var(--card); padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .student-form::before { content: ""; display: block; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gold-gradient); }
+        .form-section-label { display:flex; align-items:center; gap:10px; margin: 24px 0 16px; font-weight:700; font-size:14px; color:var(--primary); border-bottom: 1px dashed var(--border); padding-bottom: 8px; }
+        .form-section-label:first-of-type { margin-top:0; }
+        .form-section-label .num { width:22px; height:22px; border-radius:50%; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight: 700; font-family:var(--font-mono); flex-shrink:0; }
+        .student-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-        /* ===== LOGO CONTAINER (FIXED FOR JS) ===== */
-        .login-school-logo { text-align: center; margin-bottom: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .login-school-logo img { max-height: 90px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.05)); }
-        .login-school-logo .school-name { font-weight: 700; font-size: 22px; color: var(--text); display: block; }
-        .login-school-logo .school-sub { font-size: 14px; color: var(--muted); display: block; }
-        .login-school-logo .school-est { font-size: 12px; color: var(--muted); opacity: 0.8; display: block; }
+        /* صندوق تسجيل الدخول للموظفين */
+        .login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+        .login-box::before { content: ""; display: block; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gold-gradient); }
+        .login-school-logo { text-align: center; margin-bottom: 24px; }
+        .login-school-logo img { max-height: 90px; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.05)); }
+        .login-school-logo .school-name { display: block; font-weight: 800; font-size: 20px; color: var(--navy); margin-top: 12px; }
+        .login-school-logo .school-sub { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .login-school-logo .school-est { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; opacity: 0.8; }
 
-        /* ===== DASHBOARD SPECIFICS ===== */
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 20px; flex-wrap: wrap; background: var(--card); padding: 24px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
-        .stat-card { padding: 24px 20px; border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow); transition: var(--transition); }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--primary); }
+        .age-display { margin-top: 8px; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .age-display.valid { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .age-display.invalid { background: rgba(239, 68, 110, 0.15); color: var(--danger); }
+
+        /* بطاقات المواد والمناهج */
+        .subjects-card { margin-top: 24px; padding: 24px; border-radius: var(--radius-sm); background: var(--primary-light); border: 1px solid var(--border); }
+        .subjects-card h3 { color: var(--primary); margin-bottom: 12px; font-size: 15px; }
+        .subjects-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .subject-tag { padding: 8px 18px; border-radius: 30px; background: var(--card); border: 1px solid var(--border); font-weight: 600; font-size: 13.5px; box-shadow: var(--shadow); display: inline-flex; align-items: center; gap: 8px; }
+
+        /* شاشة الانتظار والمراجعة */
+        .waiting-message { background: var(--card); padding: 40px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .waiting-message .icon { width: 70px; height: 70px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-light); font-size: 32px; color: var(--primary); }
+        .status-badge { padding: 8px 24px; border-radius: 30px; font-weight: 600; display: inline-block; font-size: 13px; margin-top: 12px; }
+        .status-badge.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .status-badge.approved { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .status-badge.rejected { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+        /* عناصر لوحة التحكم */
+        .dashboard-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; align-items: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { padding: 24px 20px; border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border); text-align: center; transition: transform var(--transition), box-shadow var(--transition); box-shadow: var(--shadow); }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary); }
         .stat-card .stat-value { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--primary); }
-        .stat-card .stat-label { font-size: 13px; color: var(--muted); margin-top: 8px; font-weight: 500; }
+        .stat-card .stat-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 600; }
 
-        .dashboard-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 24px; box-shadow: var(--shadow); }
-        .dashboard-section h4 { margin-bottom: 20px; font-size: 20px; display: flex; align-items: center; gap: 12px; color: var(--text); }
-        .dashboard-section h4 i { color: var(--primary); }
+        /* الحاويات الرئيسية للوحات التحكم */
+        .dashboard-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow); position: relative; }
+        .dashboard-section h4 { margin-bottom: 18px; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 10px; color: var(--navy); }
+        .dashboard-section h4 i { color: var(--gold-solid); }
 
-        /* ===== TABLES ===== */
-        .data-table-wrapper { overflow-x: auto; margin-top: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
-        .data-table { width: 100%; border-collapse: collapse; text-align: right; }
-        html[dir="ltr"] .data-table { text-align: left; }
-        .data-table th { background: var(--bg); color: var(--muted); padding: 16px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--border); }
-        .data-table td { padding: 16px; font-size: 14px; border-bottom: 1px solid var(--border); color: var(--text); }
-        .data-table tr:last-child td { border-bottom: none; }
-        .data-table tr:hover td { background: var(--primary-light); }
+        /* الجداول الأنيقة */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .data-table th { text-align: right; font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 12px 10px; border-bottom: 2px solid var(--border); }
+        html[dir="ltr"] .data-table th { text-align: left; }
+        .data-table td { padding: 14px 10px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
+        .data-table tbody tr:hover { background: var(--primary-light); }
+        .empty-state { text-align: center; padding: 30px; color: var(--muted); font-size: 13.5px; }
 
-        /* ===== TOASTS & MODALS ===== */
-        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; max-width: 400px; width: 100%; }
-        html[dir="ltr"] .toast-container { right: auto; left: 24px; }
-        .toast { padding: 16px 20px; border-radius: var(--radius-sm); background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow-hover); display: flex; align-items: center; gap: 14px; animation: slideIn 0.3s var(--transition); }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        .toast.success { border-right: 4px solid var(--success); }
-        html[dir="ltr"] .toast.success { border-left: 4px solid var(--success); border-right: 1px solid var(--border); }
-        .toast.error { border-right: 4px solid var(--danger); }
-        html[dir="ltr"] .toast.error { border-left: 4px solid var(--danger); border-right: 1px solid var(--border); }
+        .badge-status { padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 600; display: inline-block; text-align: center; }
+        .badge-status.pending { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+        .badge-status.accepted { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+        .badge-status.rejected { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+        .badge-status.corrected { background: rgba(59, 130, 246, 0.12); color: var(--info); }
+        .badge-status.waiting { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
 
+        .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-mini { padding: 6px 12px; border: none; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: var(--font-main); transition: .2s; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-mini:hover { transform: scale(1.04); }
+        .btn-mini.neutral { background: var(--primary-light); color: var(--primary); }
+        .btn-mini.reject { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+        .btn-mini.view { background: var(--primary-light); color: var(--primary); }
+
+        /* بطاقات طلبات الفحص والتعديل */
+        .request-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; transition: var(--transition); box-shadow: var(--shadow); }
+        .request-card:hover { border-color: var(--primary); }
+        .request-info { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; align-items: center; }
+        .request-info span { background: var(--primary-light); padding: 4px 12px; border-radius: 8px; color: var(--text); font-weight: 500; }
+        .request-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .request-actions .btn-sm { padding: 8px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; font-family: var(--font-main); display: inline-flex; align-items: center; gap: 6px; transition: transform .2s; }
+        .request-actions .btn-sm:hover { transform: translateY(-1px); }
+        .request-actions .btn-sm.approve { background: var(--success); color: #fff; }
+        .request-actions .btn-sm.reject { background: var(--danger); color: #fff; }
+        .request-actions .btn-sm.exam { background: var(--primary); color: #fff; }
+        .request-actions .btn-sm.view-score { background: var(--primary-light); color: var(--primary); }
+
+        /* التبويبات والمقاييس */
+        .tab-group { display:flex; gap:8px; margin-bottom:18px; }
+        .tab-btn { padding:10px 20px; border:1px solid var(--border); background:var(--card); border-radius:30px; font-weight: 600; font-size:13px; cursor:pointer; font-family:var(--font-main); color:var(--muted); transition:var(--transition); box-shadow: var(--shadow); }
+        .tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+        .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
+        .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px; box-shadow: var(--shadow); }
+        .chart-box h5 { font-size: 13px; margin-bottom: 12px; color: var(--muted); font-weight: 600; text-align: center; }
+        .chart-box canvas { max-height: 180px; width: 100% !important; }
+
+        .admin-question-form { display: grid; gap: 12px; margin-top: 12px; }
+        .qa-list-item { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 10px; font-size: 13px; display: flex; justify-content: space-between; gap: 12px; align-items: center; box-shadow: var(--shadow); }
+
+        /* النوافذ العائمة المودال */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
         .modal-overlay.open { display: flex; }
-        .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow-hover); }
-        .modal-title { display: flex; align-items: center; justify-content: space-between; font-size: 20px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
-        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); transition: var(--transition); }
+        .modal-box { background: var(--card); color: var(--text); border-radius: var(--radius); padding: 32px; max-width: 600px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: zoomIn .3s var(--transition); border: 1px solid var(--border); }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-title { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .modal-close { margin-right: auto; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
         .modal-close:hover { color: var(--danger); }
 
-        /* ===== TOP CONTROLS ===== */
-        .top-controls { position: fixed; top: 24px; left: 24px; z-index: 999; display: flex; gap: 12px; }
+        /* التنبيهات المنبثقة الطافية */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 12px; max-width: 380px; }
+        html[dir="ltr"] .toast-container { right: auto; left: 24px; }
+        .toast { padding: 16px 20px; border-radius: var(--radius-sm); background: var(--card); color: var(--text); border: 1px solid var(--border); border-right: 4px solid var(--primary); font-weight: 600; font-size: 13px; box-shadow: var(--shadow-hover); display: flex; gap: 12px; align-items: center; animation: slideIn .3s var(--transition); }
+        html[dir="ltr"] .toast { border-right: 1px solid var(--border); border-left: 4px solid var(--primary); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .toast.success { border-right-color: var(--success); } html[dir="ltr"] .toast.success { border-left-color: var(--success); }
+        .toast.error { border-right-color: var(--danger); } html[dir="ltr"] .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-right-color: var(--warning); } html[dir="ltr"] .toast.warning { border-left-color: var(--warning); }
+        .toast.info { border-right-color: var(--info); } html[dir="ltr"] .toast.info { border-left-color: var(--info); }
+        .toast-close { margin-right: auto; background: none; border: none; cursor: pointer; color: var(--muted); }
+
+        /* شاشات التحميل */
+        .exam-loader { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 99999; }
+        .exam-loader.open { display: flex; }
+        .loader-progress { width: 260px; height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; }
+        .loader-progress .bar { height: 100%; width: 0%; background: var(--gold-gradient); transition: width .3s; }
+
+        .spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid var(--primary-light); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* أزرار التحكم العلوي */
+        .top-controls { position: fixed; top: 24px; left: 24px; z-index: 999; display: flex; gap: 10px; }
         html[dir="ltr"] .top-controls { left: auto; right: 24px; }
-        .theme-toggle, .lang-toggle { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: var(--shadow); transition: var(--transition); }
-        .theme-toggle:hover, .lang-toggle:hover { transform: scale(1.05); border-color: var(--primary); }
+        .theme-toggle, .lang-toggle {
+            width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--card);
+            font-size: 14px; cursor: pointer; color: var(--text); transition: var(--transition); box-shadow: var(--shadow);
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        .theme-toggle:hover, .lang-toggle:hover { transform: scale(1.05); }
 
-        /* ===== UTILITIES ===== */
-        .badge-status { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .badge-status.pending { background: #fef3c7; color: #d97706; }
-        .badge-status.accepted { background: #d1fae5; color: #059669; }
-        .badge-status.rejected { background: #fee2e2; color: #dc2626; }
-        .hidden { display: none !important; }
-
-        .tab-group { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .tab-btn { padding: 8px 16px; border: 1px solid transparent; background: transparent; color: var(--muted); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; font-family: var(--font-main); transition: var(--transition); }
-        .tab-btn.active { background: var(--primary-light); color: var(--primary); }
-
-        .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .chart-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px; text-align: center; }
-        .chart-box h5 { margin-bottom: 12px; color: var(--muted); }
-
+        /* معالجة الهواتف والشاشات الصغيرة */
         @media (max-width: 992px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
             .chart-grid { grid-template-columns: 1fr; }
         }
-        @media (max-width: 576px) {
-            .branch-grid, .role-grid, .form-row { grid-template-columns: 1fr; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .student-form, .login-box, .dashboard-section { padding: 24px; }
+        @media (max-width: 768px) {
+            .student-form .form-row { grid-template-columns: 1fr; }
+            .splash-title { font-size: 26px; }
+            .top-controls { top: 16px; left: 16px; }
+            html[dir="ltr"] .top-controls { left: auto; right: 16px; }
+            .theme-toggle, .lang-toggle { width: 40px; height: 40px; font-size: 13px; }
         }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .branch-grid, .role-grid { grid-template-columns: 1fr; }
+            .app-wrapper { padding: 16px 12px; }
+            .modal-box { padding: 24px; }
+        }
+        
+        .hidden { display: none !important; }
+        .ajyal-section-group, .nationality-group { display: none; }
+        .ajyal-section-group.show, .nationality-group.show { display: block; }
     </style>
 </head>
 <body>
     <div class="animated-bg"></div>
 
     <div class="toast-container" id="toastContainer"></div>
-    
     <div class="top-controls">
         <button class="lang-toggle" onclick="toggleLang()" id="langToggle">EN</button>
         <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle"><i class="fas fa-moon"></i></button>
     </div>
 
-    <div class="exam-loader" id="examLoader" style="display:none;">
-        <div class="spinner"></div>
-        <div id="loaderBar" style="width:0%;"></div>
+    <div class="exam-loader" id="examLoader">
+        <div class="spinner" style="width:50px;height:50px;border-width:5px;"></div>
+        <div style="font-weight:700;font-size:18px;color:var(--text);" data-i18n="loaderText">جاري التحضير...</div>
+        <div class="loader-progress"><div class="bar" id="loaderBar"></div></div>
     </div>
 
     <div class="app-wrapper">
         <!-- SPLASH -->
         <div class="page active" id="pageSplash">
+            <div class="splash-bg"></div>
             <div class="splash-content">
                 <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
                 <div class="splash-title">
                     <span data-i18n="splashTitle1">منصة</span> <span class="gold" data-i18n="splashTitle2">التقييم الإلكتروني</span>
-                    <span class="light" id="splashSubDisplay" data-i18n="splashTitle3">مدارس أجيال المعرفة - بوابة الطفل</span>
+                    <span class="light" data-i18n="splashTitle3">مدارس أجيال المعرفة - بوابة الطفل</span>
                 </div>
                 <div class="splash-sub" data-i18n="splashSub">المنصة التعليمية الموحدة</div>
-                <div class="splash-loader"><span></span><span></span><span></span></div>
+                <div class="splash-loader"><span></span><span></span><span></span><span></span></div>
             </div>
         </div>
 
@@ -314,9 +423,13 @@
             <div class="login-box">
                 <div class="login-school-logo" id="schoolLogoContainer">
                     <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
-                    <span id="schoolNameDisplay" class="school-name"></span>
-                    <span id="schoolSubDisplay" class="school-sub"></span>
-                    <span id="schoolEstDisplay" class="school-est"></span>
+                    <span class="school-name gold" id="schoolNameDisplay"></span>
+                    <span class="school-sub" id="schoolSubDisplay"></span>
+                    <span class="school-est" id="schoolEstDisplay"></span>
+                </div>
+                <div style="text-align:center; margin-bottom: 24px;">
+                    <div class="page-title" style="justify-content:center;font-size:20px;margin-bottom:2px;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
+                    <div class="page-sub" style="margin-bottom:0;" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-envelope"></i> <span data-i18n="emailLabel">البريد الإلكتروني</span></label>
@@ -327,7 +440,7 @@
                     <input type="password" id="loginPassword" placeholder="••••••••" />
                 </div>
                 <button class="btn-login" id="loginBtn" onclick="login()"><i class="fas fa-right-to-bracket"></i> <span data-i18n="loginBtn">تسجيل الدخول</span></button>
-                <div id="loginStatus" style="margin-top:12px;font-size:13px;font-weight:600;"></div>
+                <div id="loginStatus" style="margin-top:12px;font-size:13px;font-weight:600;text-align:center;"></div>
                 <div class="btn-group" style="margin-top:14px;">
                     <button class="btn btn-secondary" onclick="backToRoleFromForm()" style="width:100%;"><i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span></button>
                 </div>
@@ -374,7 +487,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group" id="nationalitySpecific">
+                    <div class="form-group nationality-group" id="nationalitySpecific">
                         <label><i class="fas fa-flag"></i> <span data-i18n="nationalityLabel">الجنسية</span></label>
                         <select id="studentNationality"><option value="" data-i18n="chooseOpt">-- اختر --</option></select>
                     </div>
@@ -386,7 +499,7 @@
                     </div>
 
                     <div class="form-section-label"><span class="num">3</span><span data-i18n="sectionAcademic">البيانات الأكاديمية</span></div>
-                    <div class="form-group" id="ajyalSectionGroup">
+                    <div class="form-group ajyal-section-group" id="ajyalSectionGroup">
                         <label><i class="fas fa-venus-mars"></i> <span data-i18n="sectionLabel">قسم الفرع (بنين / بنات)</span></label>
                         <select id="ajyalSection">
                             <option value="" data-i18n="chooseOpt">-- اختر --</option>
@@ -405,21 +518,21 @@
                             <option value="g4" data-i18n="g_g4">📚 الصف الرابع</option>
                             <option value="g5" data-i18n="g_g5">📚 الصف الخامس</option>
                             <option value="g6" data-i18n="g_g6">📚 الصف السادس</option>
-                            <option value="g7" data-i18n="g_g7">📚 الصف السابع</option>
-                            <option value="g8" data-i18n="g_g8">📚 الصف الثامن</option>
-                            <option value="g9" data-i18n="g_g9">📚 الصف التاسع</option>
-                            <option value="g10" data-i18n="g_g10">📚 الصف العاشر</option>
-                            <option value="g11" data-i18n="g_g11">📚 الصف الحادي عشر</option>
-                            <option value="g12" data-i18n="g_g12">📚 الصف الثاني عشر</option>
-                            <option value="g13" data-i18n="g_g13">📚 الثالث الثانوي</option>
+                            <option value="g7" class="ajyal-only" data-i18n="g_g7">📚 الصف السابع</option>
+                            <option value="g8" class="ajyal-only" data-i18n="g_g8">📚 الصف الثامن</option>
+                            <option value="g9" class="ajyal-only" data-i18n="g_g9">📚 الصف التاسع</option>
+                            <option value="g10" class="ajyal-only" data-i18n="g_g10">📚 الصف العاشر</option>
+                            <option value="g11" class="ajyal-only" data-i18n="g_g11">📚 الصف الحادي عشر</option>
+                            <option value="g12" class="ajyal-only" data-i18n="g_g12">📚 الصف الثاني عشر</option>
+                            <option value="g13" class="ajyal-only" data-i18n="g_g13">📚 الثالث الثانوي</option>
                         </select>
                     </div>
                     <button class="btn-login" id="registerBtn" onclick="registerStudent()"><i class="fas fa-paper-plane"></i> <span data-i18n="registerBtn">تسجيل الطالب</span></button>
-                    <div id="studentStatus" style="margin-top:12px;font-size:13px;font-weight:600;"></div>
+                    <div id="studentStatus" style="margin-top:12px;font-size:13px;font-weight:600;text-align:center;"></div>
                     <div id="subjectsMessage" class="hidden">
-                        <div style="margin-top:20px; padding:20px; background:var(--primary-light); border-radius:var(--radius-sm);">
+                        <div class="subjects-card">
                             <h3 data-i18n="subjectsTitle">📢 ستختبر في المواد التالية:</h3>
-                            <div id="subjectsList" style="display:flex; gap:10px; margin-top:10px;"></div>
+                            <div id="subjectsList" class="subjects-list"></div>
                         </div>
                     </div>
                     <div class="btn-group" style="margin-top:14px;">
@@ -427,32 +540,30 @@
                     </div>
                 </div>
             </div>
-            
-            <div id="waitingMessage" class="student-form hidden" style="text-align:center;">
-                <div style="font-size:48px; color:var(--primary); margin-bottom:16px;"><i class="fas fa-clock"></i></div>
+            <div id="waitingMessage" class="waiting-message hidden">
+                <div class="icon"><i class="fas fa-clock"></i></div>
                 <h3 data-i18n="waitingTitle">⏳ بانتظار موافقة مسؤول القبول</h3>
-                <p style="margin:12px 0; color:var(--muted);" data-i18n="waitingDesc">تم تسجيل بياناتك بنجاح! احتفظ برقم هويتك ورمزك السري للتحقق من حالتك لاحقاً.</p>
-                <div class="badge-status pending" id="studentStatusBadge">🔄 قيد المراجعة</div>
+                <p style="margin:8px 0; color: var(--muted);" data-i18n="waitingDesc">تم تسجيل بياناتك بنجاح! احتفظ برقم هويتك ورمزك السري للتحقق من حالتك لاحقاً.</p>
+                <div class="status-badge pending" id="studentStatusBadge">🔄 قيد المراجعة</div>
+                <br />
                 <div class="form-group" style="margin-top:24px;">
                     <label data-i18n="idLabelShort">رقم الهوية</label>
                     <input type="text" id="checkNationalId" data-i18n-placeholder="idPh" placeholder="أدخل رقم هويتك" />
                 </div>
                 <div class="form-group">
                     <label data-i18n="secretCodeLabel">الرمز السري</label>
-                    <input type="text" id="checkSecretCode" data-i18n-placeholder="secretCodePh" placeholder="الرمز السري" />
+                    <input type="text" id="checkSecretCode" data-i18n-placeholder="secretCodePh" placeholder="الرمز السري الذي استلمته" />
                 </div>
-                <button class="btn btn-primary" onclick="checkStudentStatus()" style="width:100%; margin-bottom:12px;"><i class="fas fa-sync"></i> <span data-i18n="checkStatusBtn">التحقق من الحالة</span></button>
-                <button class="btn btn-secondary" onclick="backToRoleFromForm()" style="width:100%;"><i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span></button>
+                <button class="btn btn-secondary" onclick="checkStudentStatus()" style="width:100%;"><i class="fas fa-sync"></i> <span data-i18n="checkStatusBtn">التحقق من الحالة</span></button>
+                <button class="btn btn-secondary" onclick="backToRoleFromForm()" style="margin-top:10px;width:100%;"><i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span></button>
             </div>
         </div>
 
         <!-- TEACHER DASHBOARD -->
         <div class="page dashboard-page" id="pageTeacherDashboard">
             <div class="dashboard-header">
-                <div>
-                    <div class="page-title"><i class="fas fa-chalkboard-teacher"></i> <span data-i18n="teacherDashTitle">لوحة المعلم</span></div>
-                    <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="teacherNameDisplay">المعلم</strong></div>
-                </div>
+                <div><div class="page-title"><i class="fas fa-chalkboard-teacher"></i> <span data-i18n="teacherDashTitle">لوحة المعلم</span></div>
+                <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="teacherNameDisplay">المعلم</strong></div></div>
                 <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></button>
             </div>
             <div class="stats-grid">
@@ -467,12 +578,10 @@
                     <button class="tab-btn active" id="teacherTabWaiting" onclick="switchTeacherTab('waiting')" data-i18n="statWaitingCorrection">بانتظار التصحيح</button>
                     <button class="tab-btn" id="teacherTabDone" onclick="switchTeacherTab('done')" data-i18n="statDone">تم تصحيحها</button>
                 </div>
-                <div class="data-table-wrapper">
-                    <table class="data-table">
-                        <thead><tr><th data-i18n="thStudent">الطالب</th><th data-i18n="thSubject">المادة</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
-                        <tbody id="teacherStudentsBody"></tbody>
-                    </table>
-                </div>
+                <table class="data-table">
+                    <thead><tr><th data-i18n="thStudent">الطالب</th><th data-i18n="thSubject">المادة</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
+                    <tbody id="teacherStudentsBody"></tbody>
+                </table>
             </div>
             <div class="dashboard-section">
                 <h4><i class="fas fa-robot"></i> <span data-i18n="recommendationsTitle">توصيات للطلاب</span></h4>
@@ -483,10 +592,8 @@
         <!-- REGISTRAR DASHBOARD -->
         <div class="page dashboard-page" id="pageRegistrarDashboard">
             <div class="dashboard-header">
-                <div>
-                    <div class="page-title"><i class="fas fa-user-tie"></i> <span data-i18n="registrarDashTitle">لوحة مسؤول القبول</span></div>
-                    <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="registrarNameDisplay">مسؤول القبول</strong></div>
-                </div>
+                <div><div class="page-title"><i class="fas fa-user-tie"></i> <span data-i18n="registrarDashTitle">لوحة مسؤول القبول</span></div>
+                <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="registrarNameDisplay">مسؤول القبول</strong></div></div>
                 <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></button>
             </div>
             <div class="stats-grid">
@@ -509,10 +616,8 @@
         <!-- ADMIN DASHBOARD -->
         <div class="page dashboard-page" id="pageAdminDashboard">
             <div class="dashboard-header">
-                <div>
-                    <div class="page-title"><i class="fas fa-user-shield"></i> <span data-i18n="adminDashTitle">لوحة مدير النظام</span></div>
-                    <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="adminNameDisplay">مدير النظام</strong></div>
-                </div>
+                <div><div class="page-title"><i class="fas fa-user-shield"></i> <span data-i18n="adminDashTitle">لوحة مدير النظام</span></div>
+                <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="adminNameDisplay">مدير النظام</strong></div></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                     <button class="btn btn-success" onclick="generatePDFReport()"><i class="fas fa-file-pdf"></i> <span data-i18n="pdfReportBtn">تقرير PDF</span></button>
                     <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></button>
@@ -534,69 +639,79 @@
             </div>
             <div class="dashboard-section">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">إدارة حسابات الموظفين</span></h4>
+                <p class="page-sub" data-i18n="staffMgmtSub">أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام</p>
                 <div class="admin-question-form">
-                    <div class="form-group"><input type="text" id="staffName" data-i18n-placeholder="staffNamePh" placeholder="الاسم الكامل" /></div>
-                    <div class="form-group"><input type="email" id="staffEmail" data-i18n-placeholder="staffEmailPh" placeholder="البريد الإلكتروني" /></div>
-                    <div class="form-group"><input type="password" id="staffPassword" data-i18n-placeholder="staffPasswordPh" placeholder="كلمة المرور" /></div>
-                    <div class="form-group">
-                        <select id="staffRole">
-                            <option value="teacher" data-i18n="roleTeacher">معلم</option>
-                            <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
-                            <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
-                        </select>
-                    </div>
+                    <input type="text" id="staffName" data-i18n-placeholder="staffNamePh" placeholder="الاسم الكامل" />
+                    <input type="email" id="staffEmail" data-i18n-placeholder="staffEmailPh" placeholder="البريد الإلكتروني" />
+                    <input type="password" id="staffPassword" data-i18n-placeholder="staffPasswordPh" placeholder="كلمة المرور (6 أحرف على الأقل)" />
+                    <select id="staffRole">
+                        <option value="teacher" data-i18n="roleTeacher">معلم</option>
+                        <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
+                        <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
+                    </select>
                     <button class="btn btn-primary" onclick="createStaffUser()" id="createStaffBtn"><span data-i18n="createStaffBtn">إنشاء الحساب</span></button>
                 </div>
-                <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
+                <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;text-align:center;"></div>
                 <div id="staffList" style="margin-top:14px;"></div>
             </div>
             <div class="dashboard-section">
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">إدارة الأسئلة</span></h4>
+                <p class="page-sub" data-i18n="questionMgmtSub">أضف أسئلة الاختبار (اختياري) للمادة والمرحلة المطلوبة</p>
                 <div class="admin-question-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <select id="qSubject">
-                                <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
-                                <option value="math" data-i18n="subjMath">📗 رياضيات</option>
-                                <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <select id="qGrade">
-                                <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
-                            </select>
-                        </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <select id="qSubject">
+                            <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
+                            <option value="math" data-i18n="subjMath">📗 رياضيات</option>
+                            <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
+                        </select>
+                        <select id="qGrade">
+                            <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                            <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                            <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                            <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                            <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                        </select>
                     </div>
-                    <div class="form-group"><input type="text" id="qText" data-i18n-placeholder="qTextPh" placeholder="نص السؤال" /></div>
-                    <div class="form-group"><input type="text" id="qOptions" data-i18n-placeholder="qOptionsPh" placeholder="الخيارات مفصولة بفاصلة" /></div>
-                    <div class="form-row">
-                        <div class="form-group"><input type="number" id="qCorrect" placeholder="فهرس الإجابة الصحيحة" /></div>
-                        <div class="form-group"><input type="number" id="qMarks" placeholder="عدد الدرجات" value="1" /></div>
-                    </div>
+                    <input type="text" id="qText" data-i18n-placeholder="qTextPh" placeholder="نص السؤال" />
+                    <input type="text" id="qOptions" data-i18n-placeholder="qOptionsPh" placeholder="الخيارات مفصولة بفاصلة , مثال: أ,ب,ج" />
+                    <input type="number" id="qCorrect" data-i18n-placeholder="qCorrectPh" placeholder="فهرس الإجابة الصحيحة (0 = أول خيار)" min="0" />
+                    <input type="number" id="qMarks" data-i18n-placeholder="qMarksPh" placeholder="عدد الدرجات" value="1" min="1" />
                     <button class="btn btn-primary" onclick="addQuestion()"><span data-i18n="addQuestionBtn">إضافة السؤال</span></button>
                 </div>
-                <div id="questionsList" style="margin-top:20px;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+                    <select id="qListSubject" onchange="loadQuestionsList()">
+                        <option value="" data-i18n="allSubjects">كل المواد</option>
+                        <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
+                        <option value="math" data-i18n="subjMath">📗 رياضيات</option>
+                        <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
+                    </select>
+                    <select id="qListGrade" onchange="loadQuestionsList()">
+                        <option value="" data-i18n="allGrades">كل المراحل</option>
+                        <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                        <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                        <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                        <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                        <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                    </select>
+                </div>
+                <div id="questionsListSummary" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--gold-solid);"></div>
+                <div id="questionsList" style="margin-top:10px;"></div>
             </div>
             <div class="dashboard-section">
-                <h4><i class="fas fa-user-clock"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
+                <h4><i class="fas fa-user-plus"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
                 <input type="text" id="adminSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterAdminList()" style="margin-bottom:14px;" />
-                <div class="data-table-wrapper">
-                    <table class="data-table">
-                        <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thBranch">الفرع</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
-                        <tbody id="adminRequestsBody"></tbody>
-                    </table>
-                </div>
+                <table class="data-table">
+                    <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thBranch">الفرع</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
+                    <tbody id="adminRequestsBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- MODAL -->
     <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
         <div class="modal-box" id="modalBox">
-            <div class="modal-title">
-                <span id="modalTitle">معلومات</span>
-                <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
-            </div>
+            <div class="modal-title"><i class="fas fa-info-circle"></i><span id="modalTitle">معلومات</span>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button></div>
             <div id="modalContent"></div>
         </div>
     </div>
