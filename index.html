@@ -308,7 +308,13 @@
             box-shadow: 0 0 0 4px rgba(200,155,60,.2), var(--shadow-hover);
             transform: translateY(-5px);
         }
-        .branch-card .branch-logo img { width: 70px; height: 70px; object-fit: contain; }
+        .branch-card .branch-logo img { 
+            width: 70px; 
+            height: 70px; 
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 6px;
+        }
         .branch-card h3 { font-size: 16px; margin-top: 6px; }
         .branch-card p { font-size: 12px; color: var(--muted); margin-top: 2px; }
         .role-btn .icon { font-size: 32px; display: block; margin-bottom: 6px; color: var(--primary-dark); }
@@ -418,19 +424,32 @@
         .login-school-logo {
             text-align: center;
             margin-bottom: 20px;
+            padding: 16px;
+            background: var(--card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
         }
         .login-school-logo img {
             max-height: 80px;
             width: auto;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: block;
+            margin: 0 auto;
         }
         .login-school-logo .school-name {
             display: block;
             font-weight: 700;
             font-size: 18px;
             color: var(--navy);
-            margin-top: 6px;
+            margin-top: 8px;
+        }
+        .login-school-logo .school-sub {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
         }
 
         .age-display {
@@ -827,11 +846,13 @@
             <div class="branch-grid">
                 <div class="branch-card" onclick="selectBranch('ajyal')" id="branchAjyal">
                     <div class="branch-logo"><img src="https://cdn.phototourl.com/free/2026-07-14-d44ffda0-bbf4-44eb-99a9-650f628bd4ad.png" alt="أجيال المعرفة" /></div>
-                    <h3>أجيال المعرفة</h3><p>من Kg II إلى Grade 12</p>
+                    <h3>أجيال المعرفة</h3>
+                    <p>من Kg II إلى Grade 12</p>
                 </div>
                 <div class="branch-card" onclick="selectBranch('kids')" id="branchKids">
                     <div class="branch-logo"><img src="https://cdn.phototourl.com/free/2026-07-14-ce64c35e-2cbf-475c-bfb7-3fde4e32b4b9.png" alt="بوابة الطفل" /></div>
-                    <h3>بوابة الطفل</h3><p>من Kg II إلى Grade 6</p>
+                    <h3>بوابة الطفل</h3>
+                    <p>من Kg II إلى Grade 6</p>
                 </div>
             </div>
             <div class="btn-group">
@@ -860,6 +881,7 @@
             <div class="login-school-logo" id="schoolLogoContainer">
                 <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
                 <span class="school-name" id="schoolNameDisplay">المدرسة</span>
+                <span class="school-sub" id="schoolSubDisplay"></span>
             </div>
             <div style="text-align:center; margin-bottom: 20px;">
                 <div style="font-size:48px; color:var(--primary);"><i class="fas fa-lock"></i></div>
