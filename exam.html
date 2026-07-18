@@ -186,7 +186,7 @@ function startStage(idx){
         else passageImageContainer.classList.add('hidden');
     } else passageContainer.classList.add('hidden');
 
-    document.getElementById('examApp').classList.toggle('ltr', stage.subject==='english');
+    document.getElementById('examApp').classList.toggle('ltr', stage.subject==='english' || stage.subject==='math');
 
     renderQuestion();
     startTimer();
