@@ -52,7 +52,6 @@
             background: var(--bg);
         }
 
-        /* ===== خلفية متحركة بدوائر مضيئة ===== */
         .animated-bg {
             position: fixed;
             inset: 0;
@@ -1125,35 +1124,8 @@
             }
         }
 
-        // ===== تعديل دالة selectBranch =====
-        const originalSelectBranch = window.selectBranch;
-        window.selectBranch = function(branch) {
-            // تنفيذ الوظيفة الأصلية
-            if (originalSelectBranch) {
-                originalSelectBranch(branch);
-            }
-            
-            // تحديث الشعار في صفحة تسجيل الدخول
-            updateSchoolLogo(branch);
-            
-            // تخزين الفرع المختار
-            window.selectedBranch = branch;
-        };
-
-        // ===== تعديل دالة goToRole =====
-        const originalGoToRole = window.goToRole;
-        window.goToRole = function() {
-            if (originalGoToRole) {
-                originalGoToRole();
-            }
-            // عند الانتقال إلى صفحة الدور، نحدث الشعار بناءً على الفرع المختار
-            if (window.selectedBranch) {
-                updateSchoolLogo(window.selectedBranch);
-            }
-        };
-
-        // ===== تعديل دالة goToNextPage =====
-        const originalGoToNextPage = window.goToNextPage;
+        // ===== تحديث دالة goToNextPage =====
+        // نستدعي الدالة الأصلية من app.js ونضيف عليها تحديث الشعار
         window.goToNextPage = function() {
             const selectedRole = document.querySelector('.role-btn.active');
             if (!selectedRole) {
@@ -1164,25 +1136,14 @@
             const role = selectedRole.id.replace('role', '').toLowerCase();
             
             if (role === 'student') {
-                // للطالب نذهب مباشرة للتسجيل
                 showPage('pageStudentRegister');
             } else {
-                // للموظفين نذهب لتسجيل الدخول
-                // نحدث الشعار قبل ظهور الصفحة
-                if (window.selectedBranch) {
-                    updateSchoolLogo(window.selectedBranch);
-                }
+                // تحديث الشعار قبل ظهور صفحة تسجيل الدخول
+                const branch = window.selectedBranch || 'ajyal';
+                updateSchoolLogo(branch);
                 showPage('pageLogin');
             }
         };
-
-        // ===== تهيئة عند تحميل الصفحة =====
-        document.addEventListener('DOMContentLoaded', function() {
-            // إذا كان هناك فرع محدد مسبقاً، نحدث الشعار
-            if (window.selectedBranch) {
-                updateSchoolLogo(window.selectedBranch);
-            }
-        });
     </script>
 </body>
 </html>
