@@ -198,7 +198,14 @@
         .student-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
         .login-school-logo { text-align: center; margin-bottom: 24px; padding: 0; background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; }
-        .login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 28px; box-shadow: var(--shadow); }
+        .login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); }
+        .login-box .login-school-logo { margin-bottom: 12px; }
+        .login-box .login-school-logo img { max-height: 60px; }
+        .login-box .login-school-logo .school-name { font-size: 17px; }
+        .login-box .login-school-logo .school-sub { font-size: 11px; }
+        .login-box .login-school-logo .school-est { font-size: 11px; }
+        .login-box .form-group { margin-bottom: 12px; }
+        .login-box .form-group input { padding: 11px 16px; }
         .login-school-logo img { max-height: 100px; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.1)); }
         .login-school-logo .school-name { display: block; font-weight: 900; font-size: 24px; color: var(--navy); margin-top: 10px; letter-spacing: 0.5px; }
         [data-theme="dark"] .login-school-logo .school-name { color: var(--text); }
@@ -372,7 +379,7 @@
                 <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
                 <div class="splash-title">
                     <span data-i18n="splashTitle1">منصة</span> <span class="gold" data-i18n="splashTitle2">التقييم الإلكتروني</span>
-                    <span class="light" data-i18n="splashTitle3">بوابة الطفل ومدارس أجيال المعرفة</span>
+                    <span class="light" data-i18n="splashTitle3">مدارس أجيال المعرفة - بوابة الطفل</span>
                 </div>
                 <div class="splash-sub" data-i18n="splashSub">المنصة التعليمية الموحدة</div>
                 <div class="splash-loader"><span></span><span></span><span></span><span></span></div>
@@ -425,10 +432,10 @@
                 <span class="school-sub gold" id="schoolSubDisplay"></span>
                 <span class="school-est" id="schoolEstDisplay"></span>
             </div>
-            <div style="text-align:center; margin-bottom: 20px;">
-                <div style="font-size:48px; color:var(--gold-solid);"><i class="fas fa-lock"></i></div>
-                <div class="page-title" style="justify-content:center;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
-                <div class="page-sub" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
+            <div style="text-align:center; margin-bottom: 12px;">
+                <div style="font-size:34px; color:var(--gold-solid); margin-bottom:4px;"><i class="fas fa-lock"></i></div>
+                <div class="page-title" style="justify-content:center;font-size:20px;margin-bottom:2px;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
+                <div class="page-sub" style="margin-bottom:0;" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
             </div>
             <div class="form-group">
                 <label><i class="fas fa-envelope"></i> <span data-i18n="emailLabel">البريد الإلكتروني</span></label>
