@@ -71,7 +71,11 @@ const translations = {
         qTextPh:'نص السؤال', qOptionsPh:'الخيارات مفصولة بفاصلة , مثال: أ,ب,ج', qCorrectPh:'فهرس الإجابة الصحيحة (0 = أول خيار)', qMarksPh:'عدد الدرجات',
         addQuestionBtn:'إضافة السؤال', recentRequestsTitle:'آخر طلبات التسجيل', thName:'الاسم', thBranch:'الفرع',
         staffMgmtTitle:'إدارة حسابات الموظفين', staffMgmtSub:'أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام',
-        staffNamePh:'الاسم الكامل', staffEmailPh:'البريد الإلكتروني', staffPasswordPh:'كلمة المرور (6 أحرف على الأقل)', createStaffBtn:'إنشاء الحساب'
+        staffNamePh:'الاسم الكامل', staffEmailPh:'البريد الإلكتروني', staffPasswordPh:'كلمة المرور (6 أحرف على الأقل)', createStaffBtn:'إنشاء الحساب',
+        sectionPersonal:'البيانات الأساسية', sectionContact:'بيانات التواصل', sectionAcademic:'البيانات الأكاديمية',
+        searchPh:'ابحث بالاسم أو رقم الهوية...', allSubjects:'كل المواد', allGrades:'كل المراحل',
+        stepBranch:'الفرع', stepRole:'الصلاحية', stepDetails:'البيانات',
+        chatTitle:'مساعد المنصة', chatWelcome:'👋 أهلاً! اختر سؤال من الأسفل وبجاوبك فوراً.'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -105,7 +109,11 @@ const translations = {
         qTextPh:'Question text', qOptionsPh:'Options separated by commas, e.g. A,B,C', qCorrectPh:'Index of correct answer (0 = first option)', qMarksPh:'Number of marks',
         addQuestionBtn:'Add Question', recentRequestsTitle:'Recent Registration Requests', thName:'Name', thBranch:'Branch',
         staffMgmtTitle:'Staff Account Management', staffMgmtSub:'Add a new login account for a teacher, admissions officer, or system administrator',
-        staffNamePh:'Full name', staffEmailPh:'Email address', staffPasswordPh:'Password (at least 6 characters)', createStaffBtn:'Create Account'
+        staffNamePh:'Full name', staffEmailPh:'Email address', staffPasswordPh:'Password (at least 6 characters)', createStaffBtn:'Create Account',
+        sectionPersonal:'Personal Details', sectionContact:'Contact Details', sectionAcademic:'Academic Details',
+        searchPh:'Search by name or ID...', allSubjects:'All Subjects', allGrades:'All Grades',
+        stepBranch:'Branch', stepRole:'Role', stepDetails:'Details',
+        chatTitle:'Platform Assistant', chatWelcome:'👋 Hi! Pick a question below and I\'ll answer instantly.'
     }
 };
 
@@ -138,6 +146,7 @@ function setLangAttributes(){
 }
 
 function refreshDynamicText(){
+    if(document.getElementById('chatWindow')?.classList.contains('open')) renderChatQuickReplies();
     if(selectedBranch){
         const el = document.getElementById('selectedBranchDisplay');
         if(el) el.textContent = selectedBranch==='ajyal' ? t('branchAjyalName') : t('branchKidsName');
@@ -191,9 +200,24 @@ window.addEventListener('DOMContentLoaded', () => {
             splash.classList.remove('active');
             splash.style.display = 'none';
             branch.classList.add('active');
+            updateStepIndicator(1);
         }, 500);
     }, 3200);
 });
+
+// ---------------- STEP INDICATOR ----------------
+function updateStepIndicator(step){
+    const el = document.getElementById('stepIndicator');
+    if(!el) return;
+    if(step===0){ el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    [1,2,3].forEach(n=>{
+        const stepEl = document.getElementById('step'+n);
+        stepEl.classList.remove('active','done');
+        if(n<step) stepEl.classList.add('done');
+        else if(n===step) stepEl.classList.add('active');
+    });
+}
 
 // ---------------- NAVIGATION ----------------
 function selectBranch(branch){
@@ -210,10 +234,12 @@ function goToRole(){
     document.getElementById('selectedBranchDisplay').textContent = selectedBranch==='ajyal' ? t('branchAjyalName') : t('branchKidsName');
     document.getElementById('pageBranch').classList.remove('active');
     document.getElementById('pageRole').classList.add('active');
+    updateStepIndicator(2);
 }
 function goToBranch(){
     document.getElementById('pageRole').classList.remove('active');
     document.getElementById('pageBranch').classList.add('active');
+    updateStepIndicator(1);
 }
 function updateGradeOptions(branch){
     const select = document.getElementById('studentGrade');
@@ -237,16 +263,19 @@ function goToNextPage(){
         document.getElementById('pageStudentRegister').classList.add('active');
         document.getElementById('registerForm').style.display='block';
         document.getElementById('waitingMessage').classList.add('hidden');
+        updateStepIndicator(3);
         return;
     }
     updateSchoolLogo(selectedBranch);
     document.getElementById('pageRole').classList.remove('active');
     document.getElementById('pageLogin').classList.add('active');
+    updateStepIndicator(3);
 }
 function backToRoleFromForm(){
     document.getElementById('pageLogin').classList.remove('active');
     document.getElementById('pageStudentRegister').classList.remove('active');
     document.getElementById('pageRole').classList.add('active');
+    updateStepIndicator(2);
 }
 function logout(){
     sb.auth.signOut();
@@ -256,6 +285,7 @@ function logout(){
     document.getElementById('btnBranchNext').disabled=true;
     document.getElementById('btnRoleNext').disabled=true;
     document.getElementById('pageBranch').classList.add('active');
+    updateStepIndicator(1);
     showToast(currentLang==='ar' ? '👋 تم تسجيل الخروج' : '👋 Signed out successfully', 'info');
 }
 function updateSchoolLogo(branch){
@@ -303,6 +333,7 @@ async function login(){
     status.innerHTML = `<span style="color:var(--success);">✅ ${currentLang==='ar'?'مرحباً! جاري تحويلك...':'Welcome! Redirecting...'}</span>`;
 
     document.getElementById('pageLogin').classList.remove('active');
+    updateStepIndicator(0);
     if(profile.role==='teacher'){
         document.getElementById('teacherNameDisplay').textContent = profile.name;
         await renderTeacherDashboard();
@@ -485,6 +516,7 @@ async function renderRegistrarDashboard(){
     const isAr = currentLang==='ar';
     const { data: students, error } = await sb.from('students').select('*').order('created_at',{ascending:false});
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    window._registrarStudentsCache = students;
 
     document.getElementById('registrarStatPending').textContent = students.filter(s=>s.status==='pending').length;
     document.getElementById('registrarStatAccepted').textContent = students.filter(s=>s.status==='approved').length;
@@ -496,11 +528,21 @@ async function renderRegistrarDashboard(){
     const allAvgs = Object.values(avgByStudent).map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length);
     document.getElementById('registrarStatAvg').textContent = allAvgs.length ? (allAvgs.reduce((a,b)=>a+b,0)/allAvgs.length).toFixed(1) : 0;
 
+    filterRegistrarList();
+    await renderLeaderboard();
+}
+
+function filterRegistrarList(){
+    const isAr = currentLang==='ar';
+    const students = window._registrarStudentsCache || [];
     const list = document.getElementById('registrarRequestsList');
     list.innerHTML='';
-    if(students.length===0){ list.innerHTML = `<div class="empty-state">${isAr?'لا توجد طلبات حالياً':'No requests yet'}</div>`; }
+    const searchEl = document.getElementById('registrarSearch');
+    const query = (searchEl?.value||'').trim().toLowerCase();
+    const filteredStudents = query ? students.filter(s=>s.name.toLowerCase().includes(query) || s.national_id.includes(query)) : students;
+    if(filteredStudents.length===0){ list.innerHTML = `<div class="empty-state">${isAr?(query?'لا توجد نتائج مطابقة':'لا توجد طلبات حالياً'):(query?'No matching results':'No requests yet')}</div>`; }
     else {
-        students.forEach(s=>{
+        filteredStudents.forEach(s=>{
             const statusBadge = `<span class="badge-status ${s.status==='pending'?'pending':s.status==='approved'?'accepted':'rejected'}">${getStatusLabel(s.status)}</span>`;
             let actions='';
             if(s.status==='pending'){
@@ -523,7 +565,6 @@ async function renderRegistrarDashboard(){
                 </div>${actions}</div>`;
         });
     }
-    await renderLeaderboard();
 }
 
 async function approveStudent(studentId){
@@ -595,9 +636,8 @@ async function renderTeacherDashboard(){
     const isAr = currentLang==='ar';
     const { data: results, error } = await sb.from('exam_results').select('*, students(name,grade)').order('created_at',{ascending:false});
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    window._teacherResultsCache = results || [];
 
-    const body = document.getElementById('teacherStudentsBody');
-    body.innerHTML='';
     const waiting = (results||[]).filter(r=>r.status==='waiting_correction');
     const done = (results||[]).filter(r=>r.status==='corrected');
 
@@ -606,9 +646,25 @@ async function renderTeacherDashboard(){
     document.getElementById('teacherStatDone').textContent = done.length;
     document.getElementById('teacherStatActive').textContent = (results||[]).filter(r=>r.status==='auto').length;
 
-    if(waiting.length===0){ body.innerHTML = `<tr><td colspan="4"><div class="empty-state">${isAr?'لا توجد أوراق بانتظار التصحيح 🎉':'No papers awaiting marking 🎉'}</div></td></tr>`; }
-    else {
-        waiting.forEach(r=>{
+    renderTeacherTable();
+    renderTeacherRecommendations(results||[]);
+}
+let _teacherActiveTab = 'waiting';
+function switchTeacherTab(tab){
+    _teacherActiveTab = tab;
+    document.getElementById('teacherTabWaiting').classList.toggle('active', tab==='waiting');
+    document.getElementById('teacherTabDone').classList.toggle('active', tab==='done');
+    renderTeacherTable();
+}
+function renderTeacherTable(){
+    const isAr = currentLang==='ar';
+    const results = window._teacherResultsCache || [];
+    const body = document.getElementById('teacherStudentsBody');
+    body.innerHTML = '';
+    if(_teacherActiveTab==='waiting'){
+        const waiting = results.filter(r=>r.status==='waiting_correction');
+        if(waiting.length===0){ body.innerHTML = `<tr><td colspan="4"><div class="empty-state">${isAr?'لا توجد أوراق بانتظار التصحيح 🎉':'No papers awaiting marking 🎉'}</div></td></tr>`; }
+        else waiting.forEach(r=>{
             body.innerHTML += `<tr>
                 <td>${r.students?.name||'--'}</td>
                 <td>${getSubjectLabel(r.subject)}</td>
@@ -616,8 +672,18 @@ async function renderTeacherDashboard(){
                 <td><div class="row-actions"><button class="btn-mini neutral" onclick="openCorrectionModal('${r.id}')">✏️ ${isAr?'تصحيح':'Mark'}</button></div></td>
             </tr>`;
         });
+    } else {
+        const done = results.filter(r=>r.status==='corrected');
+        if(done.length===0){ body.innerHTML = `<tr><td colspan="4"><div class="empty-state">${isAr?'لا توجد أوراق مصححة بعد':'No marked papers yet'}</div></td></tr>`; }
+        else done.forEach(r=>{
+            body.innerHTML += `<tr>
+                <td>${r.students?.name||'--'}</td>
+                <td>${getSubjectLabel(r.subject)}</td>
+                <td><span class="badge-status corrected">${r.score} / ${r.total}</span></td>
+                <td><div class="row-actions"><button class="btn-mini neutral" onclick="openCorrectionModal('${r.id}')">✏️ ${isAr?'تعديل':'Edit'}</button></div></td>
+            </tr>`;
+        });
     }
-    renderTeacherRecommendations(results||[]);
 }
 function renderTeacherRecommendations(results){
     const isAr = currentLang==='ar';
@@ -682,20 +748,28 @@ async function renderAdminDashboard(){
     const avgs = (results||[]).map(r=>r.score/r.total*10);
     document.getElementById('adminStatAvg').textContent = avgs.length ? (avgs.reduce((a,b)=>a+b,0)/avgs.length).toFixed(1) : 0;
 
+    window._adminStudentsCache = students || [];
+    filterAdminList();
+
+    createCharts(students||[]);
+    loadQuestionsList();
+    loadStaffList();
+}
+function filterAdminList(){
+    const isAr = currentLang==='ar';
+    const students = window._adminStudentsCache || [];
     const body = document.getElementById('adminRequestsBody');
     body.innerHTML='';
-    const recent = [...(students||[])].reverse().slice(0,8);
-    const isAr = currentLang==='ar';
-    if(recent.length===0){ body.innerHTML = `<tr><td colspan="4"><div class="empty-state">${isAr?'لا توجد طلبات':'No requests'}</div></td></tr>`; }
+    const searchEl = document.getElementById('adminSearch');
+    const query = (searchEl?.value||'').trim().toLowerCase();
+    const filtered = query ? students.filter(s=>s.name.toLowerCase().includes(query) || s.national_id.includes(query)) : students;
+    const recent = [...filtered].reverse().slice(0, query ? 50 : 8);
+    if(recent.length===0){ body.innerHTML = `<tr><td colspan="4"><div class="empty-state">${isAr?(query?'لا توجد نتائج مطابقة':'لا توجد طلبات'):(query?'No matching results':'No requests')}</div></td></tr>`; }
     else recent.forEach(s=>{
         const badge = `<span class="badge-status ${s.status==='pending'?'pending':s.status==='approved'?'accepted':'rejected'}">${getStatusLabel(s.status)}</span>`;
         body.innerHTML += `<tr><td>${s.name}</td><td>${getBranchLabel(s.branch)}</td><td>${badge}</td>
             <td>${s.status==='approved'?`<button class="btn-mini view" onclick="showStudentScores('${s.id}')">📊 ${isAr?'عرض':'View'}</button>`:'--'}</td></tr>`;
     });
-
-    createCharts(students||[]);
-    loadQuestionsList();
-    loadStaffList();
 }
 function createCharts(students){
     const isAr = currentLang==='ar';
@@ -738,20 +812,122 @@ async function addQuestion(){
 async function loadQuestionsList(){
     const isAr = currentLang==='ar';
     const container = document.getElementById('questionsList');
+    const summary = document.getElementById('questionsListSummary');
     if(!container) return;
-    const { data: questions } = await sb.from('questions').select('*').order('created_at',{ascending:false}).limit(20);
-    if(!questions || questions.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا توجد أسئلة مضافة بعد':'No questions added yet'}</div>`; return; }
+    const subjectFilter = document.getElementById('qListSubject')?.value || '';
+    const gradeFilter = document.getElementById('qListGrade')?.value || '';
+
+    let query = sb.from('questions').select('*').order('subject').order('grade').order('order_index');
+    if(subjectFilter) query = query.eq('subject', subjectFilter);
+    if(gradeFilter) query = query.eq('grade', gradeFilter);
+    const { data: questions } = await query;
+
+    if(!questions || questions.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا توجد أسئلة مطابقة':'No matching questions'}</div>`; if(summary) summary.textContent=''; return; }
+
+    if(summary){
+        const totalMarks = questions.reduce((s,q)=>s+(q.marks||0),0);
+        summary.textContent = isAr ? `📋 ${questions.length} سؤال · ${totalMarks} درجة` : `📋 ${questions.length} questions · ${totalMarks} marks`;
+    }
+
     container.innerHTML = questions.map(q=>`
         <div class="qa-list-item">
-            <span>${getSubjectLabel(q.subject)} · ${getGradeLabel(q.grade)} · ${q.question_text}</span>
-            <button class="btn-mini reject" onclick="deleteQuestion('${q.id}')">${isAr?'حذف':'Delete'}</button>
+            <span>${getSubjectLabel(q.subject)} · ${getGradeLabel(q.grade)} · ${q.question_text.slice(0,50)}${q.question_text.length>50?'…':''}</span>
+            <span style="display:flex;gap:6px;align-items:center;white-space:nowrap;">
+                <span class="badge-status waiting" style="font-family:var(--font-mono);">${q.marks}${isAr?' د':' pts'}</span>
+                <button class="btn-mini neutral" onclick="editQuestionMarks('${q.id}', ${q.marks})">${isAr?'✏️ تعديل':'✏️ Edit'}</button>
+                <button class="btn-mini reject" onclick="deleteQuestion('${q.id}')">${isAr?'حذف':'Delete'}</button>
+            </span>
         </div>`).join('');
 }
+function editQuestionMarks(id, currentMarks){
+    const isAr = currentLang==='ar';
+    const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+    title.textContent = isAr ? '✏️ تعديل درجة السؤال' : '✏️ Edit Question Marks';
+    content.innerHTML = `
+        <div class="form-group"><label>${isAr?'عدد الدرجات':'Number of marks'}</label>
+            <input type="number" id="editMarksInput" min="0" step="0.5" value="${currentMarks}" /></div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="btn btn-primary" onclick="saveQuestionMarks('${id}')" style="flex:1;">${isAr?'حفظ':'Save'}</button>
+            <button class="btn btn-secondary" onclick="closeModal()" style="flex:1;">${isAr?'إلغاء':'Cancel'}</button>
+        </div>`;
+    modal.classList.add('open');
+}
+async function saveQuestionMarks(id){
+    const isAr = currentLang==='ar';
+    const val = parseFloat(document.getElementById('editMarksInput').value);
+    if(isNaN(val) || val<0){ showToast(isAr?'⚠️ قيمة غير صحيحة':'⚠️ Invalid value', 'warning'); return; }
+    const { error } = await sb.from('questions').update({ marks: val }).eq('id', id);
+    if(error){ showToast('❌ '+error.message, 'error'); return; }
+    closeModal();
+    showToast(isAr?'✅ تم تحديث الدرجة':'✅ Marks updated', 'success');
+    loadQuestionsList();
+}
 async function deleteQuestion(id){
+    const isAr = currentLang==='ar';
+    if(!confirm(isAr?'متأكد تبي تحذف هذا السؤال؟':'Are you sure you want to delete this question?')) return;
     const { error } = await sb.from('questions').delete().eq('id', id);
     if(error){ showToast('❌ '+error.message,'error'); return; }
-    showToast(currentLang==='ar'?'🗑️ تم حذف السؤال':'🗑️ Question deleted', 'info');
+    showToast(isAr?'🗑️ تم حذف السؤال':'🗑️ Question deleted', 'info');
     loadQuestionsList();
+}
+
+// ---------------- CHAT BOT (أسئلة ثابتة) ----------------
+const chatFAQ = [
+    { key:'howRegister',
+      q:{ar:'📝 كيف أسجّل طالب؟', en:'📝 How do I register a student?'},
+      a:{ar:'من الصفحة الرئيسية: اختر الفرع ← اختر "طالب" ← عبّي البيانات المطلوبة ← احفظ الرمز السري اللي بيظهر لك بعد التسجيل، بتحتاجه للتحقق من حالتك لاحقاً.',
+         en:'From the home page: choose the branch → choose "Student" → fill in the required details → save the secret code shown after registering, you will need it to check your status later.'} },
+    { key:'checkStatus',
+      q:{ar:'🔄 كيف أتحقق من حالة طلبي؟', en:'🔄 How do I check my request status?'},
+      a:{ar:'بعد التسجيل بتظهر لك شاشة "بانتظار الموافقة" فيها حقول لرقم الهوية والرمز السري — عبّيها واضغط "التحقق من الحالة" لمعرفة إذا انقبل طلبك.',
+         en:'After registering you will see a "waiting for approval" screen with fields for your ID and secret code — fill them and press "Check Status" to see if your request was approved.'} },
+    { key:'lostCode',
+      q:{ar:'❓ ضيّعت الرمز السري، وش أسوي؟', en:"❓ I lost my secret code, what do I do?"},
+      a:{ar:'تواصل مع مسؤول القبول بالمدرسة مباشرة وهو يقدر يوصلك ببياناتك من لوحته.',
+         en:'Contact the school\'s admissions officer directly — they can look up your details from their dashboard.'} },
+    { key:'roles',
+      q:{ar:'👥 وش الفرق بين الأدوار؟', en:'👥 What is the difference between the roles?'},
+      a:{ar:'👨‍🎓 الطالب: يسجّل ويدخل الاختبار بعد القبول.<br>👔 مسؤول القبول: يقبل/يرفض الطلبات ويتابع النتائج.<br>👨‍🏫 المعلم: يصحح الأسئلة الكتابية.<br>🛡️ مدير النظام: يدير الأسئلة والموظفين والإحصائيات.',
+         en:'👨‍🎓 Student: registers and takes the exam after approval.<br>👔 Admissions officer: approves/rejects requests and tracks results.<br>👨‍🏫 Teacher: marks written answers.<br>🛡️ System admin: manages questions, staff, and statistics.'} },
+    { key:'examHow',
+      q:{ar:'📋 كيف يشتغل الاختبار؟', en:'📋 How does the exam work?'},
+      a:{ar:'بعد الموافقة على طلبك، تدخل الاختبار وتنتقل تلقائياً بين المواد (إنجليزي، رياضيات، عربي). الأسئلة الاختيارية تتصحح فوراً، والكتابية يصححها المعلم.',
+         en:'After your request is approved, you take the exam and move automatically between subjects (English, Math, Arabic). Multiple-choice questions are graded instantly, written ones are marked by the teacher.'} },
+    { key:'contact',
+      q:{ar:'📞 كيف أتواصل مع الدعم؟', en:'📞 How do I contact support?'},
+      a:{ar:'تواصل مع إدارة المدرسة مباشرة عبر أرقامها الرسمية، أو مع مسؤول القبول لأي استفسار متعلق بطلبك.',
+         en:'Contact the school administration directly through its official numbers, or the admissions officer for any query related to your request.'} }
+];
+function toggleChat(){
+    const win = document.getElementById('chatWindow');
+    win.classList.toggle('open');
+    if(win.classList.contains('open')) renderChatQuickReplies();
+}
+function renderChatQuickReplies(){
+    const container = document.getElementById('chatQuick');
+    container.innerHTML = '';
+    chatFAQ.forEach(item=>{
+        const btn = document.createElement('button');
+        btn.textContent = item.q[currentLang];
+        btn.onclick = ()=> askChatQuestion(item.key);
+        container.appendChild(btn);
+    });
+}
+function askChatQuestion(key){
+    const item = chatFAQ.find(i=>i.key===key);
+    if(!item) return;
+    const body = document.getElementById('chatBody');
+    body.innerHTML += `<div class="chat-msg user"><div class="bubble">${item.q[currentLang]}</div></div>`;
+    body.innerHTML += `<div class="chat-msg bot"><div class="bubble">${item.a[currentLang]}</div></div>`;
+    body.scrollTop = body.scrollHeight;
+}
+
+// ---------------- ADMIN TABS ----------------
+function switchAdminTab(tabId){
+    document.querySelectorAll('.admin-tab').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById(tabId)?.classList.add('active');
+    document.querySelector(`.admin-tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
 }
 
 // ---------------- ADMIN: STAFF MANAGEMENT ----------------
