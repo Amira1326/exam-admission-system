@@ -13,50 +13,44 @@
         :root {
             --primary: #2B4570;
             --primary-dark: #1D2F4E;
-            --primary-gold: #D4AF37;
-            --primary-deep: #0D1625;
-            --primary-light: rgba(43, 69, 112, 0.08);
-            --navy: #1E293B;
-            --bg: #F8FAF7;
-            --card: rgba(255, 255, 255, 0.65); /* زجاجي شفاف جداً لصفحات الدخول والتسجيل */
-            --card-dashboard: rgba(255, 255, 255, 0.93); /* شفافية أخف ومقروئية أعلى للوحات التحكم */
-            --text: #0F172A;
-            --muted: #475569;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --info: #3B82F6;
-            --border: rgba(255, 255, 255, 0.45);
-            --border-inner: rgba(15, 23, 42, 0.08);
-            --shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.03);
-            --shadow-hover: 0 25px 50px -10px rgba(43, 69, 112, 0.2), 0 10px 20px -8px rgba(0, 0, 0, 0.05);
-            --gold-gradient: linear-gradient(135deg, #1D2F4E, #2B4570, #416299);
+            --primary-gold: #2B4570;
+            --primary-deep: #1D2F4E;
+            --primary-light: #E8EEF6;
+            --navy: #1F2A24;
+            --navy-light: #2E4038;
+            --bg: #FBF7EC;
+            --card: rgba(255,255,255,0.94);
+            --text: #1F2A24;
+            --muted: #7A8378;
+            --success: #2F9E63;
+            --danger: #D64545;
+            --warning: #D64545;
+            --info: #2B4570;
+            --border: rgba(31,42,36,.14);
+            --shadow: 0 16px 40px rgba(31,42,36,.10);
+            --shadow-hover: 0 24px 60px rgba(31,42,36,.18);
+            --gold-gradient: linear-gradient(135deg, #1D2F4E, #2B4570, #3E5C8A);
             --gold-solid: #2B4570;
             --redpen: #D64545;
+            --chalk-yellow: #F0B429;
             --font-main: 'IBM Plex Sans Arabic', sans-serif;
             --font-display: 'Lalezar', 'IBM Plex Sans Arabic', cursive;
             --font-mono: 'IBM Plex Mono', monospace;
-            --radius: 24px;
+            --radius: 22px;
             --radius-sm: 14px;
-            --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         [data-theme="dark"] {
-            --bg: #0B0F19;
-            --card: rgba(15, 23, 42, 0.65); /* زجاجي مظلم شفاف جداً */
-            --card-dashboard: rgba(15, 23, 42, 0.88); /* زجاجي داكن وتماسك أكبر للوحات */
-            --text: #F8FAFC;
-            --muted: #94A3B8;
-            --border: rgba(255, 255, 255, 0.12);
-            --border-inner: rgba(255, 255, 255, 0.06);
-            --primary: #60A5FA;
-            --primary-dark: #3B82F6;
-            --primary-light: rgba(96, 165, 250, 0.12);
-            --gold-solid: #F59E0B;
-            --navy: #F8FAFC;
-            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            --shadow-hover: 0 30px 60px rgba(0, 0, 0, 0.5);
-            --gold-gradient: linear-gradient(135deg, #1E293B, #334155, #475569);
+            --bg: #14201A;
+            --card: rgba(28,40,33,.92);
+            --text: #F2EEE2;
+            --muted: #9DAA9A;
+            --border: rgba(240,180,41,.18);
+            --primary: #6E93C7;
+            --primary-dark: #8FADD6;
+            --gold-solid: #6E93C7;
+            --navy: #F2EEE2;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -68,321 +62,350 @@
             color: var(--text);
             overflow-x: hidden;
             background: var(--bg);
-            transition: background-color var(--transition);
         }
 
         html[dir="ltr"] body { text-align: left; }
 
-        /* الخلفية الموحدة لجميع الأدوات وتسجيل الدخول */
         .animated-bg {
             position: fixed;
             inset: 0;
             z-index: -1;
-            background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px);
+            background-size: 100% 34px;
+            background-position: 0 64px;
+        }
+        [data-theme="dark"] .animated-bg {
+            background-color: var(--bg);
+            background-image: linear-gradient(var(--border) 1px, transparent 1px);
+            background-size: 100% 34px;
         }
 
-        /* طبقة تظليل ناعمة لضمان راحة العين وقراءة النصوص */
-        .animated-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(250, 249, 246, 0.45); /* فلتر كريمي خفيف جداً يبرز الخلفية */
-            transition: background-color var(--transition);
-        }
-        [data-theme="dark"] .animated-bg::before {
-            background: rgba(11, 15, 25, 0.75); /* فلتر ليلي ناعم */
-        }
+        .glowing-circles { display: none; }
+        .circle { display: none; }
 
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(43, 69, 112, 0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(43, 69, 112, 0.5); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
-        h1, h2, h3, h4, .page-title { font-family: var(--font-main); font-weight: 700; color: var(--navy); }
+        h1, h2, h3, h4, .page-title { font-family: var(--font-main); font-weight: 800; }
 
-        .app-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; position: relative; z-index: 1; }
+        .app-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 30px 18px; position: relative; z-index: 1; }
 
-        .page { display: none; width: 100%; max-width: 640px; margin: 0; padding: 0; }
-        .page.active { display: block; animation: fadeUp 0.6s var(--transition) forwards; }
-        .dashboard-page.active { max-width: 1220px; }
+        .page { display: none; width: 100%; max-width: 600px; margin: 0; padding: 0; }
+        .page.active { display: block; animation: fadeUp .7s var(--transition) forwards; }
+        .dashboard-page.active { max-width: 1100px; }
 
-        @keyframes fadeUp { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ===== SPLASH ===== */
+        /* ===== SPLASH: طابع السبورة المدرسية ===== */
         #pageSplash {
             max-width: 100% !important; width: 100%; height: 100vh;
             display: none; align-items: center; justify-content: center;
-            position: fixed; inset: 0; z-index: 1000; background: #141D2C;
+            position: fixed; inset: 0; z-index: 1000; background: #FBF7EC;
         }
         #pageSplash.active { display: flex; }
         .splash-bg {
             position: absolute; inset: 0;
             background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
             background-size: cover; background-position: center;
-            opacity: 0.25;
-            filter: blur(4px);
         }
-        .splash-content { position: relative; z-index: 2; text-align: center; padding: 40px; max-width: 600px; width: 100%; }
+        .splash-content { position: relative; z-index: 2; text-align: center; padding: 40px 30px; max-width: 580px; width: 100%; }
         .splash-content .logo-icon {
-            font-size: 72px; color: var(--primary-gold); margin-bottom: 24px; display: inline-block;
-            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-12px) rotate(3deg); }
+            font-size: 62px; color: #1D2F4E; margin-bottom: 18px; display: inline-block;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,.15));
         }
         .splash-title {
-            font-family: var(--font-main); font-size: 38px; font-weight: 800; color: #FFFFFF;
-            line-height: 1.4; margin-bottom: 12px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            font-family: var(--font-display); font-size: 54px; font-weight: 400; color: #1D2F4E;
+            line-height: 1.3; margin-bottom: 6px;
         }
-        .splash-title .gold { color: var(--primary-gold); }
-        .splash-title .light { display: block; font-size: 16px; font-weight: 500; color: #E2E8F0; margin-top: 12px; letter-spacing: 1px; }
+        .splash-title .gold { color: var(--primary); }
+        .splash-title .light { display: block; font-family: var(--font-main); font-size: 17px; font-weight: 500; color: #1D2F4E; letter-spacing: 2px; margin-top: 10px; }
         .splash-sub {
-            font-family: var(--font-main); font-size: 14px; color: #94A3B8; margin: 12px 0 32px; font-weight: 500;
+            font-family: var(--font-main); font-size: 14px; color: rgba(29,47,78,0.65); margin: 12px 0 30px; letter-spacing: 4px; font-weight: 400;
+            text-transform: uppercase;
         }
-        .splash-loader { display: flex; justify-content: center; gap: 8px; }
-        .splash-loader span { width: 12px; height: 12px; border-radius: 50%; background: var(--primary-gold); animation: dotPulse 1.2s ease-in-out infinite; }
+        .splash-loader { display: flex; justify-content: center; gap: 12px; }
+        .splash-loader span { width: 11px; height: 11px; border-radius: 50%; background: var(--redpen); animation: dotPulse 1.2s ease-in-out infinite; box-shadow: 0 2px 6px rgba(214,69,69,.3); }
         .splash-loader span:nth-child(2) { animation-delay: .15s; }
         .splash-loader span:nth-child(3) { animation-delay: .3s; }
         .splash-loader span:nth-child(4) { animation-delay: .45s; }
-        @keyframes dotPulse { 0%,80%,100%{ opacity:.2; transform:scale(.8);} 40%{ opacity:1; transform:scale(1.2);} }
+        @keyframes dotPulse { 0%,80%,100%{ opacity:.3; transform:scale(.7);} 40%{ opacity:1; transform:scale(1);} }
+        @keyframes splashPop { from{ opacity:0; transform:scale(.6) translateY(10px);} to{ opacity:1; transform:scale(1) translateY(0);} }
+        @keyframes splashUp { from{ opacity:0; transform:translateY(16px);} to{ opacity:1; transform:translateY(0);} }
+        @media (prefers-reduced-motion: reduce) {
+            .splash-content .logo-icon, .splash-title, .splash-sub, .splash-loader { animation: none !important; opacity: 1 !important; }
+        }
 
-        /* العناوين والتوصيف */
-        .page-title { font-size: 26px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; text-shadow: 0 1px 4px rgba(255,255,255,0.2); }
-        [data-theme="dark"] .page-title { text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+        .page-title { font-size: 26px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
         .page-title i { color: var(--gold-solid); }
-        .page-sub { color: var(--muted); margin-bottom: 24px; font-size: 14px; font-weight: 500; }
+        .page-sub { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
 
-        /* كروت اختيار الفروع والصلاحيات الفاخرة */
-        .branch-grid, .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 20px 0; }
+        .branch-grid, .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
         .branch-card, .role-btn {
-            padding: 32px 20px; border-radius: var(--radius); background: var(--card); border: 1.5px solid var(--border);
-            cursor: pointer; text-align: center; position: relative; overflow: hidden; box-shadow: var(--shadow);
-            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            padding: 24px 14px; border-radius: var(--radius-sm); background: var(--card); border: 2px solid var(--border);
+            cursor: pointer; text-align: center; position: relative; overflow: hidden;
             transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
         }
-        .branch-card:hover, .role-btn:hover { transform: translateY(-6px) scale(1.02); box-shadow: var(--shadow-hover); border-color: var(--primary-gold); }
-        .branch-card.active, .role-btn.active { border-color: var(--primary-gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.25), var(--shadow-hover); transform: translateY(-4px); }
-        
+        .branch-card:hover, .role-btn:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: var(--redpen); }
+        .branch-card.active, .role-btn.active { border-color: var(--redpen); box-shadow: 0 0 0 3px rgba(214,69,69,.15), var(--shadow-hover); transform: translateY(-5px) rotate(-0.4deg); }
         .branch-card::after, .role-btn::after {
-            content: '✓'; position: absolute; top: 12px; left: 12px; width: 26px; height: 26px; border-radius: 50%;
-            background: var(--primary-gold); color: #0F172A; font-weight: 700; font-size: 13px;
-            display: flex; align-items: center; justify-content: center; transform: scale(0);
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+            content: '✓'; position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 50%;
+            border: 2.5px solid var(--redpen); color: var(--redpen); font-weight: 700; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; transform: scale(0) rotate(-18deg);
             transition: transform .3s cubic-bezier(.34,1.56,.64,1);
         }
-        .branch-card.active::after, .role-btn.active::after { transform: scale(1); }
-        
-        .branch-card .branch-logo img { width: 85px; height: 85px; object-fit: contain; display: block; margin: 0 auto 12px; transition: transform var(--transition); }
-        .branch-card:hover .branch-logo img { transform: scale(1.08); }
-        .branch-card h3 { font-size: 17px; font-weight: 700; color: var(--navy); }
-        .branch-card p { font-size: 12px; color: var(--muted); margin-top: 4px; }
-        
-        .role-btn .icon { font-size: 38px; display: block; margin-bottom: 12px; color: var(--gold-solid); transition: transform var(--transition); }
-        .role-btn:hover .icon { transform: scale(1.15) rotate(-3deg); }
-        .role-btn { font-weight: 700; font-size: 16px; }
+        .branch-card.active::after, .role-btn.active::after { transform: scale(1) rotate(-12deg); }
+        .branch-card .branch-logo img { width: 70px; height: 70px; object-fit: contain; display: block; margin: 0 auto 6px; }
+        .branch-card h3 { font-size: 16px; margin-top: 6px; color: var(--navy); }
+        [data-theme="dark"] .branch-card h3 { color: var(--text); }
+        .branch-card p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .role-btn .icon { font-size: 32px; display: block; margin-bottom: 6px; color: var(--gold-solid); }
+        .role-btn { font-weight: 600; font-size: 15px; }
 
-        /* الأزرار */
-        .btn-group { display: flex; gap: 12px; margin-top: 24px; }
-        .btn { flex: 1; padding: 15px 24px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-family: var(--font-main); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .2s var(--transition), box-shadow .2s var(--transition), opacity .2s; }
-        .btn-primary { background: var(--gold-gradient); color: #fff; box-shadow: 0 6px 15px rgba(43, 69, 112, 0.25); border: 1.5px solid rgba(255,255,255,0.1); }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(43, 69, 112, 0.35); }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 14px 18px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-family: var(--font-main); cursor: pointer; position: relative; overflow: hidden; transition: transform .3s ease, box-shadow .3s ease; }
+        .btn-primary { background: var(--gold-gradient); color: #fff; box-shadow: 0 6px 24px rgba(200,155,60,.4); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 34px rgba(200,155,60,.5); }
         .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-        .btn-secondary { background: var(--card); border: 1.5px solid var(--border); color: var(--text); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); }
-        .btn-secondary:hover { background: rgba(255,255,255,0.9); transform: translateY(-2px); }
-        .btn-success { background: linear-gradient(135deg, #10B981, #059669); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
-        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3); }
-        
-        .btn-login { width: 100%; padding: 16px; border: none; border-radius: var(--radius-sm); background: var(--gold-gradient); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: var(--transition); box-shadow: 0 6px 18px rgba(43, 69, 112, 0.3); border: 1.5px solid rgba(255,255,255,0.1); }
-        .btn-login:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(43, 69, 112, 0.4); }
-        .btn-login:disabled { opacity:.5; cursor:not-allowed; }
-        .btn-logout { padding: 10px 18px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); font-weight: 700; font-size: 13px; color: var(--text); cursor: pointer; font-family: var(--font-main); transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
-        .btn-logout:hover { background: var(--danger); color: #fff; border-color: var(--danger); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .btn-secondary { background: var(--card); border: 2px solid var(--border); color: var(--text); }
+        .btn-secondary:hover { transform: translateY(-2px); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-login { width: 100%; padding: 17px; border: none; border-radius: var(--radius-sm); background: var(--gold-gradient); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 15px 35px rgba(200,155,60,.4); transition: var(--transition); }
+        .btn-login:hover { transform: translateY(-4px); box-shadow: 0 25px 50px rgba(200,155,60,.5); }
+        .btn-login:disabled { opacity:.5; cursor:not-allowed; transform:none !important; }
+        .btn-logout { padding: 10px 20px; border: 2px solid var(--border); border-radius: 10px; background: var(--card); font-weight: 600; cursor: pointer; font-family: var(--font-main); transition: var(--transition); }
+        .btn-logout:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
 
-        /* عناصر الاستمارات المدخلة */
-        .form-group { margin-bottom: 20px; text-align: right; }
+        .form-group { margin-bottom: 18px; text-align: right; }
         html[dir="ltr"] .form-group { text-align: left; }
-        .form-group label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 700; font-size: 13.5px; color: var(--navy); }
+        .form-group label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--navy); }
+        [data-theme="dark"] .form-group label { color: var(--text); }
         .form-group label i { color: var(--gold-solid); }
         .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 15px 18px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
-            background: rgba(255, 255, 255, 0.45); color: var(--text); font-family: var(--font-main); font-size: 14.5px; outline: none; transition: var(--transition);
+            width: 100%; padding: 16px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+            background: rgba(255,255,255,.6); color: var(--text); font-family: var(--font-main); font-size: 15px; outline: none; transition: .3s;
         }
-        [data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select { background: rgba(15, 23, 42, 0.45); }
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary-gold); background: var(--card); box-shadow: 0 0 12px rgba(212, 175, 55, 0.15); }
+        [data-theme="dark"] .form-group input, [data-theme="dark"] .form-group select { background: rgba(255,255,255,.06); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--gold-solid); box-shadow: 0 0 0 5px rgba(200,155,60,.15); }
 
-        /* نموذج تسجيل الطالب */
-        .student-form { background: var(--card); padding: 36px; border-radius: var(--radius); border: 1.5px solid var(--border); box-shadow: var(--shadow); position: relative; overflow: hidden; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
-        .student-form::before { content: ""; display: block; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gold-gradient); }
-        .form-section-label { display:flex; align-items:center; gap:10px; margin: 26px 0 18px; font-weight: 700; font-size: 14.5px; color: var(--primary); border-bottom: 1.5px dashed var(--border-inner); padding-bottom: 8px; }
-        .form-section-label:first-of-type { margin-top:0; }
-        .form-section-label .num { width:24px; height:24px; border-radius:50%; background: var(--primary-gold); color: #0F172A; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight: 800; font-family:var(--font-mono); flex-shrink:0; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3); }
+        .student-form { background: var(--card); padding: 30px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+        .form-section-label { display:flex; align-items:center; gap:10px; margin: 18px 0 12px; font-weight:700; font-size:14px; color:var(--primary); }
+        .form-section-label:first-child { margin-top:0; }
+        .form-section-label .num { width:22px; height:22px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-family:var(--font-mono); flex-shrink:0; }
+        #registrarSearch, #adminSearch { width:100%; padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border); background:rgba(255,255,255,.6); font-family:var(--font-main); font-size:14px; outline:none; }
+        #registrarSearch:focus, #adminSearch:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(43,69,112,.1); }
+        .tab-group { display:flex; gap:8px; margin-bottom:14px; }
+        .tab-btn { padding:8px 18px; border:1px solid var(--border); background:transparent; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer; font-family:var(--font-main); color:var(--muted); transition:var(--transition); }
+        .tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+        .student-form::before { content: ""; display: block; height: 4px; width: 70px; background: var(--gold-gradient); border-radius: 10px; margin-bottom: 20px; }
         .student-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-        /* صندوق تسجيل الدخول */
-        .login-box { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 36px; box-shadow: var(--shadow); position: relative; overflow: hidden; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
-        .login-box::before { content: ""; display: block; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--gold-gradient); }
-        .login-school-logo { text-align: center; margin-bottom: 24px; background: transparent !important; border: none !important; box-shadow: none !important; }
-        .login-school-logo img { max-height: 95px; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.08)); }
-        .login-school-logo .school-name { display: block; font-weight: 800; font-size: 21px; color: var(--navy); margin-top: 14px; text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
-        .login-school-logo .school-sub { display: block; font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 600; }
-        .login-school-logo .school-est { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; opacity: 0.8; font-family: var(--font-mono); }
+        .step-indicator { position:fixed; top:22px; left:50%; transform:translateX(-50%); z-index:50; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--card); border:1px solid var(--border); padding:8px 18px; border-radius:30px; box-shadow:var(--shadow); }
+        .step-indicator.hidden { display:none !important; }
+        .step-indicator .step { display:flex; align-items:center; gap:8px; }
+        .step-indicator .dot { width:26px; height:26px; border-radius:50%; background:var(--card); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--muted); transition:var(--transition); }
+        .step-indicator .step.active .dot { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .step-indicator .step.done .dot { background:var(--success); border-color:var(--success); color:#fff; }
+        .step-indicator .label { font-size:12px; font-weight:600; color:var(--muted); }
+        .step-indicator .step.active .label { color:var(--primary); font-weight:700; }
+        .step-indicator .line { width:28px; height:2px; background:var(--border); }
+        @media (max-width:480px){ .step-indicator .label{ display:none; } }
+        .admin-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; overflow-x:auto; }
+        .admin-tab-btn { padding:10px 18px; border:2px solid var(--border); background:var(--card); border-radius:12px; font-weight:700; font-size:13px; cursor:pointer; font-family:var(--font-main); color:var(--muted); display:flex; align-items:center; gap:6px; white-space:nowrap; transition:var(--transition); }
+        .admin-tab-btn:hover { border-color:var(--primary); color:var(--primary); }
+        .admin-tab-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .admin-tab { display:none; }
+        .admin-tab.active { display:block; }
+        .login-school-logo { text-align: center; margin-bottom: 24px; padding: 0; background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; }
 
-        .age-display { margin-top: 8px; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-        .age-display.valid { background: rgba(16, 185, 129, 0.12); color: var(--success); }
-        .age-display.invalid { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+        /* ===== CHAT BOT ===== */
+        .chat-toggle {
+            position:fixed; bottom:26px; left:26px; width:58px; height:58px; border-radius:50%;
+            background:var(--gold-gradient); color:#fff; border:none; font-size:24px; cursor:pointer;
+            box-shadow:0 10px 30px rgba(43,69,112,.35); z-index:997; display:flex; align-items:center; justify-content:center;
+        }
+        html[dir="ltr"] .chat-toggle { left:auto; right:26px; }
+        .chat-toggle:hover { transform:scale(1.08); }
+        .chat-window {
+            position:fixed; bottom:96px; left:26px; width:340px; max-width:88vw; max-height:460px;
+            background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-hover);
+            display:none; flex-direction:column; overflow:hidden; z-index:997;
+        }
+        html[dir="ltr"] .chat-window { left:auto; right:26px; }
+        .chat-window.open { display:flex; }
+        .chat-header { background:var(--gold-gradient); color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; font-weight:700; }
+        .chat-header button { background:none; border:none; color:#fff; font-size:18px; cursor:pointer; }
+        .chat-body { padding:14px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px; }
+        .chat-msg { display:flex; }
+        .chat-msg.user { justify-content:flex-end; }
+        .chat-msg .bubble { max-width:85%; padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.7; background:#fff; border:1px solid var(--border); }
+        .chat-msg.user .bubble { background:var(--primary); color:#fff; border:none; }
+        .chat-quick { padding:12px 14px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:8px; max-height:150px; overflow-y:auto; }
+        .chat-quick button { padding:7px 14px; border-radius:16px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font-main); color:var(--text); }
+        .chat-quick button:hover { border-color:var(--primary); color:var(--primary); }
+        @media (max-width:480px){ .chat-toggle{ width:50px; height:50px; font-size:20px; bottom:18px; left:18px;} html[dir="ltr"] .chat-toggle{left:auto;right:18px;} .chat-window{ bottom:78px; left:12px; right:12px; width:auto; } html[dir="ltr"] .chat-window{left:12px;right:12px;} }
+        .login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); }
+        .login-box .login-school-logo { margin-bottom: 12px; }
+        .login-box .login-school-logo img { max-height: 130px; }
+        .login-box .login-school-logo .school-name { font-size: 17px; }
+        .login-box .login-school-logo .school-sub { font-size: 11px; }
+        .login-box .login-school-logo .school-est { font-size: 11px; }
+        .login-box .form-group { margin-bottom: 12px; }
+        .login-box .form-group input { padding: 11px 16px; }
+        .login-school-logo img { max-height: 100px; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.1)); }
+        .login-school-logo .school-name { display: block; font-weight: 900; font-size: 24px; color: var(--navy); margin-top: 10px; letter-spacing: 0.5px; }
+        [data-theme="dark"] .login-school-logo .school-name { color: var(--text); }
+        .login-school-logo .school-name.gold { color: var(--gold-solid); text-shadow: 0 2px 8px rgba(200,155,60,0.2); }
+        .login-school-logo .school-sub { display: block; font-size: 14px; color: var(--muted); margin-top: 2px; letter-spacing: 1px; font-weight: 400; }
+        .login-school-logo .school-sub.gold { color: var(--gold-solid); font-weight: 500; }
+        .login-school-logo .school-est { display: block; font-size: 13px; color: var(--muted); margin-top: 4px; letter-spacing: 2px; font-weight: 300; }
 
-        /* بطاقات المواد */
-        .subjects-card { margin-top: 24px; padding: 24px; border-radius: var(--radius-sm); background: var(--primary-light); border: 1.5px solid var(--border); backdrop-filter: blur(8px); }
-        .subjects-card h3 { color: var(--primary); margin-bottom: 12px; font-size: 15px; font-weight: 700; }
+        .age-display { margin-top: 8px; display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .age-display.valid { background: rgba(31,167,116,.15); color: #1FA774; }
+        .age-display.invalid { background: rgba(217,83,79,.15); color: #D9534F; }
+
+        .subjects-card { margin-top: 20px; padding: 25px; border-radius: var(--radius); background: linear-gradient(135deg, rgba(200,155,60,.1), rgba(255,255,255,.8)); border: 1px solid var(--border); }
+        [data-theme="dark"] .subjects-card { background: linear-gradient(135deg, rgba(200,155,60,.12), rgba(255,255,255,.03)); }
+        .subjects-card h3 { color: var(--navy); margin-bottom: 10px; }
+        [data-theme="dark"] .subjects-card h3 { color: var(--text); }
         .subjects-list { display: flex; flex-wrap: wrap; gap: 10px; }
-        .subject-tag { padding: 8px 18px; border-radius: 30px; background: var(--card); border: 1.5px solid var(--border); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow); display: inline-flex; align-items: center; gap: 8px; }
+        .subject-tag { padding: 8px 20px; border-radius: 30px; background: #fff; border: 1px solid var(--border); font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
+        [data-theme="dark"] .subject-tag { background: rgba(255,255,255,.05); }
 
-        /* شاشة الانتظار والمراجعة */
-        .waiting-message { background: var(--card); padding: 40px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); border: 1.5px solid var(--border); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
-        .waiting-message .icon { width: 75px; height: 75px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-light); font-size: 34px; color: var(--primary); }
-        .status-badge { padding: 8px 24px; border-radius: 30px; font-weight: 700; display: inline-block; font-size: 13px; margin-top: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-        .status-badge.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-        .status-badge.approved { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-        .status-badge.rejected { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .waiting-message { background: var(--card); padding: 35px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+        .waiting-message .icon { width: 80px; height: 80px; margin: auto; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(200,155,60,.12); font-size: 40px; color: var(--gold-solid); }
+        .status-badge { padding: 10px 28px; border-radius: 30px; font-weight: 600; display: inline-block; }
+        .status-badge.pending { background: rgba(196,154,53,.15); color: var(--gold-solid); }
+        .status-badge.approved { background: rgba(46,204,113,.15); color: #2ECC71; }
+        .status-badge.rejected { background: rgba(255,107,107,.15); color: #FF6B6B; }
 
-        /* عناصر لوحات التحكم (شفافية متماسكة لسهولة القراءة والتركيز) */
-        .dashboard-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; align-items: center; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px; }
-        .stat-card { padding: 26px 20px; border-radius: var(--radius-sm); background: var(--card-dashboard); border: 1.5px solid var(--border); text-align: center; transition: transform var(--transition), box-shadow var(--transition); box-shadow: var(--shadow); backdrop-filter: blur(24px); }
-        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary-gold); }
-        .stat-card .stat-value { font-family: var(--font-mono); font-size: 34px; font-weight: 700; color: var(--gold-solid); }
-        .stat-card .stat-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 700; }
+        .dashboard-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; }
 
-        /* الحاويات الرئيسية للوحات التحكم */
-        .dashboard-section { background: var(--card-dashboard); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 26px; margin-bottom: 24px; box-shadow: var(--shadow); position: relative; backdrop-filter: blur(24px); }
-        .dashboard-section h4 { margin-bottom: 18px; font-weight: 700; font-size: 18.5px; display: flex; align-items: center; gap: 10px; color: var(--navy); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+        .stat-card { padding: 20px 16px; border-radius: var(--radius-sm); background: var(--card); border: 1px solid var(--border); text-align: center; transition: transform var(--transition), box-shadow var(--transition); backdrop-filter: blur(8px); }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--gold-solid); }
+        .stat-card .stat-value { font-family: var(--font-mono); font-size: 30px; font-weight: 600; color: var(--navy); }
+        [data-theme="dark"] .stat-card .stat-value { color: var(--text); }
+        .stat-card .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+        .dashboard-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 18px; backdrop-filter: blur(12px); position: relative; }
+        .dashboard-section h4 { margin-bottom: 14px; font-weight: 800; font-size: 19px; display: flex; align-items: center; gap: 10px; }
         .dashboard-section h4 i { color: var(--gold-solid); }
-        .dashboard-section::before { content: ''; position: absolute; top: 0; right: 26px; width: 60px; height: 4px; background: var(--gold-gradient); border-radius: 0 0 4px 4px; }
-        html[dir="ltr"] .dashboard-section::before { right: auto; left: 26px; }
+        .dashboard-section::before { content: ''; position: absolute; top: 0; right: 24px; width: 50px; height: 3px; background: var(--gold-gradient); border-radius: 0 0 4px 4px; }
+        html[dir="ltr"] .dashboard-section::before { right: auto; left: 24px; }
 
-        /* الجداول */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        .data-table th { text-align: right; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 14px 10px; border-bottom: 2px solid var(--border-inner); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: right; font-size: 12px; color: var(--muted); padding: 8px; border-bottom: 2px solid var(--border); }
         html[dir="ltr"] .data-table th { text-align: left; }
-        .data-table td { padding: 14px 10px; font-size: 13.5px; border-bottom: 1.5px solid var(--border-inner); color: var(--text); font-weight: 500; }
-        .data-table tbody tr:hover { background: var(--primary-light); }
-        .empty-state { text-align: center; padding: 30px; color: var(--muted); font-size: 13.5px; font-weight: 600; }
+        .data-table td { padding: 10px 8px; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .empty-state { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
 
-        .badge-status { padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 700; display: inline-block; text-align: center; }
-        .badge-status.pending { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
-        .badge-status.accepted { background: rgba(16, 185, 129, 0.12); color: var(--success); }
-        .badge-status.rejected { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-        .badge-status.corrected { background: rgba(59, 130, 246, 0.12); color: var(--info); }
-        .badge-status.waiting { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+        .badge-status { padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge-status.pending { background: rgba(196,154,53,.15); color: var(--gold-solid); }
+        .badge-status.accepted { background: rgba(46,204,113,.15); color: #2ECC71; }
+        .badge-status.rejected { background: rgba(255,107,107,.15); color: #FF6B6B; }
+        .badge-status.corrected { background: rgba(52,152,219,.15); color: #2980b9; }
+        .badge-status.waiting { background: rgba(196,154,53,.15); color: var(--gold-solid); }
 
-        .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-mini { padding: 6px 12px; border: none; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: var(--font-main); transition: .2s; display: inline-flex; align-items: center; gap: 4px; }
+        .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-mini { padding: 5px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font-main); transition: .2s; }
         .btn-mini:hover { transform: scale(1.05); }
-        .btn-mini.neutral { background: var(--primary-light); color: var(--primary); }
-        .btn-mini.reject { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-        .btn-mini.view { background: var(--primary-light); color: var(--primary); }
+        .btn-mini.accept { background: rgba(46,204,113,.15); color: #2ECC71; }
+        .btn-mini.reject { background: rgba(255,107,107,.15); color: #FF6B6B; }
+        .btn-mini.neutral { background: var(--primary-light); color: var(--gold-solid); }
+        .btn-mini.exam-btn { background: rgba(52,152,219,.15); color: #2980b9; }
+        .btn-mini.view { background: rgba(196,154,53,.15); color: var(--gold-solid); }
 
-        /* بطاقات طلبات التسجيل */
-        .request-card { background: var(--card-dashboard); border: 1.5px solid var(--border-inner); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 12px; transition: var(--transition); box-shadow: var(--shadow); }
-        .request-card:hover { border-color: var(--primary-gold); }
-        .request-info { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; align-items: center; }
-        .request-info span { background: var(--primary-light); padding: 4px 12px; border-radius: 8px; color: var(--text); font-weight: 600; }
-        .request-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-        .request-actions .btn-sm { padding: 8px 16px; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; font-family: var(--font-main); display: inline-flex; align-items: center; gap: 6px; transition: transform .2s; }
-        .request-actions .btn-sm:hover { transform: translateY(-2px); }
-        .request-actions .btn-sm.approve { background: var(--success); color: #fff; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); }
-        .request-actions .btn-sm.reject { background: var(--danger); color: #fff; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2); }
-        .request-actions .btn-sm.exam { background: var(--primary); color: #fff; }
-        .request-actions .btn-sm.view-score { background: var(--primary-light); color: var(--primary); }
+        .request-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 10px; transition: var(--transition); }
+        .request-card:hover { border-color: var(--gold-solid); }
+        .request-info { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+        .request-info span { background: var(--bg); padding: 2px 10px; border-radius: 8px; }
+        .request-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .request-actions .btn-sm { padding: 6px 16px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; font-family: var(--font-main); }
+        .request-actions .btn-sm.approve { background: #2ECC71; color: #fff; }
+        .request-actions .btn-sm.reject { background: #FF6B6B; color: #fff; }
+        .request-actions .btn-sm.exam { background: var(--gold-gradient); color: #fff; }
+        .request-actions .btn-sm.view-score { background: rgba(52,152,219,.15); color: #2980b9; }
 
-        /* التبويبات والمقاييس والرسوم البيانية */
-        .tab-group { display:flex; gap:8px; margin-bottom:18px; }
-        .tab-btn { padding:10px 22px; border:1.5px solid var(--border); background:var(--card-dashboard); border-radius:30px; font-weight: 700; font-size:13px; cursor:pointer; font-family:var(--font-main); color:var(--muted); transition:var(--transition); box-shadow: var(--shadow); }
-        .tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-
-        .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
-        .chart-box { background: var(--card-dashboard); border: 1.5px solid var(--border-inner); border-radius: var(--radius-sm); padding: 18px; box-shadow: var(--shadow); }
-        .chart-box h5 { font-size: 13px; margin-bottom: 12px; color: var(--muted); font-weight: 700; text-align: center; }
+        .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+        .chart-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
+        .chart-box h5 { font-size: 13px; margin-bottom: 8px; color: var(--muted); font-weight: 500; }
         .chart-box canvas { max-height: 180px; width: 100% !important; }
 
-        .admin-question-form { display: grid; gap: 12px; margin-top: 12px; }
-        .qa-list-item { background: var(--card-dashboard); border: 1.5px solid var(--border-inner); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 10px; font-size: 13px; display: flex; justify-content: space-between; gap: 12px; align-items: center; box-shadow: var(--shadow); }
+        .admin-question-form { display: grid; gap: 10px; margin-top: 10px; }
+        .qa-list-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 
-        /* النوافذ المودال الزجاجية */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
         .modal-overlay.open { display: flex; }
-        .modal-box { background: var(--card-dashboard); color: var(--text); border-radius: var(--radius); padding: 32px; max-width: 600px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); animation: zoomIn .3s var(--transition); border: 1.5px solid var(--border); backdrop-filter: blur(24px); }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        .modal-title { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18.5px; margin-bottom: 18px; border-bottom: 1.5px solid var(--border-inner); padding-bottom: 12px; }
-        .modal-close { margin-right: auto; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+        .modal-box { background: #fff; color:#1E1B16; border-radius: var(--radius); padding: 28px; max-width: 600px; width: 100%; max-height: 88vh; overflow-y: auto; animation: fadeUp .4s var(--transition); }
+        .modal-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; margin-bottom: 14px; }
+        .modal-close { margin-right: auto; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); }
         .modal-close:hover { color: var(--danger); }
 
-        /* التنبيهات */
-        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 12px; max-width: 380px; }
-        html[dir="ltr"] .toast-container { right: auto; left: 24px; }
-        .toast { padding: 16px 20px; border-radius: var(--radius-sm); background: var(--card-dashboard); color: var(--text); border: 1.5px solid var(--border); border-right: 5px solid var(--primary); font-weight: 700; font-size: 13.5px; box-shadow: var(--shadow-hover); display: flex; gap: 12px; align-items: center; animation: slideIn .3s var(--transition); backdrop-filter: blur(12px); }
-        html[dir="ltr"] .toast { border-right: 1.5px solid var(--border); border-left: 5px solid var(--primary); }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 380px; }
+        html[dir="ltr"] .toast-container { right: auto; left: 20px; }
+        .toast { padding: 14px 20px; border-radius: var(--radius-sm); background: #fff; color:#1E1B16; border: 1px solid var(--border); border-right: 5px solid var(--gold-solid); font-weight: 600; font-size: 13px; box-shadow: var(--shadow-hover); display: flex; gap: 12px; align-items: center; animation: slideIn .4s var(--transition); }
+        html[dir="ltr"] .toast { border-right: 1px solid var(--border); border-left: 5px solid var(--gold-solid); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
         .toast.success { border-right-color: var(--success); } html[dir="ltr"] .toast.success { border-left-color: var(--success); }
         .toast.error { border-right-color: var(--danger); } html[dir="ltr"] .toast.error { border-left-color: var(--danger); }
         .toast.warning { border-right-color: var(--warning); } html[dir="ltr"] .toast.warning { border-left-color: var(--warning); }
         .toast.info { border-right-color: var(--info); } html[dir="ltr"] .toast.info { border-left-color: var(--info); }
         .toast-close { margin-right: auto; background: none; border: none; cursor: pointer; color: var(--muted); }
 
-        /* شاشات التحميل قبل الاختبار */
-        .exam-loader { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 99999; }
+        .exam-loader { position: fixed; inset: 0; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 99999; }
         .exam-loader.open { display: flex; }
-        .loader-progress { width: 260px; height: 6px; background: var(--border-inner); border-radius: 10px; overflow: hidden; }
+        .loader-progress { width: 260px; height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; }
         .loader-progress .bar { height: 100%; width: 0%; background: var(--gold-gradient); transition: width .3s; }
 
-        .spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid var(--primary-light); border-top: 3px solid var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(196,154,53,.2); border-top: 3px solid var(--gold-solid); border-radius: 50%; animation: spin .7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* أزرار التحكم العلوي */
         .top-controls { position: fixed; top: 24px; left: 24px; z-index: 999; display: flex; gap: 10px; }
         html[dir="ltr"] .top-controls { left: auto; right: 24px; }
         .theme-toggle, .lang-toggle {
-            width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--card);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 14px; cursor: pointer; color: var(--text); transition: var(--transition); box-shadow: var(--shadow);
+            width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); background: var(--card);
+            backdrop-filter: blur(12px); font-size: 15px; cursor: pointer; color: var(--text); transition: var(--transition); box-shadow: var(--shadow);
             display: flex; align-items: center; justify-content: center; font-weight: 800;
         }
-        .theme-toggle:hover, .lang-toggle:hover { transform: scale(1.1); border-color: var(--primary-gold); }
+        .theme-toggle { font-size: 18px; }
+        .theme-toggle:hover, .lang-toggle:hover { transform: scale(1.1); }
 
-        @media (max-width: 992px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .chart-grid { grid-template-columns: 1fr; }
-        }
         @media (max-width: 768px) {
+            .stats-grid, .chart-grid { grid-template-columns: 1fr 1fr; }
             .student-form .form-row { grid-template-columns: 1fr; }
-            .splash-title { font-size: 28px; }
+            .splash-title { font-size: 32px; }
+            .splash-title .light { font-size: 17px; }
+            .dashboard-section { padding: 16px; }
+            .branch-grid, .role-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .page-title { font-size: 22px; }
             .top-controls { top: 16px; left: 16px; }
             html[dir="ltr"] .top-controls { left: auto; right: 16px; }
-            .theme-toggle, .lang-toggle { width: 40px; height: 40px; font-size: 13px; }
+            .theme-toggle, .lang-toggle { width: 40px; height: 40px; font-size: 14px; }
+            .login-school-logo img { max-height: 70px; }
+            .login-school-logo .school-name { font-size: 18px; }
         }
         @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr; }
+            .stats-grid, .chart-grid { grid-template-columns: 1fr; }
             .branch-grid, .role-grid { grid-template-columns: 1fr; }
-            .app-wrapper { padding: 16px 12px; }
-            .modal-box { padding: 24px; }
+            .app-wrapper { padding: 16px 10px; }
+            .modal-box { padding: 20px; }
+            .splash-title { font-size: 26px; }
+            .splash-content .logo-icon { font-size: 48px; }
+            .login-school-logo img { max-height: 60px; }
+            .login-school-logo .school-name { font-size: 16px; }
+            .login-school-logo .school-sub { font-size: 12px; }
         }
-        
-        .hidden { display: none !important; }
-        .ajyal-section-group, .nationality-group { display: none; }
-        .ajyal-section-group.show, .nationality-group.show { display: block; }
     </style>
 </head>
 <body>
-    <div class="animated-bg"></div>
+    <div class="animated-bg">
+        <div class="glowing-circles">
+            <div class="circle"></div><div class="circle"></div><div class="circle"></div><div class="circle"></div><div class="circle"></div>
+        </div>
+    </div>
 
     <div class="toast-container" id="toastContainer"></div>
     <div class="top-controls">
@@ -392,8 +415,16 @@
 
     <div class="exam-loader" id="examLoader">
         <div class="spinner" style="width:50px;height:50px;border-width:5px;"></div>
-        <div style="font-weight:700;font-size:18px;color:var(--text);" data-i18n="loaderText">جاري التحضير...</div>
+        <div style="font-weight:700;font-size:20px;color:var(--text);" data-i18n="loaderText">جاري التحضير...</div>
         <div class="loader-progress"><div class="bar" id="loaderBar"></div></div>
+    </div>
+
+    <div class="step-indicator hidden" id="stepIndicator">
+        <div class="step" id="step1"><div class="dot">1</div><span class="label" data-i18n="stepBranch">الفرع</span></div>
+        <div class="line"></div>
+        <div class="step" id="step2"><div class="dot">2</div><span class="label" data-i18n="stepRole">الصلاحية</span></div>
+        <div class="line"></div>
+        <div class="step" id="step3"><div class="dot">3</div><span class="label" data-i18n="stepDetails">البيانات</span></div>
     </div>
 
     <div class="app-wrapper">
@@ -451,30 +482,28 @@
         <!-- LOGIN -->
         <div class="page" id="pageLogin">
             <div class="login-box">
-                <div class="login-school-logo" id="schoolLogoContainer">
-                    <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
-                    <span class="school-name gold" id="schoolNameDisplay"></span>
-                    <span class="school-sub" id="schoolSubDisplay"></span>
-                    <span class="school-est" id="schoolEstDisplay"></span>
-                </div>
-                <div style="text-align:center; margin-bottom: 24px;">
-                    <div class="page-title" style="justify-content:center;font-size:20px;margin-bottom:2px;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
-                    <div class="page-sub" style="margin-bottom:0;" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> <span data-i18n="emailLabel">البريد الإلكتروني</span></label>
-                    <input type="email" id="loginEmail" placeholder="name@school.com" />
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-key"></i> <span data-i18n="passwordLabel">كلمة المرور</span></label>
-                    <input type="password" id="loginPassword" placeholder="••••••••" />
-                </div>
-                <button class="btn-login" id="loginBtn" onclick="login()"><i class="fas fa-right-to-bracket"></i> <span data-i18n="loginBtn">تسجيل الدخول</span></button>
-                <div id="loginStatus" style="margin-top:12px;font-size:13px;font-weight:600;text-align:center;"></div>
-                <div class="btn-group" style="margin-top:14px;">
-                    <button class="btn btn-secondary" onclick="backToRoleFromForm()" style="width:100%;"><i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span></button>
-                </div>
+            <div class="login-school-logo" id="schoolLogoContainer">
+                <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
             </div>
+            <div style="text-align:center; margin-bottom: 12px;">
+                <div style="font-size:34px; color:var(--gold-solid); margin-bottom:4px;"><i class="fas fa-lock"></i></div>
+                <div class="page-title" style="justify-content:center;font-size:20px;margin-bottom:2px;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
+                <div class="page-sub" style="margin-bottom:0;" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> <span data-i18n="emailLabel">البريد الإلكتروني</span></label>
+                <input type="email" id="loginEmail" placeholder="name@school.com" />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> <span data-i18n="passwordLabel">كلمة المرور</span></label>
+                <input type="password" id="loginPassword" placeholder="••••••••" />
+            </div>
+            <button class="btn-login" id="loginBtn" onclick="login()"><i class="fas fa-right-to-bracket"></i> <span data-i18n="loginBtn">تسجيل الدخول</span></button>
+            <div id="loginStatus" style="margin-top:12px;font-size:13px;font-weight:600;"></div>
+            <div class="btn-group" style="margin-top:14px;">
+                <button class="btn btn-secondary" onclick="backToRoleFromForm()" style="width:100%;"><i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span></button>
+            </div>
+          </div>
         </div>
 
         <!-- STUDENT REGISTER -->
@@ -558,7 +587,7 @@
                         </select>
                     </div>
                     <button class="btn-login" id="registerBtn" onclick="registerStudent()"><i class="fas fa-paper-plane"></i> <span data-i18n="registerBtn">تسجيل الطالب</span></button>
-                    <div id="studentStatus" style="margin-top:12px;font-size:13px;font-weight:600;text-align:center;"></div>
+                    <div id="studentStatus" style="margin-top:12px;font-size:13px;font-weight:600;"></div>
                     <div id="subjectsMessage" class="hidden">
                         <div class="subjects-card">
                             <h3 data-i18n="subjectsTitle">📢 ستختبر في المواد التالية:</h3>
@@ -573,10 +602,10 @@
             <div id="waitingMessage" class="waiting-message hidden">
                 <div class="icon"><i class="fas fa-clock"></i></div>
                 <h3 data-i18n="waitingTitle">⏳ بانتظار موافقة مسؤول القبول</h3>
-                <p style="margin:8px 0; color: var(--muted);" data-i18n="waitingDesc">تم تسجيل بياناتك بنجاح! احتفظ برقم هويتك ورمزك السري للتحقق من حالتك لاحقاً.</p>
+                <p style="margin:8px 0;" data-i18n="waitingDesc">تم تسجيل بياناتك بنجاح! احتفظ برقم هويتك ورمزك السري للتحقق من حالتك لاحقاً.</p>
                 <div class="status-badge pending" id="studentStatusBadge">🔄 قيد المراجعة</div>
                 <br />
-                <div class="form-group" style="margin-top:24px;">
+                <div class="form-group" style="margin-top:14px;">
                     <label data-i18n="idLabelShort">رقم الهوية</label>
                     <input type="text" id="checkNationalId" data-i18n-placeholder="idPh" placeholder="أدخل رقم هويتك" />
                 </div>
@@ -649,7 +678,7 @@
                 <div><div class="page-title"><i class="fas fa-user-shield"></i> <span data-i18n="adminDashTitle">لوحة مدير النظام</span></div>
                 <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="adminNameDisplay">مدير النظام</strong></div></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <button class="btn btn-success" onclick="generatePDFReport()"><i class="fas fa-file-pdf"></i> <span data-i18n="pdfReportBtn">تقرير PDF</span></button>
+                    <button class="btn btn-success" onclick="generatePDFReport()" style="padding:10px 18px;border:none;border-radius:10px;font-weight:700;font-family:var(--font-main);cursor:pointer;"><i class="fas fa-file-pdf"></i> <span data-i18n="pdfReportBtn">تقرير PDF</span></button>
                     <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></button>
                 </div>
             </div>
@@ -659,7 +688,13 @@
                 <div class="stat-card"><div class="stat-value" id="adminStatBranches">2</div><div class="stat-label" data-i18n="statBranches">الفروع</div></div>
                 <div class="stat-card"><div class="stat-value" id="adminStatAvg">0</div><div class="stat-label" data-i18n="statAvg">متوسط الدرجات</div></div>
             </div>
-            <div class="dashboard-section">
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="tabStats" onclick="switchAdminTab('tabStats')"><i class="fas fa-chart-pie"></i> <span data-i18n="statsTitle">الإحصائيات</span></button>
+                <button class="admin-tab-btn" data-tab="tabStaff" onclick="switchAdminTab('tabStaff')"><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">الموظفين</span></button>
+                <button class="admin-tab-btn" data-tab="tabQuestions" onclick="switchAdminTab('tabQuestions')"><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">الأسئلة</span></button>
+                <button class="admin-tab-btn" data-tab="tabRequests" onclick="switchAdminTab('tabRequests')"><i class="fas fa-clipboard-list"></i> <span data-i18n="recentRequestsTitle">الطلبات</span></button>
+            </div>
+            <div class="dashboard-section admin-tab active" id="tabStats">
                 <h4><i class="fas fa-chart-pie"></i> <span data-i18n="statsTitle">الإحصائيات</span></h4>
                 <div class="chart-grid">
                     <div class="chart-box"><h5 data-i18n="byGrade">حسب المرحلة</h5><canvas id="gradeChart"></canvas></div>
@@ -667,7 +702,7 @@
                     <div class="chart-box"><h5 data-i18n="byStatus">حسب الحالة</h5><canvas id="statusChart"></canvas></div>
                 </div>
             </div>
-            <div class="dashboard-section">
+            <div class="dashboard-section admin-tab" id="tabStaff">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">إدارة حسابات الموظفين</span></h4>
                 <p class="page-sub" data-i18n="staffMgmtSub">أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام</p>
                 <div class="admin-question-form">
@@ -681,10 +716,10 @@
                     </select>
                     <button class="btn btn-primary" onclick="createStaffUser()" id="createStaffBtn"><span data-i18n="createStaffBtn">إنشاء الحساب</span></button>
                 </div>
-                <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;text-align:center;"></div>
+                <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
                 <div id="staffList" style="margin-top:14px;"></div>
             </div>
-            <div class="dashboard-section">
+            <div class="dashboard-section admin-tab" id="tabQuestions">
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">إدارة الأسئلة</span></h4>
                 <p class="page-sub" data-i18n="questionMgmtSub">أضف أسئلة الاختبار (اختياري) للمادة والمرحلة المطلوبة</p>
                 <div class="admin-question-form">
@@ -727,7 +762,7 @@
                 <div id="questionsListSummary" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--gold-solid);"></div>
                 <div id="questionsList" style="margin-top:10px;"></div>
             </div>
-            <div class="dashboard-section">
+            <div class="dashboard-section admin-tab" id="tabRequests">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
                 <input type="text" id="adminSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterAdminList()" style="margin-bottom:14px;" />
                 <table class="data-table">
@@ -744,6 +779,18 @@
                 <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button></div>
             <div id="modalContent"></div>
         </div>
+    </div>
+
+    <button class="chat-toggle" onclick="toggleChat()" id="chatToggle"><i class="fas fa-comment-dots"></i></button>
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div><i class="fas fa-comment-dots"></i> <span data-i18n="chatTitle">مساعد المنصة</span></div>
+            <button onclick="toggleChat()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="chat-msg bot"><div class="bubble" data-i18n="chatWelcome">👋 أهلاً! اختر سؤال من الأسفل وبجاوبك فوراً.</div></div>
+        </div>
+        <div class="chat-quick" id="chatQuick"></div>
     </div>
 
     <script src="./supabase-config.js"></script>
