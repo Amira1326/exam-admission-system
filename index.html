@@ -191,6 +191,14 @@
         .form-group input:focus, .form-group select:focus { border-color: var(--gold-solid); box-shadow: 0 0 0 5px rgba(200,155,60,.15); }
 
         .student-form { background: var(--card); padding: 30px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+        .form-section-label { display:flex; align-items:center; gap:10px; margin: 18px 0 12px; font-weight:700; font-size:14px; color:var(--primary); }
+        .form-section-label:first-child { margin-top:0; }
+        .form-section-label .num { width:22px; height:22px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-family:var(--font-mono); flex-shrink:0; }
+        #registrarSearch, #adminSearch { width:100%; padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border); background:rgba(255,255,255,.6); font-family:var(--font-main); font-size:14px; outline:none; }
+        #registrarSearch:focus, #adminSearch:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(43,69,112,.1); }
+        .tab-group { display:flex; gap:8px; margin-bottom:14px; }
+        .tab-btn { padding:8px 18px; border:1px solid var(--border); background:transparent; border-radius:20px; font-weight:700; font-size:13px; cursor:pointer; font-family:var(--font-main); color:var(--muted); transition:var(--transition); }
+        .tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
         .student-form::before { content: ""; display: block; height: 4px; width: 70px; background: var(--gold-gradient); border-radius: 10px; margin-bottom: 20px; }
         .student-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
@@ -453,6 +461,7 @@
             <div class="page-sub" data-i18n="registerSub">أدخل بيانات الطالب للتسجيل</div>
             <div id="registerForm">
                 <div class="student-form">
+                    <div class="form-section-label"><span class="num">1</span><span data-i18n="sectionPersonal">البيانات الأساسية</span></div>
                     <div class="form-group">
                         <label><i class="fas fa-user"></i> <span data-i18n="fullNameLabel">الاسم الكامل</span></label>
                         <input type="text" id="studentName" data-i18n-placeholder="fullNamePh" placeholder="أدخل الاسم رباعياً" />
@@ -461,17 +470,6 @@
                         <div class="form-group">
                             <label><i class="fas fa-id-card"></i> <span data-i18n="idLabel">رقم الهوية (10 أرقام)</span></label>
                             <input type="text" id="studentId" maxlength="10" placeholder="1234567890" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-phone"></i> <span data-i18n="phoneLabel">رقم الجوال (966+10 أرقام)</span></label>
-                            <input type="text" id="studentPhone" maxlength="13" placeholder="966512345678" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> <span data-i18n="birthdateLabel">تاريخ الميلاد</span></label>
-                            <input type="date" id="studentBirthdate" onchange="calculateAge()" />
-                            <span id="ageDisplay" class="age-display"></span>
                         </div>
                         <div class="form-group">
                             <label><i class="fas fa-venus-mars"></i> <span data-i18n="genderLabel">الجنس</span></label>
@@ -484,6 +482,11 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> <span data-i18n="birthdateLabel">تاريخ الميلاد</span></label>
+                            <input type="date" id="studentBirthdate" onchange="calculateAge()" />
+                            <span id="ageDisplay" class="age-display"></span>
+                        </div>
+                        <div class="form-group">
                             <label><i class="fas fa-flag"></i> <span data-i18n="typeLabel">التصنيف</span></label>
                             <select id="studentNationalityType" onchange="toggleNationalities()">
                                 <option value="" data-i18n="chooseOpt">-- اختر --</option>
@@ -491,11 +494,19 @@
                                 <option value="foreign" data-i18n="typeForeign">🌍 أجنبي</option>
                             </select>
                         </div>
-                        <div class="form-group nationality-group" id="nationalitySpecific">
-                            <label><i class="fas fa-flag"></i> <span data-i18n="nationalityLabel">الجنسية</span></label>
-                            <select id="studentNationality"><option value="" data-i18n="chooseOpt">-- اختر --</option></select>
-                        </div>
                     </div>
+                    <div class="form-group nationality-group" id="nationalitySpecific">
+                        <label><i class="fas fa-flag"></i> <span data-i18n="nationalityLabel">الجنسية</span></label>
+                        <select id="studentNationality"><option value="" data-i18n="chooseOpt">-- اختر --</option></select>
+                    </div>
+
+                    <div class="form-section-label"><span class="num">2</span><span data-i18n="sectionContact">بيانات التواصل</span></div>
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> <span data-i18n="phoneLabel">رقم الجوال (966+10 أرقام)</span></label>
+                        <input type="text" id="studentPhone" maxlength="13" placeholder="966512345678" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                    </div>
+
+                    <div class="form-section-label"><span class="num">3</span><span data-i18n="sectionAcademic">البيانات الأكاديمية</span></div>
                     <div class="form-group ajyal-section-group" id="ajyalSectionGroup">
                         <label><i class="fas fa-venus-mars"></i> <span data-i18n="sectionLabel">قسم الفرع (بنين / بنات)</span></label>
                         <select id="ajyalSection">
@@ -571,6 +582,10 @@
             </div>
             <div class="dashboard-section">
                 <h4><i class="fas fa-list"></i> <span data-i18n="pendingPapersTitle">أوراق كتابية بانتظار التصحيح</span></h4>
+                <div class="tab-group">
+                    <button class="tab-btn active" id="teacherTabWaiting" onclick="switchTeacherTab('waiting')" data-i18n="statWaitingCorrection">بانتظار التصحيح</button>
+                    <button class="tab-btn" id="teacherTabDone" onclick="switchTeacherTab('done')" data-i18n="statDone">تم تصحيحها</button>
+                </div>
                 <table class="data-table">
                     <thead><tr><th data-i18n="thStudent">الطالب</th><th data-i18n="thSubject">المادة</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
                     <tbody id="teacherStudentsBody"></tbody>
@@ -597,6 +612,7 @@
             </div>
             <div class="dashboard-section">
                 <h4><i class="fas fa-clipboard-list"></i> <span data-i18n="requestsTitle">طلبات التسجيل</span></h4>
+                <input type="text" id="registrarSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterRegistrarList()" style="margin-bottom:14px;" />
                 <div id="registrarRequestsList"></div>
             </div>
             <div class="dashboard-section">
@@ -670,10 +686,28 @@
                     <input type="number" id="qMarks" data-i18n-placeholder="qMarksPh" placeholder="عدد الدرجات" value="1" min="1" />
                     <button class="btn btn-primary" onclick="addQuestion()"><span data-i18n="addQuestionBtn">إضافة السؤال</span></button>
                 </div>
-                <div id="questionsList" style="margin-top:14px;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+                    <select id="qListSubject" onchange="loadQuestionsList()">
+                        <option value="" data-i18n="allSubjects">كل المواد</option>
+                        <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
+                        <option value="math" data-i18n="subjMath">📗 رياضيات</option>
+                        <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
+                    </select>
+                    <select id="qListGrade" onchange="loadQuestionsList()">
+                        <option value="" data-i18n="allGrades">كل المراحل</option>
+                        <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                        <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                        <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                        <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                        <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                    </select>
+                </div>
+                <div id="questionsListSummary" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--gold-solid);"></div>
+                <div id="questionsList" style="margin-top:10px;"></div>
             </div>
             <div class="dashboard-section">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
+                <input type="text" id="adminSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterAdminList()" style="margin-bottom:14px;" />
                 <table class="data-table">
                     <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thBranch">الفرع</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
                     <tbody id="adminRequestsBody"></tbody>
