@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./supabase-config.js"></script>
     <style>
         :root {
             --primary: #C89B3C;
@@ -394,7 +393,6 @@
         }
         .student-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-        /* ===== شعار المدرسة في تسجيل الدخول ===== */
         .login-school-logo {
             text-align: center;
             margin-bottom: 20px;
@@ -798,7 +796,7 @@
 
     <div class="app-wrapper">
         <!-- SPLASH -->
-        <div class="page active" id="pageSplash">
+        <div class="page" id="pageSplash">
             <div class="splash-bg"></div>
             <div class="splash-content">
                 <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -848,7 +846,7 @@
             </div>
         </div>
 
-        <!-- LOGIN مع شعار المدرسة -->
+        <!-- LOGIN -->
         <div class="page" id="pageLogin">
             <div class="login-school-logo" id="schoolLogoContainer">
                 <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
@@ -1103,7 +1101,7 @@
 
     <script>
         // ============================================================
-        //  ALL APPLICATION LOGIC (app.js) - Integrated
+        //  ALL APPLICATION LOGIC
         // ============================================================
 
         // ---- State ----
@@ -1114,7 +1112,7 @@
         // ---- Supabase ----
         const supabaseUrl = 'https://YOUR_PROJECT.supabase.co';
         const supabaseKey = 'YOUR_ANON_KEY';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         // ---- Toast ----
         function showToast(message, type = 'info') {
@@ -1142,8 +1140,6 @@
             document.querySelectorAll('.branch-card').forEach(c => c.classList.remove('active'));
             document.getElementById(`branch${branch.charAt(0).toUpperCase() + branch.slice(1)}`).classList.add('active');
             document.getElementById('btnBranchNext').disabled = false;
-            
-            // Update school logo for login page
             updateSchoolLogo(branch);
         }
 
@@ -1178,7 +1174,6 @@
             if (selectedRole === 'student') {
                 showPage('pageStudentRegister');
             } else {
-                // Update school logo before showing login
                 updateSchoolLogo(selectedBranch);
                 showPage('pageLogin');
             }
@@ -1223,14 +1218,13 @@
             status.innerHTML = '<span>جاري تسجيل الدخول...</span>';
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                 if (error) throw error;
 
                 currentUser = data.user;
                 status.innerHTML = '<span style="color:var(--success);">✅ تم تسجيل الدخول بنجاح</span>';
                 showToast('مرحباً بك!', 'success');
 
-                // Navigate based on role
                 if (selectedRole === 'teacher') {
                     showPage('pageTeacherDashboard');
                     loadTeacherDashboard();
@@ -1249,7 +1243,7 @@
 
         // ---- Logout ----
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             currentUser = null;
             showToast('تم تسجيل الخروج', 'info');
             showPage('pageBranch');
@@ -1333,7 +1327,7 @@
             try {
                 const secretCode = Math.random().toString(36).substring(2, 8).toUpperCase();
                 
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('students')
                     .insert([{
                         name, national_id: id, phone, birthdate, gender,
@@ -1352,7 +1346,6 @@
                 document.getElementById('waitingMessage').style.display = 'block';
                 document.getElementById('studentStatusBadge').textContent = '🔄 قيد المراجعة';
                 
-                // Show subjects
                 showSubjects(grade);
             } catch (error) {
                 status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`;
@@ -1397,7 +1390,7 @@
             }
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('students')
                     .select('status')
                     .eq('national_id', id)
@@ -1422,7 +1415,7 @@
         // ---- Teacher Dashboard ----
         async function loadTeacherDashboard() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('students')
                     .select('*')
                     .eq('branch', selectedBranch)
@@ -1445,7 +1438,6 @@
                     </tr>
                 `).join('') || '<tr><td colspan="4" class="empty-state">لا توجد أوراق بانتظار التصحيح</td></tr>';
 
-                // Recommendations
                 document.getElementById('teacherRecommendations').innerHTML = `
                     <div class="request-card">
                         <p>📊 توصيات عامة للطلاب:</p>
@@ -1468,7 +1460,7 @@
         // ---- Registrar Dashboard ----
         async function loadRegistrarDashboard() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('students')
                     .select('*')
                     .eq('branch', selectedBranch);
@@ -1501,7 +1493,6 @@
                     </div>
                 `).join('') || '<div class="empty-state">لا توجد طلبات جديدة</div>';
 
-                // Leaderboard
                 const leaderboard = document.getElementById('registrarLeaderboard');
                 const sorted = [...data].filter(s => s.status === 'approved').sort((a, b) => (b.score || 0) - (a.score || 0));
                 leaderboard.innerHTML = sorted.slice(0, 5).map((s, i) => `
@@ -1517,7 +1508,7 @@
 
         async function updateStudentStatus(studentId, status) {
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('students')
                     .update({ status })
                     .eq('id', studentId);
@@ -1537,8 +1528,8 @@
         // ---- Admin Dashboard ----
         async function loadAdminDashboard() {
             try {
-                const { data: students, error: sError } = await supabase.from('students').select('*');
-                const { data: teachers, error: tError } = await supabase.from('users').select('*').eq('role', 'teacher');
+                const { data: students, error: sError } = await supabaseClient.from('students').select('*');
+                const { data: teachers, error: tError } = await supabaseClient.from('users').select('*').eq('role', 'teacher');
 
                 if (sError) throw sError;
 
@@ -1546,7 +1537,6 @@
                 document.getElementById('adminStatTeachers').textContent = teachers?.length || 0;
                 document.getElementById('adminStatAvg').textContent = students.length ? 'N/A' : '0';
 
-                // Charts
                 const grades = {};
                 const branches = { ajyal: 0, kids: 0 };
                 const statuses = { pending: 0, approved: 0, rejected: 0 };
@@ -1561,7 +1551,6 @@
                 renderChart('branchChart', ['أجيال المعرفة', 'بوابة الطفل'], [branches.ajyal, branches.kids], 'عدد الطلاب');
                 renderChart('statusChart', ['قيد المراجعة', 'مقبول', 'مرفوض'], [statuses.pending, statuses.approved, statuses.rejected], 'عدد الطلاب');
 
-                // Recent requests
                 const tbody = document.getElementById('adminRequestsBody');
                 tbody.innerHTML = students.slice(-5).reverse().map(s => `
                     <tr>
@@ -1581,7 +1570,6 @@
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             
-            // Destroy existing chart if any
             if (canvas.chart) canvas.chart.destroy();
             
             const ctx = canvas.getContext('2d');
@@ -1615,7 +1603,7 @@
             }
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('questions')
                     .insert([{ subject, grade, text, options, correct, marks, created_at: new Date().toISOString() }]);
 
@@ -1632,7 +1620,7 @@
 
         async function loadQuestions() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('questions')
                     .select('*')
                     .order('created_at', { ascending: false })
@@ -1675,21 +1663,22 @@
 
         // ---- Initialize ----
         document.addEventListener('DOMContentLoaded', function() {
-            // Show splash then branch after 2.5s
+            // Show splash then branch after 2.5 seconds
+            const splash = document.getElementById('pageSplash');
+            splash.classList.add('active');
+            
             setTimeout(() => {
+                splash.classList.remove('active');
                 showPage('pageBranch');
             }, 2500);
             
-            // Load questions for admin
             loadQuestions();
         });
 
         // ---- Theme detection for charts ----
         document.addEventListener('DOMContentLoaded', function() {
             const observer = new MutationObserver(() => {
-                // Re-render charts if they exist
-                const charts = document.querySelectorAll('canvas');
-                charts.forEach(c => {
+                document.querySelectorAll('canvas').forEach(c => {
                     if (c.chart) {
                         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                         const color = isDark ? '#F5EBD5' : '#1E1B16';
@@ -1704,4 +1693,4 @@
         });
     </script>
 </body>
-    </html>
+                                                                                                                                      </html>
