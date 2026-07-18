@@ -70,6 +70,9 @@ body { font-family:'Tajawal',sans-serif; background:#f0ebe4; min-height:100vh; d
                 <div id="passageContainer" class="hidden">
                     <div class="passage-box">
                         <div class="passage-title" id="passageTitle"></div>
+                        <div id="passageImageContainer" class="hidden" style="text-align:center;margin:10px 0;">
+                            <img id="passageImage" src="" style="max-width:100%;max-height:200px;border-radius:12px;" />
+                        </div>
                         <div class="passage-text" id="passageText"></div>
                     </div>
                 </div>
@@ -176,9 +179,11 @@ function startStage(idx){
 
     const passageContainer = document.getElementById('passageContainer');
     if(stage.passage){
-        passageContainer.classList.remove('hidden');
         document.getElementById('passageTitle').textContent = stage.passage.title || '';
         document.getElementById('passageText').textContent = stage.passage.body || '';
+        const passageImageContainer = document.getElementById('passageImageContainer');
+        if(stage.passage.image_url){ passageImageContainer.classList.remove('hidden'); document.getElementById('passageImage').src = stage.passage.image_url; }
+        else passageImageContainer.classList.add('hidden');
     } else passageContainer.classList.add('hidden');
 
     document.getElementById('examApp').classList.toggle('ltr', stage.subject==='english');
@@ -194,6 +199,10 @@ function renderQuestion(){
 
     document.getElementById('qNumber').textContent = `السؤال ${currentQuestionIdx+1} من ${total}`;
     document.getElementById('qText').textContent = q.question_text;
+
+    const passageContainer = document.getElementById('passageContainer');
+    if(stage.passage && currentQuestionIdx < 5){ passageContainer.classList.remove('hidden'); }
+    else { passageContainer.classList.add('hidden'); }
 
     const qImageContainer = document.getElementById('qImageContainer');
     if(q.image_url){ qImageContainer.classList.remove('hidden'); document.getElementById('qImage').src = q.image_url; }
