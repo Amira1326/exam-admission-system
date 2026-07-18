@@ -40,7 +40,7 @@ const BRANCH_INFO = {
 // ============================================================
 const translations = {
     ar: {
-        loaderText:'جاري التحضير...', splashTitle1:'نظام', splashTitle2:'التقييم والقبول', splashTitle3:'بوابة الطفل · أجيال المعرفة',
+        loaderText:'جاري التحضير...', splashTitle1:'منصة', splashTitle2:'التقييم الإلكتروني', splashTitle3:'بوابة الطفل ومدارس أجيال المعرفة',
         splashSub:'المنصة التعليمية الموحدة', branchTitle:'اختر الفرع', branchSub:'يرجى تحديد الفرع التعليمي المناسب',
         branchAjyalName:'أجيال المعرفة', branchAjyalDesc:'من Kg II إلى Grade 12', branchKidsName:'بوابة الطفل', branchKidsDesc:'من Kg II إلى Grade 6',
         next:'التالي', back:'رجوع', roleTitle:'اختر صلاحية الدخول', branchLabel:'الفرع:',
@@ -74,7 +74,7 @@ const translations = {
         staffNamePh:'الاسم الكامل', staffEmailPh:'البريد الإلكتروني', staffPasswordPh:'كلمة المرور (6 أحرف على الأقل)', createStaffBtn:'إنشاء الحساب'
     },
     en: {
-        loaderText:'Preparing...', splashTitle1:'Admission &', splashTitle2:'Assessment System', splashTitle3:"Kids' Gateway · Ajyal Al Maarefah",
+        loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Kids' Gateway & Ajyal Al Maarefah Schools",
         splashSub:'The Unified Education Platform', branchTitle:'Choose a Branch', branchSub:'Please select the appropriate school branch',
         branchAjyalName:'Ajyal Al Maarefah', branchAjyalDesc:'From KG2 to Grade 12', branchKidsName:"Kids' Gateway", branchKidsDesc:'From KG2 to Grade 6',
         next:'Next', back:'Back', roleTitle:'Choose Access Role', branchLabel:'Branch:',
@@ -702,17 +702,17 @@ function createCharts(students){
     const gradeMap={}; students.forEach(s=>gradeMap[s.grade]=(gradeMap[s.grade]||0)+1);
     const ctx1=document.getElementById('gradeChart').getContext('2d');
     if(charts.grade) charts.grade.destroy();
-    charts.grade = new Chart(ctx1, { type:'bar', data:{ labels:Object.keys(gradeMap).map(getGradeLabel), datasets:[{data:Object.values(gradeMap), backgroundColor:'rgba(200,155,60,.6)'}] }, options:{plugins:{legend:{display:false}}} });
+    charts.grade = new Chart(ctx1, { type:'bar', data:{ labels:Object.keys(gradeMap).map(getGradeLabel), datasets:[{data:Object.values(gradeMap), backgroundColor:'rgba(43,69,112,.55)'}] }, options:{plugins:{legend:{display:false}}} });
 
     const branchMap={}; students.forEach(s=>branchMap[s.branch]=(branchMap[s.branch]||0)+1);
     const ctx2=document.getElementById('branchChart').getContext('2d');
     if(charts.branch) charts.branch.destroy();
-    charts.branch = new Chart(ctx2, { type:'doughnut', data:{ labels:Object.keys(branchMap).map(getBranchLabel), datasets:[{data:Object.values(branchMap), backgroundColor:['#C89B3C','#2980b9']}] } });
+    charts.branch = new Chart(ctx2, { type:'doughnut', data:{ labels:Object.keys(branchMap).map(getBranchLabel), datasets:[{data:Object.values(branchMap), backgroundColor:['#2B4570','#D64545']}] } });
 
     const statusMap={pending:0,approved:0,rejected:0}; students.forEach(s=>statusMap[s.status]++);
     const ctx3=document.getElementById('statusChart').getContext('2d');
     if(charts.status) charts.status.destroy();
-    charts.status = new Chart(ctx3, { type:'pie', data:{ labels:[getStatusLabel('pending'),getStatusLabel('approved'),getStatusLabel('rejected')], datasets:[{data:Object.values(statusMap), backgroundColor:['#C89B3C','#2ECC71','#FF6B6B']}] } });
+    charts.status = new Chart(ctx3, { type:'pie', data:{ labels:[getStatusLabel('pending'),getStatusLabel('approved'),getStatusLabel('rejected')], datasets:[{data:Object.values(statusMap), backgroundColor:['#D64545','#2F9E63','#7A8378']}] } });
 }
 
 // ---------------- ADMIN: QUESTION MANAGEMENT ----------------
@@ -816,10 +816,10 @@ async function generatePDFReport(){
     const isAr = currentLang==='ar';
     const { data: students } = await sb.from('students').select('*');
     const reportHtml = `<div id="reportContent" style="font-family:'Alexandria',sans-serif;padding:24px;background:#fff;color:#222;direction:${isAr?'rtl':'ltr'};">
-        <h1 style="color:#C89B3C;text-align:center;">📊 ${isAr?'تقرير نظام التقييم والقبول':'Admission System Report'}</h1>
+        <h1 style="color:#2B4570;text-align:center;">📊 ${isAr?'تقرير نظام التقييم والقبول':'Admission System Report'}</h1>
         <p style="text-align:center;color:#888;">${isAr?'تم الإنشاء':'Generated'}: ${new Date().toLocaleDateString(isAr?'ar-SA':'en-GB')}</p>
         <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:16px;">
-            <thead><tr style="background:#C89B3C;color:#fff;"><th style="padding:8px;">${isAr?'الاسم':'Name'}</th><th style="padding:8px;">${isAr?'الفرع':'Branch'}</th><th style="padding:8px;">${isAr?'المرحلة':'Grade'}</th><th style="padding:8px;">${isAr?'الحالة':'Status'}</th></tr></thead>
+            <thead><tr style="background:#2B4570;color:#fff;"><th style="padding:8px;">${isAr?'الاسم':'Name'}</th><th style="padding:8px;">${isAr?'الفرع':'Branch'}</th><th style="padding:8px;">${isAr?'المرحلة':'Grade'}</th><th style="padding:8px;">${isAr?'الحالة':'Status'}</th></tr></thead>
             <tbody>${(students||[]).map(s=>`<tr style="border-bottom:1px solid #eee;">
                 <td style="padding:8px;">${s.name}</td><td style="padding:8px;">${getBranchLabel(s.branch)}</td>
                 <td style="padding:8px;">${getGradeLabel(s.grade)}</td><td style="padding:8px;">${getStatusLabel(s.status)}</td></tr>`).join('')}</tbody>
