@@ -69,7 +69,9 @@ const translations = {
         g_g1_short:'الأول', g_g2_short:'الثاني', g_g3_short:'الثالث', g_g4_short:'الرابع', g_g5_short:'الخامس', g_g6_short:'السادس',
         g_g7_short:'السابع', g_g8_short:'الثامن', g_g9_short:'التاسع', g_g10_short:'العاشر', g_g11_short:'الحادي عشر', g_g12_short:'الثاني عشر', g_g13_short:'الثالث الثانوي',
         qTextPh:'نص السؤال', qOptionsPh:'الخيارات مفصولة بفاصلة , مثال: أ,ب,ج', qCorrectPh:'فهرس الإجابة الصحيحة (0 = أول خيار)', qMarksPh:'عدد الدرجات',
-        addQuestionBtn:'إضافة السؤال', recentRequestsTitle:'آخر طلبات التسجيل', thName:'الاسم', thBranch:'الفرع'
+        addQuestionBtn:'إضافة السؤال', recentRequestsTitle:'آخر طلبات التسجيل', thName:'الاسم', thBranch:'الفرع',
+        staffMgmtTitle:'إدارة حسابات الموظفين', staffMgmtSub:'أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام',
+        staffNamePh:'الاسم الكامل', staffEmailPh:'البريد الإلكتروني', staffPasswordPh:'كلمة المرور (6 أحرف على الأقل)', createStaffBtn:'إنشاء الحساب'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'Admission &', splashTitle2:'Assessment System', splashTitle3:"Kids' Gateway · Ajyal Al Maarefah",
@@ -101,7 +103,9 @@ const translations = {
         g_g1_short:'Grade 1', g_g2_short:'Grade 2', g_g3_short:'Grade 3', g_g4_short:'Grade 4', g_g5_short:'Grade 5', g_g6_short:'Grade 6',
         g_g7_short:'Grade 7', g_g8_short:'Grade 8', g_g9_short:'Grade 9', g_g10_short:'Grade 10', g_g11_short:'Grade 11', g_g12_short:'Grade 12', g_g13_short:'Grade 13',
         qTextPh:'Question text', qOptionsPh:'Options separated by commas, e.g. A,B,C', qCorrectPh:'Index of correct answer (0 = first option)', qMarksPh:'Number of marks',
-        addQuestionBtn:'Add Question', recentRequestsTitle:'Recent Registration Requests', thName:'Name', thBranch:'Branch'
+        addQuestionBtn:'Add Question', recentRequestsTitle:'Recent Registration Requests', thName:'Name', thBranch:'Branch',
+        staffMgmtTitle:'Staff Account Management', staffMgmtSub:'Add a new login account for a teacher, admissions officer, or system administrator',
+        staffNamePh:'Full name', staffEmailPh:'Email address', staffPasswordPh:'Password (at least 6 characters)', createStaffBtn:'Create Account'
     }
 };
 
@@ -691,6 +695,7 @@ async function renderAdminDashboard(){
 
     createCharts(students||[]);
     loadQuestionsList();
+    loadStaffList();
 }
 function createCharts(students){
     const isAr = currentLang==='ar';
@@ -747,6 +752,63 @@ async function deleteQuestion(id){
     if(error){ showToast('❌ '+error.message,'error'); return; }
     showToast(currentLang==='ar'?'🗑️ تم حذف السؤال':'🗑️ Question deleted', 'info');
     loadQuestionsList();
+}
+
+// ---------------- ADMIN: STAFF MANAGEMENT ----------------
+async function createStaffUser(){
+    const isAr = currentLang==='ar';
+    const name = document.getElementById('staffName').value.trim();
+    const email = document.getElementById('staffEmail').value.trim();
+    const password = document.getElementById('staffPassword').value;
+    const role = document.getElementById('staffRole').value;
+    const status = document.getElementById('staffMgmtStatus');
+    const btn = document.getElementById('createStaffBtn');
+
+    if(!name || !email || !password){
+        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'يرجى تعبئة جميع الحقول':'Please fill in all fields'}</span>`; return;
+    }
+    if(password.length < 6){
+        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'كلمة المرور يجب أن تكون 6 أحرف على الأقل':'Password must be at least 6 characters'}</span>`; return;
+    }
+
+    btn.disabled = true;
+    status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الإنشاء...':'Creating...'}`;
+
+    const { data, error } = await sb.functions.invoke('create-staff-user', {
+        body: { name, email, password, role }
+    });
+    btn.disabled = false;
+
+    if(error || data?.error){
+        const msg = data?.error || error.message || '';
+        let friendly = isAr ? 'حدث خطأ أثناء الإنشاء' : 'An error occurred while creating the account';
+        if(msg.includes('NOT_ADMIN')) friendly = isAr ? '⚠️ فقط مدير النظام يقدر يضيف حسابات' : '⚠️ Only a system administrator can add accounts';
+        else if(msg.includes('already been registered') || msg.includes('email_exists')) friendly = isAr ? '⚠️ هذا البريد مسجل مسبقاً' : '⚠️ This email is already registered';
+        status.innerHTML = `<span style="color:var(--danger);">❌ ${friendly}</span>`;
+        showToast('❌ ' + friendly, 'error');
+        return;
+    }
+
+    status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?'تم إنشاء الحساب بنجاح':'Account created successfully'}</span>`;
+    showToast(isAr?'✅ تم إنشاء حساب الموظف بنجاح':'✅ Staff account created successfully', 'success');
+    document.getElementById('staffName').value='';
+    document.getElementById('staffEmail').value='';
+    document.getElementById('staffPassword').value='';
+    loadStaffList();
+}
+
+async function loadStaffList(){
+    const isAr = currentLang==='ar';
+    const container = document.getElementById('staffList');
+    if(!container) return;
+    const { data: profiles, error } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+    if(error){ container.innerHTML = `<div class="empty-state">${error.message}</div>`; return; }
+    if(!profiles || profiles.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد موظفون بعد':'No staff members yet'}</div>`; return; }
+    const roleLabel = r => r==='admin'?t('roleAdmin'): r==='teacher'?t('roleTeacher'): t('roleRegistrar');
+    container.innerHTML = profiles.map(p=>`
+        <div class="qa-list-item">
+            <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong></span>
+        </div>`).join('');
 }
 
 // ---------------- PDF REPORT ----------------
