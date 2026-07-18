@@ -5,7 +5,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>نظام التقييم والقبول المتطور</title>
-    <!-- خط عصرية وأنيقة -->
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -54,14 +53,15 @@
             background: var(--bg);
         }
 
-        /* ===== خلفية متحركة للصفحات ===== */
+        /* ===== خلفية متحركة بنجوم وجزيئات ===== */
         .animated-bg {
             position: fixed;
             inset: 0;
             z-index: -1;
             background: linear-gradient(-45deg, #f5f0e8, #e8e0d5, #f0ebe0, #e5ddd0);
             background-size: 400% 400%;
-            animation: gradientMove 18s ease infinite;
+            animation: gradientMove 25s ease infinite;
+            overflow: hidden;
         }
         @keyframes gradientMove {
             0% { background-position: 0% 50%; }
@@ -69,7 +69,72 @@
             100% { background-position: 0% 50%; }
         }
         [data-theme="dark"] .animated-bg {
-            background: linear-gradient(-45deg, #1a1a1a, #2a2a2a, #1e1e1e, #252525);
+            background: linear-gradient(-45deg, #0a0a12, #14141e, #0e0e18, #181824);
+        }
+
+        /* النجوم والجزيئات المتحركة */
+        .stars, .twinkling, .clouds {
+            position: absolute;
+            inset: 0;
+            display: block;
+        }
+        .stars {
+            background: transparent;
+            box-shadow: 
+                10px 20px 2px 2px rgba(255,255,255,0.3),
+                80px 60px 1px 1px rgba(255,255,255,0.2),
+                150px 120px 3px 2px rgba(255,255,255,0.4),
+                250px 40px 2px 1px rgba(255,255,255,0.3),
+                350px 180px 1px 2px rgba(255,255,255,0.2),
+                500px 80px 3px 1px rgba(255,255,255,0.5),
+                650px 220px 2px 2px rgba(255,255,255,0.3),
+                800px 50px 1px 1px rgba(255,255,255,0.4),
+                100px 300px 2px 1px rgba(255,255,255,0.2),
+                300px 400px 3px 2px rgba(255,255,255,0.3);
+            animation: starMove 120s linear infinite;
+            transform: rotate(0deg);
+        }
+        @keyframes starMove {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .twinkling {
+            background: transparent;
+            box-shadow: 
+                30px 100px 4px 4px rgba(255,255,200,0.15),
+                200px 180px 6px 6px rgba(255,255,200,0.1),
+                400px 60px 5px 5px rgba(255,255,200,0.2),
+                600px 300px 8px 8px rgba(255,255,200,0.1),
+                800px 150px 4px 4px rgba(255,255,200,0.15);
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        .clouds {
+            background: transparent;
+            box-shadow: 
+                -50px 50px 30px 20px rgba(255,255,255,0.03),
+                150px 300px 40px 30px rgba(255,255,255,0.02),
+                700px 100px 50px 30px rgba(255,255,255,0.03);
+            animation: cloudMove 40s linear infinite;
+        }
+        @keyframes cloudMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(100px); }
+        }
+        [data-theme="dark"] .stars { box-shadow: 
+            10px 20px 2px 2px rgba(255,255,255,0.1),
+            80px 60px 1px 1px rgba(255,255,255,0.08),
+            150px 120px 3px 2px rgba(255,255,200,0.2),
+            250px 40px 2px 1px rgba(255,255,255,0.1),
+            350px 180px 1px 2px rgba(255,255,200,0.08),
+            500px 80px 3px 1px rgba(255,255,255,0.2),
+            650px 220px 2px 2px rgba(255,255,200,0.1),
+            800px 50px 1px 1px rgba(255,255,255,0.15),
+            100px 300px 2px 1px rgba(255,255,200,0.08),
+            300px 400px 3px 2px rgba(255,255,255,0.1);
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -103,7 +168,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== SPLASH - فقط الصورة ===== */
+        /* ===== SPLASH ===== */
         #pageSplash {
             max-width: 100% !important;
             width: 100%;
@@ -125,7 +190,7 @@
             background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
             background-size: cover;
             background-position: center;
-            filter: brightness(0.8);
+            filter: brightness(0.7);
         }
         .splash-content {
             position: relative;
@@ -653,9 +718,10 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ===== زر الوضع الليلي في الأعلى ===== */
         .theme-toggle {
             position: fixed;
-            bottom: 24px;
+            top: 24px;
             left: 24px;
             z-index: 999;
             width: 48px;
@@ -680,6 +746,7 @@
             .dashboard-section { padding: 16px; }
             .branch-grid, .role-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
             .page-title { font-size: 22px; }
+            .theme-toggle { top: 16px; left: 16px; width: 40px; height: 40px; font-size: 16px; }
         }
         @media (max-width: 480px) {
             .stats-grid, .chart-grid { grid-template-columns: 1fr; }
@@ -692,7 +759,13 @@
     </style>
 </head>
 <body>
-    <div class="animated-bg"></div>
+    <!-- خلفية متحركة بنجوم وجزيئات -->
+    <div class="animated-bg">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+        <div class="clouds"></div>
+    </div>
+    
     <div class="toast-container" id="toastContainer"></div>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle"><i class="fas fa-moon"></i></button>
 
@@ -703,7 +776,7 @@
     </div>
 
     <div class="app-wrapper">
-        <!-- SPLASH - فقط الصورة -->
+        <!-- SPLASH -->
         <div class="page active" id="pageSplash">
             <div class="splash-bg"></div>
             <div class="splash-content">
@@ -1006,4 +1079,4 @@
 
     <script src="./app.js"></script>
 </body>
-</html>
+    </html>
