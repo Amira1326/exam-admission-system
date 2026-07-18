@@ -40,7 +40,7 @@ const BRANCH_INFO = {
 // ============================================================
 const translations = {
     ar: {
-        loaderText:'جاري التحضير...', splashTitle1:'منصة', splashTitle2:'التقييم الإلكتروني', splashTitle3:'بوابة الطفل ومدارس أجيال المعرفة',
+        loaderText:'جاري التحضير...', splashTitle1:'منصة', splashTitle2:'التقييم الإلكتروني', splashTitle3:'مدارس أجيال المعرفة - بوابة الطفل',
         splashSub:'المنصة التعليمية الموحدة', branchTitle:'اختر الفرع', branchSub:'يرجى تحديد الفرع التعليمي المناسب',
         branchAjyalName:'أجيال المعرفة', branchAjyalDesc:'من Kg II إلى Grade 12', branchKidsName:'بوابة الطفل', branchKidsDesc:'من Kg II إلى Grade 6',
         next:'التالي', back:'رجوع', roleTitle:'اختر صلاحية الدخول', branchLabel:'الفرع:',
@@ -74,7 +74,7 @@ const translations = {
         staffNamePh:'الاسم الكامل', staffEmailPh:'البريد الإلكتروني', staffPasswordPh:'كلمة المرور (6 أحرف على الأقل)', createStaffBtn:'إنشاء الحساب'
     },
     en: {
-        loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Kids' Gateway & Ajyal Al Maarefah Schools",
+        loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
         splashSub:'The Unified Education Platform', branchTitle:'Choose a Branch', branchSub:'Please select the appropriate school branch',
         branchAjyalName:'Ajyal Al Maarefah', branchAjyalDesc:'From KG2 to Grade 12', branchKidsName:"Kids' Gateway", branchKidsDesc:'From KG2 to Grade 6',
         next:'Next', back:'Back', roleTitle:'Choose Access Role', branchLabel:'Branch:',
