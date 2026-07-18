@@ -1101,9 +1101,94 @@
         </div>
     </div>
 
-    <script src="./app.js"></script>
     <script>
-        // ===== دالة عرض الشعار في صفحة تسجيل الدخول =====
+        // ============================================================
+        //  ALL APPLICATION LOGIC (app.js) - Integrated
+        // ============================================================
+
+        // ---- State ----
+        let selectedBranch = null;
+        let selectedRole = null;
+        let currentUser = null;
+
+        // ---- Supabase ----
+        const supabaseUrl = 'https://YOUR_PROJECT.supabase.co';
+        const supabaseKey = 'YOUR_ANON_KEY';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // ---- Toast ----
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        // ---- Page Navigation ----
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const page = document.getElementById(pageId);
+            if (page) page.classList.add('active');
+        }
+
+        // ---- Branch Selection ----
+        function selectBranch(branch) {
+            selectedBranch = branch;
+            document.querySelectorAll('.branch-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`branch${branch.charAt(0).toUpperCase() + branch.slice(1)}`).classList.add('active');
+            document.getElementById('btnBranchNext').disabled = false;
+            
+            // Update school logo for login page
+            updateSchoolLogo(branch);
+        }
+
+        function goToRole() {
+            if (!selectedBranch) {
+                showToast('يرجى اختيار الفرع أولاً', 'warning');
+                return;
+            }
+            document.getElementById('selectedBranchDisplay').textContent = 
+                selectedBranch === 'ajyal' ? 'أجيال المعرفة' : 'بوابة الطفل';
+            showPage('pageRole');
+        }
+
+        function goToBranch() {
+            showPage('pageBranch');
+        }
+
+        // ---- Role Selection ----
+        function selectRole(role) {
+            selectedRole = role;
+            document.querySelectorAll('.role-btn').forEach(r => r.classList.remove('active'));
+            document.getElementById(`role${role.charAt(0).toUpperCase() + role.slice(1)}`).classList.add('active');
+            document.getElementById('btnRoleNext').disabled = false;
+        }
+
+        function goToNextPage() {
+            if (!selectedRole) {
+                showToast('يرجى اختيار الصلاحية أولاً', 'warning');
+                return;
+            }
+            
+            if (selectedRole === 'student') {
+                showPage('pageStudentRegister');
+            } else {
+                // Update school logo before showing login
+                updateSchoolLogo(selectedBranch);
+                showPage('pageLogin');
+            }
+        }
+
+        function backToRoleFromForm() {
+            showPage('pageRole');
+        }
+
+        // ---- School Logo Update ----
         function updateSchoolLogo(branch) {
             const logoImg = document.getElementById('schoolLogoImg');
             const nameDisplay = document.getElementById('schoolNameDisplay');
@@ -1124,26 +1209,499 @@
             }
         }
 
-        // ===== تحديث دالة goToNextPage =====
-        // نستدعي الدالة الأصلية من app.js ونضيف عليها تحديث الشعار
-        window.goToNextPage = function() {
-            const selectedRole = document.querySelector('.role-btn.active');
-            if (!selectedRole) {
-                showToast('يرجى اختيار الصلاحية أولاً', 'warning');
+        // ---- Login ----
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const status = document.getElementById('loginStatus');
+
+            if (!email || !password) {
+                status.innerHTML = '<span style="color:var(--danger);">يرجى إدخال البريد الإلكتروني وكلمة المرور</span>';
                 return;
             }
-            
-            const role = selectedRole.id.replace('role', '').toLowerCase();
-            
-            if (role === 'student') {
-                showPage('pageStudentRegister');
-            } else {
-                // تحديث الشعار قبل ظهور صفحة تسجيل الدخول
-                const branch = window.selectedBranch || 'ajyal';
-                updateSchoolLogo(branch);
-                showPage('pageLogin');
+
+            status.innerHTML = '<span>جاري تسجيل الدخول...</span>';
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+
+                currentUser = data.user;
+                status.innerHTML = '<span style="color:var(--success);">✅ تم تسجيل الدخول بنجاح</span>';
+                showToast('مرحباً بك!', 'success');
+
+                // Navigate based on role
+                if (selectedRole === 'teacher') {
+                    showPage('pageTeacherDashboard');
+                    loadTeacherDashboard();
+                } else if (selectedRole === 'registrar') {
+                    showPage('pageRegistrarDashboard');
+                    loadRegistrarDashboard();
+                } else if (selectedRole === 'admin') {
+                    showPage('pageAdminDashboard');
+                    loadAdminDashboard();
+                }
+            } catch (error) {
+                status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`;
+                showToast(error.message, 'error');
             }
-        };
+        }
+
+        // ---- Logout ----
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            showToast('تم تسجيل الخروج', 'info');
+            showPage('pageBranch');
+        }
+
+        // ---- Theme Toggle ----
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('themeToggle');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                btn.innerHTML = '<i class="fas fa-moon"></i>';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                btn.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        // ---- Student Registration ----
+        function calculateAge() {
+            const birthdate = document.getElementById('studentBirthdate').value;
+            const display = document.getElementById('ageDisplay');
+            if (!birthdate) { display.textContent = ''; return; }
+            
+            const age = Math.floor((new Date() - new Date(birthdate)) / (365.25 * 24 * 60 * 60 * 1000));
+            if (age >= 4 && age <= 18) {
+                display.textContent = `✅ العمر: ${age} سنة`;
+                display.className = 'age-display valid';
+            } else {
+                display.textContent = `⚠️ العمر: ${age} سنة (غير مسموح)`;
+                display.className = 'age-display invalid';
+            }
+        }
+
+        function toggleNationalities() {
+            const type = document.getElementById('studentNationalityType').value;
+            const select = document.getElementById('studentNationality');
+            select.innerHTML = '<option value="">-- اختر --</option>';
+            
+            const arabCountries = ['السعودية', 'الإمارات', 'الكويت', 'قطر', 'البحرين', 'عمان', 'مصر', 'الأردن', 'سوريا', 'لبنان', 'فلسطين', 'العراق', 'السودان', 'اليمن', 'تونس', 'الجزائر', 'المغرب', 'ليبيا', 'موريتانيا'];
+            const foreignCountries = ['الولايات المتحدة', 'بريطانيا', 'فرنسا', 'ألمانيا', 'كندا', 'أستراليا', 'الهند', 'باكستان', 'تركيا', 'ماليزيا', 'إندونيسيا', 'الفلبين', 'نيجيريا', 'جنوب أفريقيا'];
+            
+            const countries = type === 'arab' ? arabCountries : type === 'foreign' ? foreignCountries : [];
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+            });
+        }
+
+        async function registerStudent() {
+            const name = document.getElementById('studentName').value.trim();
+            const id = document.getElementById('studentId').value.trim();
+            const phone = document.getElementById('studentPhone').value.trim();
+            const birthdate = document.getElementById('studentBirthdate').value;
+            const gender = document.getElementById('studentGender').value;
+            const nationalityType = document.getElementById('studentNationalityType').value;
+            const nationality = document.getElementById('studentNationality').value;
+            const section = document.getElementById('ajyalSection').value;
+            const grade = document.getElementById('studentGrade').value;
+            const status = document.getElementById('studentStatus');
+
+            if (!name || !id || !phone || !birthdate || !gender || !nationalityType || !nationality || !grade) {
+                status.innerHTML = '<span style="color:var(--danger);">⚠️ يرجى ملء جميع الحقول</span>';
+                return;
+            }
+
+            if (id.length !== 10) {
+                status.innerHTML = '<span style="color:var(--danger);">⚠️ رقم الهوية يجب أن يكون 10 أرقام</span>';
+                return;
+            }
+
+            if (selectedBranch === 'ajyal' && !section) {
+                status.innerHTML = '<span style="color:var(--danger);">⚠️ يرجى اختيار قسم الفرع</span>';
+                return;
+            }
+
+            status.innerHTML = '<span>جاري التسجيل...</span>';
+
+            try {
+                const secretCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                
+                const { data, error } = await supabase
+                    .from('students')
+                    .insert([{
+                        name, national_id: id, phone, birthdate, gender,
+                        nationality_type: nationalityType, nationality,
+                        branch: selectedBranch, section: section || null,
+                        grade, status: 'pending', secret_code: secretCode,
+                        created_at: new Date().toISOString()
+                    }]);
+
+                if (error) throw error;
+
+                status.innerHTML = `<span style="color:var(--success);">✅ تم التسجيل بنجاح! الرمز السري: <strong>${secretCode}</strong></span>`;
+                showToast('تم تسجيل الطالب بنجاح!', 'success');
+                
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('waitingMessage').style.display = 'block';
+                document.getElementById('studentStatusBadge').textContent = '🔄 قيد المراجعة';
+                
+                // Show subjects
+                showSubjects(grade);
+            } catch (error) {
+                status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`;
+                showToast(error.message, 'error');
+            }
+        }
+
+        function showSubjects(grade) {
+            const container = document.getElementById('subjectsMessage');
+            const list = document.getElementById('subjectsList');
+            container.style.display = 'block';
+            
+            const subjects = {
+                'kg2': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية'],
+                'g1': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم'],
+                'g2': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية'],
+                'g3': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية'],
+                'g4': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية'],
+                'g5': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية'],
+                'g6': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية'],
+                'g7': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية', 'التقنية'],
+                'g8': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية', 'التقنية'],
+                'g9': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'العلوم', 'اللغة الإنجليزية', 'الدراسات الاجتماعية', 'التقنية'],
+                'g10': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'الفيزياء', 'الكيمياء', 'الأحياء', 'اللغة الإنجليزية'],
+                'g11': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'الفيزياء', 'الكيمياء', 'الأحياء', 'اللغة الإنجليزية'],
+                'g12': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'الفيزياء', 'الكيمياء', 'الأحياء', 'اللغة الإنجليزية'],
+                'g13': ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية', 'الفيزياء', 'الكيمياء', 'الأحياء', 'اللغة الإنجليزية']
+            };
+
+            const gradeSubjects = subjects[grade] || ['اللغة العربية', 'الرياضيات', 'التربية الإسلامية'];
+            list.innerHTML = gradeSubjects.map(s => `<span class="subject-tag">${s}</span>`).join('');
+        }
+
+        async function checkStudentStatus() {
+            const id = document.getElementById('checkNationalId').value.trim();
+            const code = document.getElementById('checkSecretCode').value.trim().toUpperCase();
+            const badge = document.getElementById('studentStatusBadge');
+
+            if (!id || !code) {
+                showToast('يرجى إدخال رقم الهوية والرمز السري', 'warning');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('status')
+                    .eq('national_id', id)
+                    .eq('secret_code', code)
+                    .single();
+
+                if (error) throw error;
+
+                const statusMap = {
+                    'pending': '🔄 قيد المراجعة',
+                    'approved': '✅ تم القبول',
+                    'rejected': '❌ مرفوض'
+                };
+                badge.textContent = statusMap[data.status] || data.status;
+                badge.className = `status-badge ${data.status}`;
+                showToast(`الحالة: ${statusMap[data.status] || data.status}`, data.status === 'approved' ? 'success' : 'info');
+            } catch (error) {
+                showToast('لم يتم العثور على الطالب', 'error');
+            }
+        }
+
+        // ---- Teacher Dashboard ----
+        async function loadTeacherDashboard() {
+            try {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('*')
+                    .eq('branch', selectedBranch)
+                    .eq('status', 'approved');
+
+                if (error) throw error;
+
+                document.getElementById('teacherStatStudents').textContent = data.length;
+                document.getElementById('teacherStatWaiting').textContent = data.filter(s => s.exam_status === 'pending').length;
+                document.getElementById('teacherStatDone').textContent = data.filter(s => s.exam_status === 'corrected').length;
+                document.getElementById('teacherStatActive').textContent = data.filter(s => s.status === 'approved').length;
+
+                const tbody = document.getElementById('teacherStudentsBody');
+                tbody.innerHTML = data.filter(s => s.exam_status === 'pending').map(s => `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.grade}</td>
+                        <td><span class="badge-status pending">بانتظار التصحيح</span></td>
+                        <td><button class="btn-mini exam-btn" onclick="correctExam('${s.id}')">📝 تصحيح</button></td>
+                    </tr>
+                `).join('') || '<tr><td colspan="4" class="empty-state">لا توجد أوراق بانتظار التصحيح</td></tr>';
+
+                // Recommendations
+                document.getElementById('teacherRecommendations').innerHTML = `
+                    <div class="request-card">
+                        <p>📊 توصيات عامة للطلاب:</p>
+                        <ul style="margin-top:8px;list-style:none;">
+                            <li>• التركيز على تحسين مهارات القراءة والكتابة</li>
+                            <li>• حل تمارين إضافية في الرياضيات</li>
+                            <li>• مراجعة الدروس بشكل يومي</li>
+                        </ul>
+                    </div>
+                `;
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        function correctExam(studentId) {
+            showToast('سيتم فتح واجهة التصحيح قريباً', 'info');
+        }
+
+        // ---- Registrar Dashboard ----
+        async function loadRegistrarDashboard() {
+            try {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('*')
+                    .eq('branch', selectedBranch);
+
+                if (error) throw error;
+
+                const pending = data.filter(s => s.status === 'pending');
+                const accepted = data.filter(s => s.status === 'approved');
+                const rejected = data.filter(s => s.status === 'rejected');
+
+                document.getElementById('registrarStatPending').textContent = pending.length;
+                document.getElementById('registrarStatAccepted').textContent = accepted.length;
+                document.getElementById('registrarStatRejected').textContent = rejected.length;
+                document.getElementById('registrarStatAvg').textContent = data.length ? 'N/A' : '0';
+
+                const list = document.getElementById('registrarRequestsList');
+                list.innerHTML = pending.map(s => `
+                    <div class="request-card">
+                        <div class="request-info">
+                            <span><strong>${s.name}</strong></span>
+                            <span>🆔 ${s.national_id}</span>
+                            <span>📚 ${s.grade}</span>
+                            <span>🏫 ${s.branch === 'ajyal' ? 'أجيال المعرفة' : 'بوابة الطفل'}</span>
+                        </div>
+                        <div class="request-actions">
+                            <button class="btn-sm approve" onclick="updateStudentStatus('${s.id}', 'approved')">✅ قبول</button>
+                            <button class="btn-sm reject" onclick="updateStudentStatus('${s.id}', 'rejected')">❌ رفض</button>
+                            <button class="btn-sm view-score" onclick="viewStudentDetails('${s.id}')">👁️ عرض</button>
+                        </div>
+                    </div>
+                `).join('') || '<div class="empty-state">لا توجد طلبات جديدة</div>';
+
+                // Leaderboard
+                const leaderboard = document.getElementById('registrarLeaderboard');
+                const sorted = [...data].filter(s => s.status === 'approved').sort((a, b) => (b.score || 0) - (a.score || 0));
+                leaderboard.innerHTML = sorted.slice(0, 5).map((s, i) => `
+                    <div class="request-card" style="display:flex;justify-content:space-between;align-items:center;">
+                        <span>${i + 1}. ${s.name}</span>
+                        <span>⭐ ${s.score || 'N/A'}</span>
+                    </div>
+                `).join('') || '<div class="empty-state">لا يوجد متصدرين بعد</div>';
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function updateStudentStatus(studentId, status) {
+            try {
+                const { error } = await supabase
+                    .from('students')
+                    .update({ status })
+                    .eq('id', studentId);
+
+                if (error) throw error;
+                showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطالب بنجاح`, 'success');
+                loadRegistrarDashboard();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        function viewStudentDetails(studentId) {
+            showToast('سيتم عرض تفاصيل الطالب قريباً', 'info');
+        }
+
+        // ---- Admin Dashboard ----
+        async function loadAdminDashboard() {
+            try {
+                const { data: students, error: sError } = await supabase.from('students').select('*');
+                const { data: teachers, error: tError } = await supabase.from('users').select('*').eq('role', 'teacher');
+
+                if (sError) throw sError;
+
+                document.getElementById('adminStatStudents').textContent = students.length;
+                document.getElementById('adminStatTeachers').textContent = teachers?.length || 0;
+                document.getElementById('adminStatAvg').textContent = students.length ? 'N/A' : '0';
+
+                // Charts
+                const grades = {};
+                const branches = { ajyal: 0, kids: 0 };
+                const statuses = { pending: 0, approved: 0, rejected: 0 };
+
+                students.forEach(s => {
+                    grades[s.grade] = (grades[s.grade] || 0) + 1;
+                    branches[s.branch] = (branches[s.branch] || 0) + 1;
+                    statuses[s.status] = (statuses[s.status] || 0) + 1;
+                });
+
+                renderChart('gradeChart', Object.keys(grades), Object.values(grades), 'عدد الطلاب');
+                renderChart('branchChart', ['أجيال المعرفة', 'بوابة الطفل'], [branches.ajyal, branches.kids], 'عدد الطلاب');
+                renderChart('statusChart', ['قيد المراجعة', 'مقبول', 'مرفوض'], [statuses.pending, statuses.approved, statuses.rejected], 'عدد الطلاب');
+
+                // Recent requests
+                const tbody = document.getElementById('adminRequestsBody');
+                tbody.innerHTML = students.slice(-5).reverse().map(s => `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.branch === 'ajyal' ? 'أجيال المعرفة' : 'بوابة الطفل'}</td>
+                        <td><span class="badge-status ${s.status}">${s.status === 'pending' ? 'قيد المراجعة' : s.status === 'approved' ? 'مقبول' : 'مرفوض'}</span></td>
+                        <td><button class="btn-mini view" onclick="viewStudentDetails('${s.id}')">👁️ عرض</button></td>
+                    </tr>
+                `).join('') || '<tr><td colspan="4" class="empty-state">لا توجد طلبات</td></tr>';
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ---- Charts ----
+        function renderChart(canvasId, labels, data, label) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            // Destroy existing chart if any
+            if (canvas.chart) canvas.chart.destroy();
+            
+            const ctx = canvas.getContext('2d');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const color = isDark ? '#F5EBD5' : '#1E1B16';
+            
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label, data, backgroundColor: 'rgba(200,155,60,0.6)', borderColor: '#C89B3C', borderWidth: 2 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { labels: { color } } },
+                    scales: { x: { ticks: { color } }, y: { ticks: { color } } }
+                }
+            });
+        }
+
+        // ---- Questions Management ----
+        async function addQuestion() {
+            const subject = document.getElementById('qSubject').value;
+            const grade = document.getElementById('qGrade').value;
+            const text = document.getElementById('qText').value.trim();
+            const options = document.getElementById('qOptions').value.split(',').map(o => o.trim());
+            const correct = parseInt(document.getElementById('qCorrect').value);
+            const marks = parseInt(document.getElementById('qMarks').value) || 1;
+
+            if (!text || options.length < 2 || isNaN(correct)) {
+                showToast('يرجى ملء جميع الحقول بشكل صحيح', 'warning');
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('questions')
+                    .insert([{ subject, grade, text, options, correct, marks, created_at: new Date().toISOString() }]);
+
+                if (error) throw error;
+                showToast('تم إضافة السؤال بنجاح', 'success');
+                document.getElementById('qText').value = '';
+                document.getElementById('qOptions').value = '';
+                document.getElementById('qCorrect').value = '';
+                loadQuestions();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function loadQuestions() {
+            try {
+                const { data, error } = await supabase
+                    .from('questions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const list = document.getElementById('questionsList');
+                list.innerHTML = data.map(q => `
+                    <div class="qa-list-item">
+                        <div>
+                            <strong>${q.text}</strong>
+                            <div style="font-size:12px;color:var(--muted);">
+                                ${q.subject} - ${q.grade} | الخيارات: ${q.options.join(', ')}
+                            </div>
+                        </div>
+                        <span style="font-size:12px;">${q.marks} نقاط</span>
+                    </div>
+                `).join('') || '<div class="empty-state">لا توجد أسئلة مضافة</div>';
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ---- PDF Report ----
+        function generatePDFReport() {
+            showToast('جاري إنشاء التقرير...', 'info');
+            const element = document.getElementById('pageAdminDashboard');
+            const opt = {
+                margin: 1,
+                filename: 'تقرير_النظام.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save().then(() => {
+                showToast('تم إنشاء التقرير بنجاح', 'success');
+            });
+        }
+
+        // ---- Initialize ----
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show splash then branch after 2.5s
+            setTimeout(() => {
+                showPage('pageBranch');
+            }, 2500);
+            
+            // Load questions for admin
+            loadQuestions();
+        });
+
+        // ---- Theme detection for charts ----
+        document.addEventListener('DOMContentLoaded', function() {
+            const observer = new MutationObserver(() => {
+                // Re-render charts if they exist
+                const charts = document.querySelectorAll('canvas');
+                charts.forEach(c => {
+                    if (c.chart) {
+                        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                        const color = isDark ? '#F5EBD5' : '#1E1B16';
+                        c.chart.options.plugins.legend.labels.color = color;
+                        c.chart.options.scales.x.ticks.color = color;
+                        c.chart.options.scales.y.ticks.color = color;
+                        c.chart.update();
+                    }
+                });
+            });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        });
     </script>
 </body>
-</html>
+    </html>
