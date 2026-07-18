@@ -83,6 +83,11 @@ body { font-family:'IBM Plex Sans Arabic',sans-serif; background:#FBF7EC; backgr
                 </div>
                 <div class="options" id="optionsContainer"></div>
                 <div id="matchContainer" class="hidden" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;"></div>
+                <div id="sortContainer" class="hidden" style="margin-bottom:16px;">
+                    <div id="sortAnswerStrip" style="display:flex;flex-wrap:wrap;gap:8px;min-height:52px;padding:10px;background:#FBF7EC;border:2px dashed #EDE7D8;border-radius:12px;margin-bottom:12px;"></div>
+                    <div id="sortWordBank" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+                    <button type="button" onclick="resetSort()" style="margin-top:10px;padding:8px 16px;border:none;border-radius:10px;background:#EDE7D8;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;">إعادة</button>
+                </div>
                 <div id="writtenContainer" class="hidden">
                     <div class="written-notice"><i class="fas fa-pencil"></i> <span id="writtenInstructions"></span></div>
                     <div id="writtenImageContainer" class="hidden" style="text-align:center;margin-bottom:10px;">
@@ -116,6 +121,7 @@ let currentStageIdx = 0;
 let currentQuestionIdx = 0;
 let answers = {};
 let matchAnswers = {};
+let sortAnswers = {};
 let writtenUploads = {};
 let timerSeconds = 0;
 let timerInterval = null;
@@ -168,7 +174,7 @@ async function loadStages(){
 function startStage(idx){
     currentStageIdx = idx;
     currentQuestionIdx = 0;
-    answers = {}; writtenUploads = {}; matchAnswers = {};
+    answers = {}; writtenUploads = {}; matchAnswers = {}; sortAnswers = {};
     const stage = stagesList[idx];
     clearInterval(timerInterval);
     timerSeconds = stage.timeMinutes*60;
@@ -211,7 +217,8 @@ function renderQuestion(){
     const optionsContainer = document.getElementById('optionsContainer');
     const writtenContainer = document.getElementById('writtenContainer');
     const matchContainer = document.getElementById('matchContainer');
-    optionsContainer.classList.remove('hidden'); writtenContainer.classList.add('hidden'); matchContainer.classList.add('hidden');
+    const sortContainer = document.getElementById('sortContainer');
+    optionsContainer.classList.remove('hidden'); writtenContainer.classList.add('hidden'); matchContainer.classList.add('hidden'); sortContainer.classList.add('hidden');
     optionsContainer.innerHTML=''; matchContainer.innerHTML='';
 
     if(q.type==='mcq'){
@@ -230,12 +237,16 @@ function renderQuestion(){
         (q.match_items||[]).forEach((item, idx)=>{
             const box = document.createElement('div');
             box.style.cssText = 'background:#faf8f5;border:2px solid #e8ddd0;border-radius:14px;padding:14px;text-align:center;';
-            const imgHtml = item.image ? `<img src="${item.image}" style="max-width:100%;max-height:90px;border-radius:10px;margin-bottom:8px;" />` : `<div style="font-size:32px;margin-bottom:6px;">${item.label||''}</div>`;
+            const imgHtml = item.image ? `<img src="${item.image}" style="max-width:100%;max-height:90px;border-radius:10px;margin-bottom:8px;" />` : `<div style="font-size:20px;font-weight:700;margin-bottom:6px;">${item.label||''}</div>`;
             const currentVal = matchAnswers[q.id][idx] || '';
             const optionsHtml = (q.match_options||[]).map(o=>`<option value="${o}" ${o===currentVal?'selected':''}>${o}</option>`).join('');
             box.innerHTML = `${imgHtml}<select style="width:100%;padding:8px;border-radius:8px;border:2px solid #e8ddd0;" onchange="selectMatch('${q.id}', ${idx}, this.value)"><option value="">--</option>${optionsHtml}</select>`;
             matchContainer.appendChild(box);
         });
+    } else if(q.type==='sort'){
+        optionsContainer.classList.add('hidden');
+        sortContainer.classList.remove('hidden');
+        renderSortQuestion(q);
     } else if(q.type==='written'){
         optionsContainer.classList.add('hidden');
         writtenContainer.classList.remove('hidden');
@@ -261,6 +272,62 @@ function renderQuestion(){
     renderDots();
 }
 
+function renderSortQuestion(q){
+    const items = q.sort_items || [];
+    if(!sortAnswers[q.id]) sortAnswers[q.id] = { order: [], remaining: items.map(it=>it.id) };
+    const state = sortAnswers[q.id];
+
+    const strip = document.getElementById('sortAnswerStrip');
+    const bank = document.getElementById('sortWordBank');
+    strip.innerHTML = ''; bank.innerHTML = '';
+
+    state.order.forEach(id=>{
+        const item = items.find(it=>it.id===id);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.textContent = item ? item.text : id;
+        chip.style.cssText = 'padding:8px 16px;border:2px solid #2B4570;background:rgba(43,69,112,.08);border-radius:20px;font-weight:700;cursor:pointer;font-family:inherit;';
+        chip.onclick = ()=>{ removeSortWord(q.id, id); };
+        strip.appendChild(chip);
+    });
+
+    state.remaining.forEach(id=>{
+        const item = items.find(it=>it.id===id);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.textContent = item ? item.text : id;
+        chip.style.cssText = 'padding:8px 16px;border:2px solid #EDE7D8;background:#FBF9F3;border-radius:20px;font-weight:700;cursor:pointer;font-family:inherit;';
+        chip.onclick = ()=>{ addSortWord(q.id, id); };
+        bank.appendChild(chip);
+    });
+}
+function addSortWord(qId, itemId){
+    const state = sortAnswers[qId];
+    state.remaining = state.remaining.filter(id=>id!==itemId);
+    state.order.push(itemId);
+    const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
+    renderSortQuestion(q);
+    document.getElementById('nextBtn').disabled = !isAnswered(q);
+    renderDots();
+}
+function removeSortWord(qId, itemId){
+    const state = sortAnswers[qId];
+    state.order = state.order.filter(id=>id!==itemId);
+    state.remaining.push(itemId);
+    const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
+    renderSortQuestion(q);
+    document.getElementById('nextBtn').disabled = !isAnswered(q);
+    renderDots();
+}
+function resetSort(){
+    const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
+    const items = q.sort_items || [];
+    sortAnswers[q.id] = { order: [], remaining: items.map(it=>it.id) };
+    renderSortQuestion(q);
+    document.getElementById('nextBtn').disabled = true;
+    renderDots();
+}
+
 function isAnswered(q){
     if(q.type==='mcq') return answers[q.id]!==undefined;
     if(q.type==='written') return writtenUploads[q.id]!==undefined;
@@ -268,6 +335,11 @@ function isAnswered(q){
         const items = q.match_items||[];
         const ans = matchAnswers[q.id]||{};
         return items.length>0 && items.every((it,idx)=> ans[idx] && ans[idx]!=='');
+    }
+    if(q.type==='sort'){
+        const items = q.sort_items||[];
+        const state = sortAnswers[q.id];
+        return items.length>0 && state && state.order.length===items.length;
     }
     return false;
 }
@@ -325,6 +397,19 @@ async function finishStage(){
             score += matchCorrect * perItem;
             if(matchCorrect===items.length && items.length>0) correctCount++;
         }
+        else if(q.type==='sort'){
+            const state = sortAnswers[q.id];
+            const items = q.sort_items || [];
+            const correctOrder = q.correct_order || [];
+            if(state && items.length>0){
+                const studentOrderText = state.order.map(id=>{
+                    const item = items.find(it=>it.id===id);
+                    return item ? item.text : '';
+                });
+                const isFullyCorrect = JSON.stringify(studentOrderText) === JSON.stringify(correctOrder);
+                if(isFullyCorrect){ score += q.marks||0; correctCount++; }
+            }
+        }
         else if(q.type==='written'){ hasWritten = true; }
     });
     const total = stage.questions.reduce((sum,q)=>sum+(q.marks||1),0);
@@ -333,7 +418,7 @@ async function finishStage(){
         p_student_id: studentId, p_secret_code: secretCode, p_subject: stage.subject,
         p_score: hasWritten ? null : score, p_total: total,
         p_correct_count: correctCount, p_total_questions: stage.questions.length,
-        p_answers: {...answers, ...matchAnswers}, p_written_uploads: writtenUploads, p_has_written: hasWritten
+        p_answers: {...answers, ...matchAnswers, ...sortAnswers}, p_written_uploads: writtenUploads, p_has_written: hasWritten
     });
     if(error){ alert('❌ حدث خطأ أثناء حفظ النتيجة: '+error.message); return; }
 
