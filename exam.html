@@ -73,7 +73,9 @@ const translations = {
         staffMgmtTitle:'إدارة حسابات الموظفين', staffMgmtSub:'أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام',
         staffNamePh:'الاسم الكامل', staffEmailPh:'البريد الإلكتروني', staffPasswordPh:'كلمة المرور (6 أحرف على الأقل)', createStaffBtn:'إنشاء الحساب',
         sectionPersonal:'البيانات الأساسية', sectionContact:'بيانات التواصل', sectionAcademic:'البيانات الأكاديمية',
-        searchPh:'ابحث بالاسم أو رقم الهوية...', allSubjects:'كل المواد', allGrades:'كل المراحل'
+        searchPh:'ابحث بالاسم أو رقم الهوية...', allSubjects:'كل المواد', allGrades:'كل المراحل',
+        stepBranch:'الفرع', stepRole:'الصلاحية', stepDetails:'البيانات',
+        chatTitle:'مساعد المنصة', chatWelcome:'👋 أهلاً! اختر سؤال من الأسفل وبجاوبك فوراً.'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -109,7 +111,9 @@ const translations = {
         staffMgmtTitle:'Staff Account Management', staffMgmtSub:'Add a new login account for a teacher, admissions officer, or system administrator',
         staffNamePh:'Full name', staffEmailPh:'Email address', staffPasswordPh:'Password (at least 6 characters)', createStaffBtn:'Create Account',
         sectionPersonal:'Personal Details', sectionContact:'Contact Details', sectionAcademic:'Academic Details',
-        searchPh:'Search by name or ID...', allSubjects:'All Subjects', allGrades:'All Grades'
+        searchPh:'Search by name or ID...', allSubjects:'All Subjects', allGrades:'All Grades',
+        stepBranch:'Branch', stepRole:'Role', stepDetails:'Details',
+        chatTitle:'Platform Assistant', chatWelcome:'👋 Hi! Pick a question below and I\'ll answer instantly.'
     }
 };
 
@@ -142,6 +146,7 @@ function setLangAttributes(){
 }
 
 function refreshDynamicText(){
+    if(document.getElementById('chatWindow')?.classList.contains('open')) renderChatQuickReplies();
     if(selectedBranch){
         const el = document.getElementById('selectedBranchDisplay');
         if(el) el.textContent = selectedBranch==='ajyal' ? t('branchAjyalName') : t('branchKidsName');
@@ -195,9 +200,24 @@ window.addEventListener('DOMContentLoaded', () => {
             splash.classList.remove('active');
             splash.style.display = 'none';
             branch.classList.add('active');
+            updateStepIndicator(1);
         }, 500);
     }, 3200);
 });
+
+// ---------------- STEP INDICATOR ----------------
+function updateStepIndicator(step){
+    const el = document.getElementById('stepIndicator');
+    if(!el) return;
+    if(step===0){ el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    [1,2,3].forEach(n=>{
+        const stepEl = document.getElementById('step'+n);
+        stepEl.classList.remove('active','done');
+        if(n<step) stepEl.classList.add('done');
+        else if(n===step) stepEl.classList.add('active');
+    });
+}
 
 // ---------------- NAVIGATION ----------------
 function selectBranch(branch){
@@ -214,10 +234,12 @@ function goToRole(){
     document.getElementById('selectedBranchDisplay').textContent = selectedBranch==='ajyal' ? t('branchAjyalName') : t('branchKidsName');
     document.getElementById('pageBranch').classList.remove('active');
     document.getElementById('pageRole').classList.add('active');
+    updateStepIndicator(2);
 }
 function goToBranch(){
     document.getElementById('pageRole').classList.remove('active');
     document.getElementById('pageBranch').classList.add('active');
+    updateStepIndicator(1);
 }
 function updateGradeOptions(branch){
     const select = document.getElementById('studentGrade');
@@ -241,16 +263,19 @@ function goToNextPage(){
         document.getElementById('pageStudentRegister').classList.add('active');
         document.getElementById('registerForm').style.display='block';
         document.getElementById('waitingMessage').classList.add('hidden');
+        updateStepIndicator(3);
         return;
     }
     updateSchoolLogo(selectedBranch);
     document.getElementById('pageRole').classList.remove('active');
     document.getElementById('pageLogin').classList.add('active');
+    updateStepIndicator(3);
 }
 function backToRoleFromForm(){
     document.getElementById('pageLogin').classList.remove('active');
     document.getElementById('pageStudentRegister').classList.remove('active');
     document.getElementById('pageRole').classList.add('active');
+    updateStepIndicator(2);
 }
 function logout(){
     sb.auth.signOut();
@@ -260,6 +285,7 @@ function logout(){
     document.getElementById('btnBranchNext').disabled=true;
     document.getElementById('btnRoleNext').disabled=true;
     document.getElementById('pageBranch').classList.add('active');
+    updateStepIndicator(1);
     showToast(currentLang==='ar' ? '👋 تم تسجيل الخروج' : '👋 Signed out successfully', 'info');
 }
 function updateSchoolLogo(branch){
@@ -307,6 +333,7 @@ async function login(){
     status.innerHTML = `<span style="color:var(--success);">✅ ${currentLang==='ar'?'مرحباً! جاري تحويلك...':'Welcome! Redirecting...'}</span>`;
 
     document.getElementById('pageLogin').classList.remove('active');
+    updateStepIndicator(0);
     if(profile.role==='teacher'){
         document.getElementById('teacherNameDisplay').textContent = profile.name;
         await renderTeacherDashboard();
@@ -842,6 +869,65 @@ async function deleteQuestion(id){
     if(error){ showToast('❌ '+error.message,'error'); return; }
     showToast(isAr?'🗑️ تم حذف السؤال':'🗑️ Question deleted', 'info');
     loadQuestionsList();
+}
+
+// ---------------- CHAT BOT (أسئلة ثابتة) ----------------
+const chatFAQ = [
+    { key:'howRegister',
+      q:{ar:'📝 كيف أسجّل طالب؟', en:'📝 How do I register a student?'},
+      a:{ar:'من الصفحة الرئيسية: اختر الفرع ← اختر "طالب" ← عبّي البيانات المطلوبة ← احفظ الرمز السري اللي بيظهر لك بعد التسجيل، بتحتاجه للتحقق من حالتك لاحقاً.',
+         en:'From the home page: choose the branch → choose "Student" → fill in the required details → save the secret code shown after registering, you will need it to check your status later.'} },
+    { key:'checkStatus',
+      q:{ar:'🔄 كيف أتحقق من حالة طلبي؟', en:'🔄 How do I check my request status?'},
+      a:{ar:'بعد التسجيل بتظهر لك شاشة "بانتظار الموافقة" فيها حقول لرقم الهوية والرمز السري — عبّيها واضغط "التحقق من الحالة" لمعرفة إذا انقبل طلبك.',
+         en:'After registering you will see a "waiting for approval" screen with fields for your ID and secret code — fill them and press "Check Status" to see if your request was approved.'} },
+    { key:'lostCode',
+      q:{ar:'❓ ضيّعت الرمز السري، وش أسوي؟', en:"❓ I lost my secret code, what do I do?"},
+      a:{ar:'تواصل مع مسؤول القبول بالمدرسة مباشرة وهو يقدر يوصلك ببياناتك من لوحته.',
+         en:'Contact the school\'s admissions officer directly — they can look up your details from their dashboard.'} },
+    { key:'roles',
+      q:{ar:'👥 وش الفرق بين الأدوار؟', en:'👥 What is the difference between the roles?'},
+      a:{ar:'👨‍🎓 الطالب: يسجّل ويدخل الاختبار بعد القبول.<br>👔 مسؤول القبول: يقبل/يرفض الطلبات ويتابع النتائج.<br>👨‍🏫 المعلم: يصحح الأسئلة الكتابية.<br>🛡️ مدير النظام: يدير الأسئلة والموظفين والإحصائيات.',
+         en:'👨‍🎓 Student: registers and takes the exam after approval.<br>👔 Admissions officer: approves/rejects requests and tracks results.<br>👨‍🏫 Teacher: marks written answers.<br>🛡️ System admin: manages questions, staff, and statistics.'} },
+    { key:'examHow',
+      q:{ar:'📋 كيف يشتغل الاختبار؟', en:'📋 How does the exam work?'},
+      a:{ar:'بعد الموافقة على طلبك، تدخل الاختبار وتنتقل تلقائياً بين المواد (إنجليزي، رياضيات، عربي). الأسئلة الاختيارية تتصحح فوراً، والكتابية يصححها المعلم.',
+         en:'After your request is approved, you take the exam and move automatically between subjects (English, Math, Arabic). Multiple-choice questions are graded instantly, written ones are marked by the teacher.'} },
+    { key:'contact',
+      q:{ar:'📞 كيف أتواصل مع الدعم؟', en:'📞 How do I contact support?'},
+      a:{ar:'تواصل مع إدارة المدرسة مباشرة عبر أرقامها الرسمية، أو مع مسؤول القبول لأي استفسار متعلق بطلبك.',
+         en:'Contact the school administration directly through its official numbers, or the admissions officer for any query related to your request.'} }
+];
+function toggleChat(){
+    const win = document.getElementById('chatWindow');
+    win.classList.toggle('open');
+    if(win.classList.contains('open')) renderChatQuickReplies();
+}
+function renderChatQuickReplies(){
+    const container = document.getElementById('chatQuick');
+    container.innerHTML = '';
+    chatFAQ.forEach(item=>{
+        const btn = document.createElement('button');
+        btn.textContent = item.q[currentLang];
+        btn.onclick = ()=> askChatQuestion(item.key);
+        container.appendChild(btn);
+    });
+}
+function askChatQuestion(key){
+    const item = chatFAQ.find(i=>i.key===key);
+    if(!item) return;
+    const body = document.getElementById('chatBody');
+    body.innerHTML += `<div class="chat-msg user"><div class="bubble">${item.q[currentLang]}</div></div>`;
+    body.innerHTML += `<div class="chat-msg bot"><div class="bubble">${item.a[currentLang]}</div></div>`;
+    body.scrollTop = body.scrollHeight;
+}
+
+// ---------------- ADMIN TABS ----------------
+function switchAdminTab(tabId){
+    document.querySelectorAll('.admin-tab').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById(tabId)?.classList.add('active');
+    document.querySelector(`.admin-tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
 }
 
 // ---------------- ADMIN: STAFF MANAGEMENT ----------------
