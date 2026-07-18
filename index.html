@@ -629,6 +629,23 @@
                 </div>
             </div>
             <div class="dashboard-section">
+                <h4><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">إدارة حسابات الموظفين</span></h4>
+                <p class="page-sub" data-i18n="staffMgmtSub">أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام</p>
+                <div class="admin-question-form">
+                    <input type="text" id="staffName" data-i18n-placeholder="staffNamePh" placeholder="الاسم الكامل" />
+                    <input type="email" id="staffEmail" data-i18n-placeholder="staffEmailPh" placeholder="البريد الإلكتروني" />
+                    <input type="password" id="staffPassword" data-i18n-placeholder="staffPasswordPh" placeholder="كلمة المرور (6 أحرف على الأقل)" />
+                    <select id="staffRole">
+                        <option value="teacher" data-i18n="roleTeacher">معلم</option>
+                        <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
+                        <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="createStaffUser()" id="createStaffBtn"><span data-i18n="createStaffBtn">إنشاء الحساب</span></button>
+                </div>
+                <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
+                <div id="staffList" style="margin-top:14px;"></div>
+            </div>
+            <div class="dashboard-section">
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">إدارة الأسئلة</span></h4>
                 <p class="page-sub" data-i18n="questionMgmtSub">أضف أسئلة الاختبار (اختياري) للمادة والمرحلة المطلوبة</p>
                 <div class="admin-question-form">
