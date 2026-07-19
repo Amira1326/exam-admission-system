@@ -42,7 +42,7 @@ const translations = {
     ar: {
         loaderText:'جاري التحضير...', splashTitle1:'منصة', splashTitle2:'التقييم الإلكتروني', splashTitle3:'مدارس أجيال المعرفة - بوابة الطفل',
         splashSub:'المنصة التعليمية الموحدة', branchTitle:'اختر الفرع', branchSub:'يرجى تحديد الفرع التعليمي المناسب',
-        branchAjyalName:'أجيال المعرفة', branchAjyalDesc:'من Kg II إلى Grade 12', branchKidsName:'بوابة الطفل', branchKidsDesc:'من Kg II إلى Grade 6',
+        branchAjyalName:'أجيال المعرفة', branchAjyalDesc:'من Kg II إلى الثالث الثانوي', branchKidsName:'بوابة الطفل', branchKidsDesc:'من Kg II إلى الرابع الابتدائي',
         next:'التالي', back:'رجوع', roleTitle:'اختر صلاحية الدخول', branchLabel:'الفرع:',
         roleStudent:'طالب', roleTeacher:'معلم', roleRegistrar:'مسؤول قبول', roleAdmin:'مدير النظام',
         loginTitle:'تسجيل الدخول', loginSub:'أدخل بيانات حسابك الوظيفي', emailLabel:'البريد الإلكتروني', passwordLabel:'كلمة المرور', loginBtn:'تسجيل الدخول',
@@ -94,7 +94,7 @@ const translations = {
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
         splashSub:'The Unified Education Platform', branchTitle:'Choose a Branch', branchSub:'Please select the appropriate school branch',
-        branchAjyalName:'Ajyal Al Maarefah', branchAjyalDesc:'From KG2 to Grade 12', branchKidsName:"Kids' Gateway", branchKidsDesc:'From KG2 to Grade 6',
+        branchAjyalName:'Ajyal Al Maarefah', branchAjyalDesc:'From KG2 to Grade 12 (Secondary 3)', branchKidsName:"Kids' Gateway", branchKidsDesc:'From KG2 to Grade 4',
         next:'Next', back:'Back', roleTitle:'Choose Access Role', branchLabel:'Branch:',
         roleStudent:'Student', roleTeacher:'Teacher', roleRegistrar:'Admissions Officer', roleAdmin:'System Administrator',
         loginTitle:'Sign In', loginSub:'Enter your staff account details', emailLabel:'Email Address', passwordLabel:'Password', loginBtn:'Sign In',
@@ -342,7 +342,7 @@ function updateGradeOptions(branch){
     const select = document.getElementById('studentGrade');
     select.querySelectorAll('option').forEach(opt=>{
         opt.style.display='';
-        if(branch==='kids' && ['g7','g8','g9','g10','g11','g12','g13'].includes(opt.value)) opt.style.display='none';
+        if(branch==='kids' && ['g5','g6','g7','g8','g9','g10','g11','g12','g13'].includes(opt.value)) opt.style.display='none';
     });
     select.value='';
 }
@@ -359,7 +359,7 @@ function goToNextPage(){
         document.getElementById('pageRole').classList.remove('active');
         document.getElementById('pageStudentRegister').classList.add('active');
         document.getElementById('registerForm').style.display='block';
-        document.getElementById('waitingMessage').classList.add('hidden');
+        document.getElementById('pageWaitingApproval').classList.remove('active');
         updateStepIndicator(3);
         setBranchRoleBg(false);
         return;
@@ -373,6 +373,7 @@ function goToNextPage(){
 function backToRoleFromForm(){
     document.getElementById('pageLogin').classList.remove('active');
     document.getElementById('pageStudentRegister').classList.remove('active');
+    document.getElementById('pageWaitingApproval').classList.remove('active');
     document.getElementById('pageRole').classList.add('active');
     updateStepIndicator(2);
     setBranchRoleBg(true);
@@ -569,7 +570,7 @@ async function registerStudent(){
     showToast(`✅ ${isAr?'تم التسجيل! الرمز السري':'Registered! Secret code'}: ${data.secret_code}`, 'success', 9000);
 
     const isArab = nationalityType==='arab';
-    const subjectsList = document.getElementById('subjectsList');
+    const subjectsList = document.getElementById('waitingSubjectsList');
     subjectsList.innerHTML='';
     const subjects = [{icon:'📘', key:'subjEnglish'},{icon:'📗', key:'subjMath'}];
     if(isArab) subjects.push({icon:'📙', key:'subjArabic'});
@@ -578,13 +579,15 @@ async function registerStudent(){
         span.className='subject-tag'; span.textContent = t(s.key);
         subjectsList.appendChild(span);
     });
-    document.getElementById('subjectsMessage').classList.remove('hidden');
-    document.getElementById('registerForm').style.display='none';
-    document.getElementById('waitingMessage').classList.remove('hidden');
+    document.getElementById('waitingSubjectsMessage').classList.remove('hidden');
     document.getElementById('checkNationalId').value = id;
     document.getElementById('checkSecretCode').value = data.secret_code;
     document.getElementById('studentStatusBadge').textContent = getStatusLabel('pending');
+    document.getElementById('studentStatusBadge').className = 'status-badge pending';
     status.innerHTML='';
+
+    document.getElementById('pageStudentRegister').classList.remove('active');
+    document.getElementById('pageWaitingApproval').classList.add('active');
 }
 
 async function checkStudentStatus(){
