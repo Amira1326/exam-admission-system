@@ -257,14 +257,15 @@
         .chat-quick button { padding:7px 14px; border-radius:16px; border:1px solid var(--border); background:#fff; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font-main); color:var(--text); }
         .chat-quick button:hover { border-color:var(--primary); color:var(--primary); }
         @media (max-width:480px){ .chat-toggle{ width:50px; height:50px; font-size:20px; bottom:18px; left:18px;} html[dir="ltr"] .chat-toggle{left:auto;right:18px;} .chat-window{ bottom:78px; left:12px; right:12px; width:auto; } html[dir="ltr"] .chat-window{left:12px;right:12px;} }
-        .login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); }
-        .login-box .login-school-logo { margin-bottom: 12px; }
-        .login-box .login-school-logo img { max-height: 130px; }
-        .login-box .login-school-logo .school-name { font-size: 17px; }
-        .login-box .login-school-logo .school-sub { font-size: 11px; }
-        .login-box .login-school-logo .school-est { font-size: 11px; }
-        .login-box .form-group { margin-bottom: 12px; }
-        .login-box .form-group input { padding: 11px 16px; }
+        .login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); max-width: 380px; margin: 0 auto; }
+        .login-box .login-school-logo { margin-bottom: 8px; }
+        .login-box .login-school-logo img { max-height: 70px; }
+        .login-box .login-school-logo .school-name { font-size: 16px; }
+        .login-box .login-school-logo .school-sub { font-size: 10px; }
+        .login-box .login-school-logo .school-est { font-size: 10px; }
+        .login-box .form-group { margin-bottom: 10px; }
+        .login-box .form-group input { padding: 10px 14px; font-size: 13px; }
+        .login-box .form-group label { font-size: 12px; margin-bottom: 4px; }
         .login-school-logo img { max-height: 100px; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 4px 20px rgba(0,0,0,0.1)); }
         .login-school-logo .school-name { display: block; font-weight: 900; font-size: 24px; color: var(--navy); margin-top: 10px; letter-spacing: 0.5px; }
         [data-theme="dark"] .login-school-logo .school-name { color: var(--text); }
@@ -514,10 +515,10 @@
             <div class="login-school-logo" id="schoolLogoContainer">
                 <img id="schoolLogoImg" src="" alt="شعار المدرسة" />
             </div>
-            <div style="text-align:center; margin-bottom: 12px;">
-                <div style="font-size:34px; color:var(--gold-solid); margin-bottom:4px;"><i class="fas fa-lock"></i></div>
-                <div class="page-title" style="justify-content:center;font-size:20px;margin-bottom:2px;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
-                <div class="page-sub" style="margin-bottom:0;" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
+            <div style="text-align:center; margin-bottom: 8px;">
+                <div style="font-size:26px; color:var(--gold-solid); margin-bottom:2px;"><i class="fas fa-lock"></i></div>
+                <div class="page-title" style="justify-content:center;font-size:17px;margin-bottom:2px;"><span data-i18n="loginTitle">تسجيل الدخول</span></div>
+                <div class="page-sub" style="margin-bottom:0;font-size:12px;" data-i18n="loginSub">أدخل بيانات حسابك الوظيفي</div>
             </div>
             <div class="form-group">
                 <label><i class="fas fa-envelope"></i> <span data-i18n="emailLabel">البريد الإلكتروني</span></label>
