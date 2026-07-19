@@ -497,6 +497,8 @@
                 <div class="role-btn" onclick="selectRole('teacher')" id="roleTeacher"><span class="icon"><i class="fas fa-chalkboard-teacher"></i></span><span data-i18n="roleTeacher">معلم</span></div>
                 <div class="role-btn" onclick="selectRole('registrar')" id="roleRegistrar"><span class="icon"><i class="fas fa-user-tie"></i></span><span data-i18n="roleRegistrar">مسؤول قبول</span></div>
                 <div class="role-btn" onclick="selectRole('admin')" id="roleAdmin"><span class="icon"><i class="fas fa-user-shield"></i></span><span data-i18n="roleAdmin">مدير النظام</span></div>
+                <div class="role-btn" onclick="selectRole('supervisor')" id="roleSupervisor"><span class="icon"><i class="fas fa-user-graduate"></i></span><span data-i18n="roleSupervisor">مشرف أكاديمي</span></div>
+                <div class="role-btn" onclick="selectRole('stage_manager')" id="roleStageManager"><span class="icon"><i class="fas fa-building-columns"></i></span><span data-i18n="roleStageManager">مدير مرحلة</span></div>
             </div>
             <div class="btn-group">
                 <button class="btn btn-secondary" onclick="goToBranch()"><i class="fas fa-arrow-right"></i> <span data-i18n="back">رجوع</span></button>
@@ -548,7 +550,7 @@
                     <div class="form-section-label"><span class="num">1</span><span data-i18n="sectionPersonal">البيانات الأساسية</span></div>
                     <div class="form-group">
                         <label><i class="fas fa-user"></i> <span data-i18n="fullNameLabel">الاسم الكامل</span></label>
-                        <input type="text" id="studentName" data-i18n-placeholder="fullNamePh" placeholder="أدخل الاسم رباعياً" />
+                        <input type="text" id="studentName" data-i18n-placeholder="fullNamePh" placeholder="Enter full name in English" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')" />
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -571,7 +573,7 @@
                             <span id="ageDisplay" class="age-display"></span>
                         </div>
                         <div class="form-group">
-                            <label><i class="fas fa-flag"></i> <span data-i18n="typeLabel">التصنيف</span></label>
+                            <label><i class="fas fa-flag"></i> <span data-i18n="typeLabel">فئة</span></label>
                             <select id="studentNationalityType" onchange="toggleNationalities()">
                                 <option value="" data-i18n="chooseOpt">-- اختر --</option>
                                 <option value="arab" data-i18n="typeArab">🌍 عربي</option>
@@ -586,8 +588,11 @@
 
                     <div class="form-section-label"><span class="num">2</span><span data-i18n="sectionContact">بيانات التواصل</span></div>
                     <div class="form-group">
-                        <label><i class="fas fa-phone"></i> <span data-i18n="phoneLabel">رقم الجوال (966+10 أرقام)</span></label>
-                        <input type="text" id="studentPhone" maxlength="13" placeholder="966512345678" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                        <label><i class="fas fa-phone"></i> <span data-i18n="phoneLabel">رقم الجوال</span></label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-weight:700;font-family:var(--font-mono);white-space:nowrap;">+966</span>
+                            <input type="text" id="studentPhone" maxlength="10" placeholder="5XXXXXXXX" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="flex:1;" />
+                        </div>
                     </div>
 
                     <div class="form-section-label"><span class="num">3</span><span data-i18n="sectionAcademic">البيانات الأكاديمية</span></div>
@@ -701,14 +706,8 @@
                 <div class="stat-card"><div class="stat-value" id="registrarStatPending">0</div><div class="stat-label" data-i18n="statNewRequests">طلبات جديدة</div></div>
                 <div class="stat-card"><div class="stat-value" id="registrarStatAccepted">0</div><div class="stat-label" data-i18n="statAccepted">تم القبول</div></div>
                 <div class="stat-card"><div class="stat-value" id="registrarStatRejected">0</div><div class="stat-label" data-i18n="statRejected">تم الرفض</div></div>
-                <div class="stat-card"><div class="stat-value" id="registrarStatAvg">0</div><div class="stat-label" data-i18n="statAvg">متوسط الدرجات</div></div>
             </div>
-            <div class="admin-tabs">
-                <button class="admin-tab-btn active" data-tab="regTabRequests" onclick="switchRegistrarTab('regTabRequests')"><i class="fas fa-clipboard-list"></i> <span data-i18n="requestsTitle">الطلبات</span></button>
-                <button class="admin-tab-btn" data-tab="regTabQuestions" onclick="switchRegistrarTab('regTabQuestions')"><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">بنك الأسئلة</span></button>
-                <button class="admin-tab-btn" data-tab="regTabLeaderboard" onclick="switchRegistrarTab('regTabLeaderboard')"><i class="fas fa-trophy"></i> <span data-i18n="leaderboardTitle">المتصدرين</span></button>
-            </div>
-            <div class="dashboard-section admin-tab active" id="regTabRequests">
+            <div class="dashboard-section">
                 <h4><i class="fas fa-clipboard-list"></i> <span data-i18n="requestsTitle">طلبات التسجيل</span></h4>
                 <input type="text" id="registrarSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterRegistrarList()" style="margin-bottom:10px;" />
                 <div class="field-row" style="margin-bottom:10px;">
@@ -733,7 +732,20 @@
                 </div>
                 <div id="registrarRequestsList"></div>
             </div>
-            <div class="dashboard-section admin-tab" id="regTabQuestions">
+        </div>
+
+        <!-- SUPERVISOR / STAGE MANAGER DASHBOARD (بنك الأسئلة والدرجات) -->
+        <div class="page dashboard-page" id="pageSupervisorDashboard">
+            <div class="dashboard-header">
+                <div><div class="page-title"><i class="fas fa-user-graduate"></i> <span data-i18n="supervisorDashTitle">لوحة المشرف الأكاديمي</span></div>
+                <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="supervisorNameDisplay">المشرف</strong></div></div>
+                <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i> <span data-i18n="logout">تسجيل الخروج</span></button>
+            </div>
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="supTabQuestions" onclick="switchSupervisorTab('supTabQuestions')"><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">بنك الأسئلة</span></button>
+                <button class="admin-tab-btn" data-tab="supTabResults" onclick="switchSupervisorTab('supTabResults')"><i class="fas fa-trophy"></i> <span data-i18n="resultsTitle">النتائج والدرجات</span></button>
+            </div>
+            <div class="dashboard-section admin-tab active" id="supTabQuestions">
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">إدارة الأسئلة</span></h4>
                 <p class="page-sub" data-i18n="questionMgmtSub">أضف أسئلة الاختبار (اختياري) للمادة والمرحلة المطلوبة</p>
                 <div class="admin-question-form">
@@ -803,11 +815,15 @@
                     </select>
                 </div>
                 <button class="btn btn-secondary" onclick="previewExam()" style="margin-top:10px;"><i class="fas fa-eye"></i> <span data-i18n="previewExamBtn">معاينة الاختبار</span></button>
+                <button class="btn btn-secondary" onclick="exportQuestionBankJSON()" style="margin-top:10px;"><i class="fas fa-download"></i> <span data-i18n="exportQuestionsBtn">تصدير بنك الأسئلة (نسخة احتياطية)</span></button>
                 <div id="regQuestionsListSummary" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--gold-solid);"></div>
                 <div id="regQuestionsList" style="margin-top:10px;"></div>
             </div>
-            <div class="dashboard-section admin-tab" id="regTabLeaderboard">
-                <h4><i class="fas fa-trophy"></i> <span data-i18n="leaderboardTitle">لوحة المتصدرين</span></h4>
+            <div class="dashboard-section admin-tab" id="supTabResults">
+                <h4><i class="fas fa-magnifying-glass"></i> <span data-i18n="lookupStudentTitle">البحث عن نتيجة طالب</span></h4>
+                <input type="text" id="supervisorSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterSupervisorStudentList()" style="margin-bottom:12px;" />
+                <div id="supervisorStudentsList"></div>
+                <h4 style="margin-top:22px;"><i class="fas fa-trophy"></i> <span data-i18n="leaderboardTitle">لوحة المتصدرين</span></h4>
                 <div id="registrarLeaderboard"></div>
             </div>
         </div>
@@ -832,7 +848,6 @@
             <div class="admin-tabs">
                 <button class="admin-tab-btn active" data-tab="tabStats" onclick="switchAdminTab('tabStats')"><i class="fas fa-chart-pie"></i> <span data-i18n="statsTitle">الإحصائيات</span></button>
                 <button class="admin-tab-btn" data-tab="tabStaff" onclick="switchAdminTab('tabStaff')"><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">الموظفين</span></button>
-                <button class="admin-tab-btn" data-tab="tabQuestions" onclick="switchAdminTab('tabQuestions')"><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">الأسئلة</span></button>
                 <button class="admin-tab-btn" data-tab="tabRequests" onclick="switchAdminTab('tabRequests')"><i class="fas fa-clipboard-list"></i> <span data-i18n="recentRequestsTitle">الطلبات</span></button>
                 <button class="admin-tab-btn" data-tab="tabActivity" onclick="switchAdminTab('tabActivity')"><i class="fas fa-clock-rotate-left"></i> <span data-i18n="activityLogTitle">سجل النشاط</span></button>
             </div>
@@ -867,6 +882,8 @@
                             <option value="teacher" data-i18n="roleTeacher">معلم</option>
                             <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
                             <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
+                            <option value="supervisor" data-i18n="roleSupervisor">مشرف أكاديمي</option>
+                            <option value="stage_manager" data-i18n="roleStageManager">مدير مرحلة</option>
                         </select>
                     </div>
                     <div>
@@ -907,29 +924,6 @@
                     <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:14px;"><i class="fas fa-save"></i> <span data-i18n="saveSettingsBtn">حفظ الإعدادات</span></button>
                     <div id="settingsStatus" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
                 </div>
-            </div>
-            <div class="dashboard-section admin-tab" id="tabQuestions">
-                <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitleReview">مراجعة بنك الأسئلة</span></h4>
-                <p class="page-sub" data-i18n="questionMgmtSubReview">عرض للمراجعة فقط — الإضافة والتعديل من صلاحية مسؤول القبول</p>
-                <button class="btn btn-secondary" onclick="exportQuestionBankJSON()" style="margin-bottom:12px;"><i class="fas fa-download"></i> <span data-i18n="exportQuestionsBtn">تصدير بنك الأسئلة (نسخة احتياطية)</span></button>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <select id="qListSubject" onchange="loadQuestionsList()">
-                        <option value="" data-i18n="allSubjects">كل المواد</option>
-                        <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
-                        <option value="math" data-i18n="subjMath">📗 رياضيات</option>
-                        <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
-                    </select>
-                    <select id="qListGrade" onchange="loadQuestionsList()">
-                        <option value="" data-i18n="allGrades">كل المراحل</option>
-                        <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
-                        <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
-                        <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
-                        <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
-                        <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
-                    </select>
-                </div>
-                <div id="questionsListSummary" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--gold-solid);"></div>
-                <div id="questionsList" style="margin-top:10px;"></div>
             </div>
             <div class="dashboard-section admin-tab" id="tabRequests">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
