@@ -92,6 +92,19 @@
             background-size: 100% 34px;
         }
         [data-theme="dark"] .animated-bg::before { opacity: 0.08; }
+        #pageBranch, #pageRole { position: relative; }
+        #pageBranch::before, #pageRole::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
+            background-size: 420px;
+            background-repeat: repeat;
+            opacity: 0.16;
+            pointer-events: none;
+        }
+        [data-theme="dark"] #pageBranch::before, [data-theme="dark"] #pageRole::before { opacity: 0.1; }
 
         .glowing-circles { display: none; }
         .circle { display: none; }
