@@ -356,6 +356,10 @@
         [data-theme="dark"] .admin-question-form input, [data-theme="dark"] .admin-question-form select { background: rgba(255,255,255,.06); }
         .admin-question-form input:focus, .admin-question-form select:focus { border-color: var(--gold-solid); box-shadow: 0 0 0 4px rgba(43,69,112,.12); }
         .field-row, .admin-question-form .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .checkbox-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:8px; }
+        .checkbox-grid label { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:7px 10px; background:rgba(255,255,255,.5); border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+        [data-theme="dark"] .checkbox-grid label { background:rgba(255,255,255,.04); }
+        .checkbox-grid input[type="checkbox"] { width:15px; height:15px; accent-color: var(--primary); flex-shrink:0; }
         .nationality-group, .ajyal-section-group { display:none; }
         .nationality-group.show, .ajyal-section-group.show { display:block; }
         .admin-question-form .field-hint { font-size:11px; color:var(--muted); margin-top:-6px; }
@@ -815,7 +819,7 @@
                     </select>
                 </div>
                 <button class="btn btn-secondary" onclick="previewExam()" style="margin-top:10px;"><i class="fas fa-eye"></i> <span data-i18n="previewExamBtn">معاينة الاختبار</span></button>
-                <button class="btn btn-secondary" onclick="exportQuestionBankJSON()" style="margin-top:10px;"><i class="fas fa-download"></i> <span data-i18n="exportQuestionsBtn">تصدير بنك الأسئلة (نسخة احتياطية)</span></button>
+                <button class="btn btn-secondary" id="exportQuestionsBtnEl" onclick="exportQuestionBankJSON()" style="margin-top:10px;"><i class="fas fa-download"></i> <span data-i18n="exportQuestionsBtn">تصدير بنك الأسئلة (نسخة احتياطية)</span></button>
                 <div id="regQuestionsListSummary" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--gold-solid);"></div>
                 <div id="regQuestionsList" style="margin-top:10px;"></div>
             </div>
@@ -850,6 +854,7 @@
                 <button class="admin-tab-btn" data-tab="tabStaff" onclick="switchAdminTab('tabStaff')"><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">الموظفين</span></button>
                 <button class="admin-tab-btn" data-tab="tabRequests" onclick="switchAdminTab('tabRequests')"><i class="fas fa-clipboard-list"></i> <span data-i18n="recentRequestsTitle">الطلبات</span></button>
                 <button class="admin-tab-btn" data-tab="tabActivity" onclick="switchAdminTab('tabActivity')"><i class="fas fa-clock-rotate-left"></i> <span data-i18n="activityLogTitle">سجل النشاط</span></button>
+                <button class="admin-tab-btn" data-tab="tabAnalytics" onclick="switchAdminTab('tabAnalytics')"><i class="fas fa-chart-line"></i> <span data-i18n="advancedAnalyticsTitle">تحليلات متقدمة</span></button>
             </div>
             <div class="dashboard-section admin-tab active" id="tabStats">
                 <h4><i class="fas fa-chart-pie"></i> <span data-i18n="statsTitle">الإحصائيات</span></h4>
@@ -878,7 +883,7 @@
                     </div>
                     <div>
                         <label data-i18n="roleLabel">الدور الوظيفي</label>
-                        <select id="staffRole">
+                        <select id="staffRole" onchange="updateStaffTabsSection()">
                             <option value="teacher" data-i18n="roleTeacher">معلم</option>
                             <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
                             <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
@@ -894,6 +899,40 @@
                             <option value="kids" data-i18n="branchKidsName">بوابة الطفل</option>
                         </select>
                         <div class="field-hint" data-i18n="staffBranchHint">إذا حددت فرعاً، المعلم أو مسؤول القبول بيشوف طلاب هذا الفرع فقط</div>
+                    </div>
+                    <div>
+                        <label data-i18n="allowedGradesLabel">🎓 المراحل المسموحة</label>
+                        <div class="field-hint" data-i18n="allowedGradesHint" style="margin-bottom:6px;">اختر مرحلة أو أكثر. اتركها فارغة يعني كل المراحل.</div>
+                        <div class="checkbox-grid" id="staffGradesCheckboxes">
+                            <label><input type="checkbox" value="kg2" /> KG2</label>
+                            <label><input type="checkbox" value="g1" /> <span data-i18n="g_g1_short">الأول</span></label>
+                            <label><input type="checkbox" value="g2" /> <span data-i18n="g_g2_short">الثاني</span></label>
+                            <label><input type="checkbox" value="g3" /> <span data-i18n="g_g3_short">الثالث</span></label>
+                            <label><input type="checkbox" value="g4" /> <span data-i18n="g_g4_short">الرابع</span></label>
+                            <label><input type="checkbox" value="g5" /> <span data-i18n="g_g5_short">الخامس</span></label>
+                            <label><input type="checkbox" value="g6" /> <span data-i18n="g_g6_short">السادس</span></label>
+                            <label><input type="checkbox" value="g7" /> <span data-i18n="g_g7_short">السابع</span></label>
+                            <label><input type="checkbox" value="g8" /> <span data-i18n="g_g8_short">الثامن</span></label>
+                            <label><input type="checkbox" value="g9" /> <span data-i18n="g_g9_short">التاسع</span></label>
+                            <label><input type="checkbox" value="g10" /> <span data-i18n="g_g10_short">العاشر</span></label>
+                            <label><input type="checkbox" value="g11" /> <span data-i18n="g_g11_short">الحادي عشر</span></label>
+                            <label><input type="checkbox" value="g12" /> <span data-i18n="g_g12_short">الثاني عشر</span></label>
+                            <label><input type="checkbox" value="g13" /> <span data-i18n="g_g13_short">الثالث الثانوي</span></label>
+                        </div>
+                    </div>
+                    <div>
+                        <label data-i18n="extraPermissionsLabel">🔑 صلاحيات إضافية لهذا الحساب</label>
+                        <div class="field-hint" data-i18n="extraPermissionsHint" style="margin-bottom:6px;">تُمنح فوق صلاحيات الدور الأساسي. مدير النظام لديه كل الصلاحيات دائماً.</div>
+                        <div class="checkbox-grid" id="staffPermissionsCheckboxes">
+                            <label><input type="checkbox" value="bulk_actions" checked /> <span data-i18n="permBulkActions">الإجراءات الجماعية</span></label>
+                            <label><input type="checkbox" value="export_data" checked /> <span data-i18n="permExportData">تصدير البيانات</span></label>
+                            <label><input type="checkbox" value="delete_records" checked /> <span data-i18n="permDeleteRecords">حذف الأسئلة/الحسابات</span></label>
+                        </div>
+                    </div>
+                    <div id="staffVisibleTabsSection" class="hidden">
+                        <label data-i18n="visibleTabsLabel">📑 التبويبات الظاهرة لهذا الحساب</label>
+                        <div class="field-hint" data-i18n="visibleTabsHint" style="margin-bottom:6px;">أزل علامة أي تبويب لإخفائه عن هذا الحساب فقط.</div>
+                        <div class="checkbox-grid" id="staffTabsCheckboxes"></div>
                     </div>
                     <button class="btn btn-primary" onclick="createStaffUser()" id="createStaffBtn"><span data-i18n="createStaffBtn">إنشاء الحساب</span></button>
                 </div>
@@ -927,7 +966,7 @@
             </div>
             <div class="dashboard-section admin-tab" id="tabRequests">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
-                <button class="btn btn-secondary" onclick="exportStudentsCSV()" style="margin-bottom:12px;"><i class="fas fa-file-csv"></i> <span data-i18n="exportCsvBtn">تصدير Excel/CSV</span></button>
+                <button class="btn btn-secondary" id="exportStudentsBtnEl" onclick="exportStudentsCSV()" style="margin-bottom:12px;"><i class="fas fa-file-csv"></i> <span data-i18n="exportCsvBtn">تصدير Excel/CSV</span></button>
                 <input type="text" id="adminSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterAdminList()" style="margin-bottom:14px;" />
                 <table class="data-table">
                     <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thBranch">الفرع</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
@@ -938,6 +977,23 @@
                 <h4><i class="fas fa-clock-rotate-left"></i> <span data-i18n="activityLogTitle">سجل النشاط</span></h4>
                 <p class="page-sub" data-i18n="activityLogSub">آخر 50 عملية تمت من قبل الموظفين</p>
                 <div id="activityLogList"></div>
+            </div>
+            <div class="dashboard-section admin-tab" id="tabAnalytics">
+                <h4><i class="fas fa-filter"></i> <span data-i18n="funnelTitle">قمع القبول</span></h4>
+                <div id="funnelDisplay" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;"></div>
+
+                <h4><i class="fas fa-code-compare"></i> <span data-i18n="branchCompareTitle">مقارنة الفروع</span></h4>
+                <div id="branchCompareDisplay" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;"></div>
+
+                <h4><i class="fas fa-user-tie"></i> <span data-i18n="registrarPerfTitle">أداء مسؤولي القبول</span></h4>
+                <div id="registrarPerfDisplay" style="margin-bottom:24px;"></div>
+
+                <h4><i class="fas fa-chalkboard-teacher"></i> <span data-i18n="teacherPerfTitle">أداء المعلمين بالتصحيح</span></h4>
+                <div id="teacherPerfDisplay" style="margin-bottom:24px;"></div>
+
+                <h4><i class="fas fa-triangle-exclamation"></i> <span data-i18n="duplicatesTitle">تنبيه تكرار محتمل</span></h4>
+                <p class="page-sub" data-i18n="duplicatesSub">نفس الاسم وتاريخ الميلاد برقم هوية مختلف</p>
+                <div id="duplicatesDisplay"></div>
             </div>
         </div>
     </div>
