@@ -77,7 +77,15 @@ const translations = {
         stepBranch:'الفرع', stepRole:'الصلاحية', stepDetails:'البيانات',
         chatTitle:'مساعد المنصة', chatWelcome:'👋 أهلاً! اختر سؤال من الأسفل وبجاوبك فوراً.',
         questionMgmtTitleReview:'مراجعة بنك الأسئلة', questionMgmtSubReview:'عرض للمراجعة فقط — الإضافة والتعديل من صلاحية مسؤول القبول',
-        checkExistingStatusLink:'تحقق من حالة طلب سابق'
+        checkExistingStatusLink:'تحقق من حالة طلب سابق',
+        roleLabel:'الدور الوظيفي', subjectLabel:'المادة', questionTextLabel:'نص السؤال', optionsLabel:'الخيارات',
+        optionsHint:'افصل كل خيار بفاصلة — مثال: التفاحة,البرتقالة,الموزة',
+        correctIndexLabel:'الإجابة الصحيحة', correctIndexHint:'0 = الخيار الأول، 1 = الثاني، وهكذا', marksFieldLabel:'عدد الدرجات',
+        activityLogTitle:'سجل النشاط', activityLogSub:'آخر 50 عملية تمت من قبل الموظفين',
+        exportCsvBtn:'تصدير Excel/CSV', bySubjectPerf:'متوسط الأداء حسب المادة',
+        bulkImportTitle:'استيراد أسئلة بالجملة', bulkImportSub:'ملف JSON يحتوي مصفوفة أسئلة بنفس صيغة قاعدة البيانات',
+        bulkImportBtn:'استيراد الملف', staffBranchLabel:'الفرع المخصص له (اختياري)',
+        staffBranchHint:'إذا حددت فرعاً، الموظف بيشوف طلاب هذا الفرع فقط', allBranches:'كل الفروع'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -117,7 +125,15 @@ const translations = {
         stepBranch:'Branch', stepRole:'Role', stepDetails:'Details',
         chatTitle:'Platform Assistant', chatWelcome:'👋 Hi! Pick a question below and I\'ll answer instantly.',
         questionMgmtTitleReview:'Question Bank Review', questionMgmtSubReview:'Read-only view — additions and edits are managed by the admissions officer',
-        checkExistingStatusLink:'Check a previous application status'
+        checkExistingStatusLink:'Check a previous application status',
+        roleLabel:'Job Role', subjectLabel:'Subject', questionTextLabel:'Question Text', optionsLabel:'Options',
+        optionsHint:'Separate each option with a comma — e.g. Apple,Orange,Banana',
+        correctIndexLabel:'Correct Answer', correctIndexHint:'0 = first option, 1 = second, and so on', marksFieldLabel:'Number of Marks',
+        activityLogTitle:'Activity Log', activityLogSub:'Last 50 actions taken by staff',
+        exportCsvBtn:'Export Excel/CSV', bySubjectPerf:'Average Performance by Subject',
+        bulkImportTitle:'Bulk Import Questions', bulkImportSub:'A JSON file containing an array of questions in the same database format',
+        bulkImportBtn:'Import File', staffBranchLabel:'Assigned Branch (optional)',
+        staffBranchHint:'If you set a branch, the staff member will only see that branch\'s students', allBranches:'All Branches'
     }
 };
 
@@ -208,6 +224,28 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }, 3200);
 });
+
+// ---------------- ACTIVITY LOG ----------------
+async function logActivity(action, details){
+    try{
+        await sb.from('activity_log').insert({
+            actor_id: currentUserProfile?.id || null,
+            actor_name: currentUserProfile?.name || 'نظام',
+            action, details: details || null
+        });
+    } catch(e){ /* تجاهل أخطاء التسجيل حتى لا توقف العملية الأساسية */ }
+}
+async function loadActivityLog(){
+    const isAr = currentLang==='ar';
+    const container = document.getElementById('activityLogList');
+    if(!container) return;
+    const { data, error } = await sb.from('activity_log').select('*').order('created_at',{ascending:false}).limit(50);
+    if(error || !data || data.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد نشاط مسجل بعد':'No activity logged yet'}</div>`; return; }
+    container.innerHTML = data.map(a=>{
+        const time = new Date(a.created_at).toLocaleString(isAr?'ar-SA':'en-GB');
+        return `<div class="qa-list-item"><span>👤 <strong>${a.actor_name||'—'}</strong> — ${a.action}${a.details?' · '+a.details:''}</span><span style="font-size:11px;color:var(--muted);white-space:nowrap;">${time}</span></div>`;
+    }).join('');
+}
 
 // ---------------- STANDALONE STATUS CHECK (لطالب راجع بجلسة جديدة) ----------------
 function openStatusCheckModal(){
@@ -321,8 +359,25 @@ function backToRoleFromForm(){
     document.getElementById('pageRole').classList.add('active');
     updateStepIndicator(2);
 }
+let _studentsRealtimeChannel = null;
+function subscribeToNewStudents(){
+    if(_studentsRealtimeChannel) return;
+    const isAr = currentLang==='ar';
+    _studentsRealtimeChannel = sb.channel('new-students')
+        .on('postgres_changes', { event:'INSERT', schema:'public', table:'students' }, (payload)=>{
+            const name = payload.new?.name || '';
+            showToast(isAr ? `🔔 طالب جديد سجّل: ${name}` : `🔔 New student registered: ${name}`, 'info', 8000);
+            if(document.getElementById('pageRegistrarDashboard')?.classList.contains('active')) renderRegistrarDashboard();
+        })
+        .subscribe();
+}
+function unsubscribeFromNewStudents(){
+    if(_studentsRealtimeChannel){ sb.removeChannel(_studentsRealtimeChannel); _studentsRealtimeChannel = null; }
+}
+
 function logout(){
     sb.auth.signOut();
+    unsubscribeFromNewStudents();
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     selectedBranch=''; selectedRole=''; currentUserProfile=null;
     document.querySelectorAll('.branch-card,.role-btn').forEach(el=>el.classList.remove('active'));
@@ -386,6 +441,7 @@ async function login(){
         document.getElementById('registrarNameDisplay').textContent = profile.name;
         await renderRegistrarDashboard();
         document.getElementById('pageRegistrarDashboard').classList.add('active');
+        subscribeToNewStudents();
     } else if(profile.role==='admin'){
         document.getElementById('adminNameDisplay').textContent = profile.name;
         await renderAdminDashboard();
@@ -558,7 +614,9 @@ function showExamLoader(callback){
 // ---------------- REGISTRAR DASHBOARD ----------------
 async function renderRegistrarDashboard(){
     const isAr = currentLang==='ar';
-    const { data: students, error } = await sb.from('students').select('*').order('created_at',{ascending:false});
+    let query = sb.from('students').select('*').order('created_at',{ascending:false});
+    if(currentUserProfile?.branch) query = query.eq('branch', currentUserProfile.branch);
+    const { data: students, error } = await query;
     if(error){ showToast('❌ '+error.message,'error'); return; }
     window._registrarStudentsCache = students;
 
@@ -617,6 +675,8 @@ async function approveStudent(studentId){
         status:'approved', approved_by: currentUserProfile?.id, approved_at: new Date().toISOString()
     }).eq('id', studentId);
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    const st = (window._registrarStudentsCache||[]).find(s=>s.id===studentId);
+    logActivity(currentLang==='ar'?'قبل طالب':'Approved student', st?.name || studentId);
     showToast(currentLang==='ar'?'✅ تم قبول الطالب':'✅ Student approved', 'success');
     renderRegistrarDashboard();
 }
@@ -626,6 +686,8 @@ async function rejectStudent(studentId){
     if(reason===null) return;
     const { error } = await sb.from('students').update({ status:'rejected', rejection_reason: reason || (isAr?'غير محدد':'Not specified') }).eq('id', studentId);
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    const st = (window._registrarStudentsCache||[]).find(s=>s.id===studentId);
+    logActivity(isAr?'رفض طالب':'Rejected student', st?.name || studentId);
     showToast(isAr?'❌ تم رفض الطالب':'❌ Student rejected', 'error');
     renderRegistrarDashboard();
 }
@@ -679,7 +741,9 @@ async function renderLeaderboard(){
 // ---------------- TEACHER DASHBOARD ----------------
 async function renderTeacherDashboard(){
     const isAr = currentLang==='ar';
-    const { data: results, error } = await sb.from('exam_results').select('*, students(name,grade)').order('created_at',{ascending:false});
+    let query = sb.from('exam_results').select('*, students!inner(name,grade,branch)').order('created_at',{ascending:false});
+    if(currentUserProfile?.branch) query = query.eq('students.branch', currentUserProfile.branch);
+    const { data: results, error } = await query;
     if(error){ showToast('❌ '+error.message,'error'); return; }
     window._teacherResultsCache = results || [];
 
@@ -777,6 +841,7 @@ async function submitCorrection(resultId, total){
         score: val, status:'corrected', corrected_by: currentUserProfile?.id, corrected_at: new Date().toISOString()
     }).eq('id', resultId);
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    logActivity(isAr?'صحّح ورقة اختبار':'Marked an exam paper', `${val}/${total}`);
     closeModal();
     showToast(isAr?'✅ تم حفظ التصحيح':'✅ Marking saved', 'success');
     renderTeacherDashboard();
@@ -786,7 +851,7 @@ async function submitCorrection(resultId, total){
 async function renderAdminDashboard(){
     const { data: students } = await sb.from('students').select('*');
     const { data: profiles } = await sb.from('profiles').select('*');
-    const { data: results } = await sb.from('exam_results').select('score,total').not('score','is',null);
+    const { data: results } = await sb.from('exam_results').select('subject,score,total').not('score','is',null);
 
     document.getElementById('adminStatStudents').textContent = students?.length||0;
     document.getElementById('adminStatTeachers').textContent = profiles?.length||0;
@@ -796,9 +861,10 @@ async function renderAdminDashboard(){
     window._adminStudentsCache = students || [];
     filterAdminList();
 
-    createCharts(students||[]);
+    createCharts(students||[], results||[]);
     loadQuestionsList();
     loadStaffList();
+    loadActivityLog();
 }
 function filterAdminList(){
     const isAr = currentLang==='ar';
@@ -816,7 +882,7 @@ function filterAdminList(){
             <td>${s.status==='approved'?`<button class="btn-mini view" onclick="showStudentScores('${s.id}')">📊 ${isAr?'عرض':'View'}</button>`:'--'}</td></tr>`;
     });
 }
-function createCharts(students){
+function createCharts(students, results){
     const isAr = currentLang==='ar';
     const gradeMap={}; students.forEach(s=>gradeMap[s.grade]=(gradeMap[s.grade]||0)+1);
     const ctx1=document.getElementById('gradeChart').getContext('2d');
@@ -832,6 +898,17 @@ function createCharts(students){
     const ctx3=document.getElementById('statusChart').getContext('2d');
     if(charts.status) charts.status.destroy();
     charts.status = new Chart(ctx3, { type:'pie', data:{ labels:[getStatusLabel('pending'),getStatusLabel('approved'),getStatusLabel('rejected')], datasets:[{data:Object.values(statusMap), backgroundColor:['#D64545','#2F9E63','#7A8378']}] } });
+
+    const subjMap = {};
+    (results||[]).forEach(r=>{
+        subjMap[r.subject] = subjMap[r.subject] || [];
+        subjMap[r.subject].push(r.score/r.total*10);
+    });
+    const subjLabels = Object.keys(subjMap).map(getSubjectLabel);
+    const subjAvgs = Object.values(subjMap).map(arr=>+(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1));
+    const ctx4=document.getElementById('subjectPerfChart').getContext('2d');
+    if(charts.subjectPerf) charts.subjectPerf.destroy();
+    charts.subjectPerf = new Chart(ctx4, { type:'bar', data:{ labels: subjLabels.length?subjLabels:[isAr?'لا يوجد':'None'], datasets:[{ label: isAr?'المعدل من 10':'Average out of 10', data: subjAvgs.length?subjAvgs:[0], backgroundColor:'rgba(214,69,69,.55)' }] }, options:{ plugins:{legend:{display:false}}, scales:{ y:{ min:0, max:10 } } } });
 }
 
 // ---------------- ADMIN: QUESTION MANAGEMENT ----------------
@@ -854,6 +931,7 @@ async function addQuestion(){
 
     const { error } = await sb.from('questions').insert({ subject, grade, type:'mcq', question_text:text, options, correct_index:correct, marks });
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    logActivity(isAr?'أضاف سؤال':'Added a question', `${getSubjectLabel(subject)} · ${getGradeLabel(grade)}`);
     showToast(isAr?'✅ تمت إضافة السؤال':'✅ Question added', 'success');
     document.getElementById('regQText').value=''; document.getElementById('regQOptions').value=''; document.getElementById('regQCorrect').value='';
     loadQuestionsList('registrar');
@@ -919,6 +997,7 @@ async function deleteQuestion(id){
     if(!confirm(isAr?'متأكد تبي تحذف هذا السؤال؟':'Are you sure you want to delete this question?')) return;
     const { error } = await sb.from('questions').delete().eq('id', id);
     if(error){ showToast('❌ '+error.message,'error'); return; }
+    logActivity(isAr?'حذف سؤال':'Deleted a question', '');
     showToast(isAr?'🗑️ تم حذف السؤال':'🗑️ Question deleted', 'info');
     loadQuestionsList('registrar');
 }
@@ -995,6 +1074,7 @@ async function createStaffUser(){
     const email = document.getElementById('staffEmail').value.trim();
     const password = document.getElementById('staffPassword').value;
     const role = document.getElementById('staffRole').value;
+    const branch = document.getElementById('staffBranch').value;
     const status = document.getElementById('staffMgmtStatus');
     const btn = document.getElementById('createStaffBtn');
 
@@ -1009,7 +1089,7 @@ async function createStaffUser(){
     status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الإنشاء...':'Creating...'}`;
 
     const { data, error } = await sb.functions.invoke('create-staff-user', {
-        body: { name, email, password, role }
+        body: { name, email, password, role, branch: branch || null }
     });
     btn.disabled = false;
 
@@ -1024,10 +1104,12 @@ async function createStaffUser(){
     }
 
     status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?'تم إنشاء الحساب بنجاح':'Account created successfully'}</span>`;
+    logActivity(isAr?'أنشأ حساب موظف':'Created a staff account', `${name} (${role})`);
     showToast(isAr?'✅ تم إنشاء حساب الموظف بنجاح':'✅ Staff account created successfully', 'success');
     document.getElementById('staffName').value='';
     document.getElementById('staffEmail').value='';
     document.getElementById('staffPassword').value='';
+    document.getElementById('staffBranch').value='';
     loadStaffList();
 }
 
@@ -1041,8 +1123,97 @@ async function loadStaffList(){
     const roleLabel = r => r==='admin'?t('roleAdmin'): r==='teacher'?t('roleTeacher'): t('roleRegistrar');
     container.innerHTML = profiles.map(p=>`
         <div class="qa-list-item">
-            <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong></span>
+            <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong>${p.branch?` · ${getBranchLabel(p.branch)}`:''}</span>
+            ${p.id!==currentUserProfile?.id ? `<button class="btn-mini reject" onclick="deleteStaffUser('${p.id}','${p.name.replace(/'/g,"")}')">${isAr?'حذف':'Delete'}</button>` : `<span style="font-size:11px;color:var(--muted);">${isAr?'(أنت)':'(you)'}</span>`}
         </div>`).join('');
+}
+async function deleteStaffUser(userId, name){
+    const isAr = currentLang==='ar';
+    if(!confirm(isAr?`متأكد تبي تحذف حساب "${name}"؟ هذا الإجراء لا يمكن التراجع عنه.`:`Are you sure you want to delete "${name}"'s account? This cannot be undone.`)) return;
+    const { data, error } = await sb.functions.invoke('delete-staff-user', { body: { userId } });
+    if(error || data?.error){
+        const msg = data?.error || error.message || '';
+        showToast('❌ ' + (msg.includes('NOT_ADMIN') ? (isAr?'فقط مدير النظام يقدر يحذف حسابات':'Only a system administrator can delete accounts') : (isAr?'تعذر حذف الحساب':'Could not delete account')), 'error');
+        return;
+    }
+    logActivity(isAr?'حذف حساب موظف':'Deleted a staff account', name);
+    showToast(isAr?'🗑️ تم حذف الحساب':'🗑️ Account deleted', 'info');
+    loadStaffList();
+}
+
+async function exportStudentsCSV(){
+    const isAr = currentLang==='ar';
+    const { data: students } = await sb.from('students').select('*').order('created_at',{ascending:false});
+    const { data: results } = await sb.from('exam_results').select('student_id, subject, score, total');
+    if(!students || students.length===0){ showToast(isAr?'⚠️ لا توجد بيانات للتصدير':'⚠️ No data to export', 'warning'); return; }
+
+    const scoresByStudent = {};
+    (results||[]).forEach(r=>{
+        scoresByStudent[r.student_id] = scoresByStudent[r.student_id] || [];
+        if(r.score!=null) scoresByStudent[r.student_id].push(r.score/r.total*10);
+    });
+
+    const headers = isAr
+        ? ['الاسم','رقم الهوية','الجوال','الفرع','المرحلة','الجنسية','الحالة','المعدل من 10','تاريخ التسجيل']
+        : ['Name','National ID','Phone','Branch','Grade','Nationality Type','Status','Average /10','Registered At'];
+
+    const rows = students.map(s=>{
+        const arr = scoresByStudent[s.id] || [];
+        const avg = arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : '';
+        return [
+            s.name, s.national_id, s.phone, getBranchLabel(s.branch), getGradeLabel(s.grade),
+            s.nationality_type==='arab'?(isAr?'عربي':'Arab'):(isAr?'أجنبي':'Foreign'),
+            getStatusLabel(s.status), avg, new Date(s.created_at).toLocaleDateString(isAr?'ar-SA':'en-GB')
+        ];
+    });
+
+    const csvContent = [headers, ...rows].map(row =>
+        row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')
+    ).join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `students_export_${Date.now()}.csv`;
+    link.click();
+    logActivity(isAr?'صدّر بيانات الطلاب':'Exported student data', `${students.length} ${isAr?'طالب':'students'}`);
+    showToast(isAr?'✅ تم تصدير الملف':'✅ File exported', 'success');
+}
+
+async function bulkImportQuestions(){
+    const isAr = currentLang==='ar';
+    const fileInput = document.getElementById('bulkImportFile');
+    const status = document.getElementById('bulkImportStatus');
+    const file = fileInput.files[0];
+    if(!file){ status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'اختر ملف أولاً':'Choose a file first'}</span>`; return; }
+
+    status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري القراءة...':'Reading...'}`;
+    try{
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const items = Array.isArray(parsed) ? parsed : [parsed];
+        if(items.length===0){ status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'الملف فارغ':'File is empty'}</span>`; return; }
+
+        const validTypes = ['mcq','written','match','sort'];
+        for(const item of items){
+            if(!item.subject || !item.grade || !validTypes.includes(item.type) || !item.question_text){
+                status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'صيغة غير صحيحة في أحد الأسئلة (تأكد من subject, grade, type, question_text)':'Invalid format in one of the questions (check subject, grade, type, question_text)'}</span>`;
+                return;
+            }
+        }
+
+        status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الاستيراد...':'Importing...'}`;
+        const { error } = await sb.from('questions').insert(items);
+        if(error){ status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`; return; }
+
+        logActivity(isAr?'استورد أسئلة بالجملة':'Bulk imported questions', `${items.length} ${isAr?'سؤال':'questions'}`);
+        status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?`تم استيراد ${items.length} سؤال بنجاح`:`Successfully imported ${items.length} questions`}</span>`;
+        showToast(isAr?'✅ تم الاستيراد بنجاح':'✅ Import successful', 'success');
+        fileInput.value = '';
+        loadQuestionsList('registrar');
+    } catch(e){
+        status.innerHTML = `<span style="color:var(--danger);">❌ ${isAr?'الملف مو JSON صحيح':'File is not valid JSON'}</span>`;
+    }
 }
 
 // ---------------- PDF REPORT ----------------
