@@ -1070,19 +1070,64 @@ async function loadQuestionsList(mode){
 
     if(summary){
         const totalMarks = questions.reduce((s,q)=>s+(q.marks||0),0);
-        summary.textContent = isAr ? `📋 ${questions.length} سؤال · ${totalMarks} درجة` : `📋 ${questions.length} questions · ${totalMarks} marks`;
+        const hint = (subjectFilter && gradeFilter) ? '' : (isAr ? ' · اختر مادة ومرحلة لمشاهدة الاختبار كامل بترتيبه' : ' · Select a subject and grade to view the full exam in order');
+        summary.textContent = isAr ? `📋 ${questions.length} سؤال · ${totalMarks} درجة${hint}` : `📋 ${questions.length} questions · ${totalMarks} marks${hint}`;
     }
 
-    container.innerHTML = questions.map(q=>`
-        <div class="qa-list-item">
-            <span>${getSubjectLabel(q.subject)} · ${getGradeLabel(q.grade)} · ${q.question_text.slice(0,50)}${q.question_text.length>50?'…':''}</span>
-            <span style="display:flex;gap:6px;align-items:center;white-space:nowrap;">
-                <span class="badge-status waiting" style="font-family:var(--font-mono);">${q.marks}${isAr?' د':' pts'}</span>
-                ${cfg.editable ? `
-                <button class="btn-mini neutral" onclick="editQuestionMarks('${q.id}', ${q.marks})">${isAr?'✏️ تعديل':'✏️ Edit'}</button>
-                <button class="btn-mini reject" onclick="deleteQuestion('${q.id}')">${isAr?'حذف':'Delete'}</button>` : ''}
-            </span>
-        </div>`).join('');
+    const typeLabel = ty => ({ mcq: isAr?'اختياري':'MCQ', written: isAr?'كتابي':'Written', match: isAr?'وصل':'Match', sort: isAr?'ترتيب':'Sort' }[ty] || ty);
+    const letters = ['أ','ب','ج','د'];
+
+    container.innerHTML = questions.map((q, idx)=>{
+        let bodyHtml = '';
+        if(q.type==='mcq' && q.options){
+            bodyHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${q.options.map((opt,i)=>`
+                <span style="padding:4px 10px;border-radius:8px;font-size:12px;border:1px solid ${i===q.correct_index?'var(--success)':'var(--border)'};${i===q.correct_index?'background:rgba(47,158,99,.1);color:var(--success);font-weight:700;':'color:var(--muted);'}">${letters[i]||i}. ${opt}${i===q.correct_index?' ✓':''}</span>
+            `).join('')}</div>`;
+        } else if(q.type==='match' && q.match_items){
+            bodyHtml = `<div style="font-size:12px;color:var(--muted);margin-top:6px;">${isAr?'وصل':'Match'}: ${q.match_items.map(it=>`${it.label||''}→${it.correct}`).join(' · ')}</div>`;
+        } else if(q.type==='sort' && q.correct_order){
+            bodyHtml = `<div style="font-size:12px;color:var(--muted);margin-top:6px;">${isAr?'الترتيب الصحيح':'Correct order'}: ${q.correct_order.join(' ← ')}</div>`;
+        } else if(q.type==='written'){
+            bodyHtml = `<div style="font-size:12px;color:var(--muted);margin-top:6px;">${q.instructions||''}</div>`;
+        }
+        const marksControl = cfg.editable
+            ? `<input type="number" class="qbank-marks-input" data-id="${q.id}" value="${q.marks}" min="0" step="0.5" onchange="quickSaveMarks('${q.id}', this)" style="width:70px;text-align:center;padding:6px;border-radius:8px;border:1px solid var(--border);font-family:var(--font-mono);font-weight:700;" />`
+            : `<span class="badge-status waiting" style="font-family:var(--font-mono);">${q.marks}${isAr?' د':' pts'}</span>`;
+
+        return `<div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--card);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                <div style="flex:1;">
+                    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">
+                        <strong style="color:var(--primary);">#${q.order_index ?? idx+1}</strong> · ${getSubjectLabel(q.subject)} · ${getGradeLabel(q.grade)} · ${typeLabel(q.type)}
+                    </div>
+                    <div style="font-weight:700;font-size:14px;">${q.question_text}</div>
+                    ${bodyHtml}
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;align-items:center;white-space:nowrap;">
+                    ${marksControl}
+                    ${cfg.editable ? `<button class="btn-mini reject" onclick="deleteQuestion('${q.id}')">${isAr?'حذف':'Delete'}</button>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+async function quickSaveMarks(id, inputEl){
+    const isAr = currentLang==='ar';
+    const val = parseFloat(inputEl.value);
+    if(isNaN(val) || val<0){ showToast(isAr?'⚠️ قيمة غير صحيحة':'⚠️ Invalid value', 'warning'); return; }
+    const { error } = await sb.from('questions').update({ marks: val }).eq('id', id);
+    if(error){ showToast('❌ '+error.message, 'error'); return; }
+    logActivity(isAr?'عدّل درجة سؤال':'Edited question marks', String(val));
+    showToast(isAr?'✅ تم تحديث الدرجة':'✅ Marks updated', 'success', 1800);
+    const summaryEl = document.getElementById('regQuestionsListSummary') || document.getElementById('questionsListSummary');
+    if(summaryEl){
+        const inputs = document.querySelectorAll('.qbank-marks-input');
+        if(inputs.length){
+            let total = 0; inputs.forEach(i=>total += parseFloat(i.value)||0);
+            const isAr2 = currentLang==='ar';
+            summaryEl.textContent = isAr2 ? `📋 ${inputs.length} سؤال · ${total} درجة` : `📋 ${inputs.length} questions · ${total} marks`;
+        }
+    }
 }
 function editQuestionMarks(id, currentMarks){
     const isAr = currentLang==='ar';
