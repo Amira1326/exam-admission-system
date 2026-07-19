@@ -446,16 +446,57 @@ function renderDots(){
         container.appendChild(dot);
     });
 }
-function uploadWrittenSolution(input){
+function compressImage(file, maxWidth, quality){
+    return new Promise((resolve, reject)=>{
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; };
+        reader.onerror = reject;
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if(w > maxWidth){ h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+        };
+        img.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+async function uploadWrittenSolution(input){
     const file = input.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = e=>{
-        const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
-        writtenUploads[q.id] = e.target.result;
+    const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
+
+    if(!file.type.startsWith('image/')){
+        alert('⚠️ يرجى اختيار ملف صورة فقط (JPG أو PNG)');
+        input.value = '';
+        return;
+    }
+    if(file.size > 15 * 1024 * 1024){
+        alert('⚠️ حجم الصورة كبير جداً (الحد الأقصى 15 ميجا)');
+        input.value = '';
+        return;
+    }
+
+    const uploadArea = input.closest('.upload-area');
+    const originalHtml = uploadArea ? uploadArea.innerHTML : '';
+    if(uploadArea) uploadArea.innerHTML = '<p>⏳ جاري رفع الصورة...</p>';
+
+    try{
+        const compressedBlob = await compressImage(file, 1200, 0.7);
+        const path = `${studentId}/${q.id}_${Date.now()}.jpg`;
+        const { error: uploadError } = await sb.storage.from('written-answers').upload(path, compressedBlob, { contentType: 'image/jpeg', upsert: true });
+        if(uploadError){ throw uploadError; }
+        const { data: urlData } = sb.storage.from('written-answers').getPublicUrl(path);
+        writtenUploads[q.id] = urlData.publicUrl;
         renderQuestion();
         saveProgress();
-    };
-    reader.readAsDataURL(file);
+    } catch(e){
+        alert('❌ تعذر رفع الصورة، حاول مرة أخرى: ' + (e.message||''));
+        if(uploadArea) uploadArea.innerHTML = originalHtml;
+        input.value = '';
+    }
 }
 function nextQuestion(){
     const stage = stagesList[currentStageIdx];
