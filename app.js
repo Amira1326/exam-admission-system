@@ -92,7 +92,14 @@ const translations = {
         passThresholdLabel:'درجة النجاح (%)', saveSettingsBtn:'حفظ الإعدادات', exportQuestionsBtn:'تصدير بنك الأسئلة (نسخة احتياطية)',
         previewExamBtn:'معاينة الاختبار', forgotPasswordLink:'نسيت كلمة المرور؟',
         roleSupervisor:'مشرف أكاديمي', roleStageManager:'مدير مرحلة', supervisorDashTitle:'لوحة المشرف الأكاديمي',
-        resultsTitle:'النتائج والدرجات', lookupStudentTitle:'البحث عن نتيجة طالب'
+        resultsTitle:'النتائج والدرجات', lookupStudentTitle:'البحث عن نتيجة طالب',
+        advancedAnalyticsTitle:'تحليلات متقدمة', funnelTitle:'قمع القبول', branchCompareTitle:'مقارنة الفروع',
+        registrarPerfTitle:'أداء مسؤولي القبول', teacherPerfTitle:'أداء المعلمين بالتصحيح',
+        duplicatesTitle:'تنبيه تكرار محتمل', duplicatesSub:'نفس الاسم وتاريخ الميلاد برقم هوية مختلف',
+        allowedGradesLabel:'🎓 المراحل المسموحة', allowedGradesHint:'اختر مرحلة أو أكثر. اتركها فارغة يعني كل المراحل.',
+        extraPermissionsLabel:'🔑 صلاحيات إضافية لهذا الحساب', extraPermissionsHint:'تُمنح فوق صلاحيات الدور الأساسي. مدير النظام لديه كل الصلاحيات دائماً.',
+        permBulkActions:'الإجراءات الجماعية', permExportData:'تصدير البيانات', permDeleteRecords:'حذف الأسئلة/الحسابات',
+        visibleTabsLabel:'📑 التبويبات الظاهرة لهذا الحساب', visibleTabsHint:'أزل علامة أي تبويب لإخفائه عن هذا الحساب فقط.'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -147,7 +154,14 @@ const translations = {
         passThresholdLabel:'Pass Threshold (%)', saveSettingsBtn:'Save Settings', exportQuestionsBtn:'Export Question Bank (Backup)',
         previewExamBtn:'Preview Exam', forgotPasswordLink:'Forgot your password?',
         roleSupervisor:'Academic Supervisor', roleStageManager:'Stage Manager', supervisorDashTitle:'Academic Supervisor Dashboard',
-        resultsTitle:'Results & Grades', lookupStudentTitle:'Look Up a Student Result'
+        resultsTitle:'Results & Grades', lookupStudentTitle:'Look Up a Student Result',
+        advancedAnalyticsTitle:'Advanced Analytics', funnelTitle:'Admission Funnel', branchCompareTitle:'Branch Comparison',
+        registrarPerfTitle:'Registrar Performance', teacherPerfTitle:'Teacher Marking Performance',
+        duplicatesTitle:'Possible Duplicate Alert', duplicatesSub:'Same name and birthdate with a different ID',
+        allowedGradesLabel:'🎓 Allowed Grades', allowedGradesHint:'Select one or more grades. Leave empty for all grades.',
+        extraPermissionsLabel:'🔑 Extra Permissions for This Account', extraPermissionsHint:'Granted on top of the base role permissions. System admin always has full access.',
+        permBulkActions:'Bulk Actions', permExportData:'Export Data', permDeleteRecords:'Delete Questions/Accounts',
+        visibleTabsLabel:'📑 Visible Tabs for This Account', visibleTabsHint:'Uncheck a tab to hide it for this account only.'
     }
 };
 
@@ -707,9 +721,11 @@ async function renderRegistrarDashboard(){
     const isAr = currentLang==='ar';
     let query = sb.from('students').select('*').order('created_at',{ascending:false});
     if(currentUserProfile?.branch) query = query.eq('branch', currentUserProfile.branch);
+    if(currentUserProfile?.allowed_grades?.length) query = query.in('grade', currentUserProfile.allowed_grades);
     const { data: students, error } = await query;
     if(error){ showToast('❌ '+error.message,'error'); return; }
     window._registrarStudentsCache = students;
+    applyGradeRestriction(['registrarGradeFilter']);
 
     document.getElementById('registrarStatPending').textContent = students.filter(s=>s.status==='pending').length;
     document.getElementById('registrarStatAccepted').textContent = students.filter(s=>s.status==='approved').length;
@@ -743,7 +759,7 @@ function filterRegistrarList(){
             let actions='';
             let checkbox = '';
             if(s.status==='pending'){
-                checkbox = `<input type="checkbox" class="bulk-select-cb" data-id="${s.id}" onchange="toggleBulkSelect('${s.id}', this.checked)" ${_bulkSelectedIds.has(s.id)?'checked':''} style="width:18px;height:18px;margin-left:8px;" />`;
+                checkbox = hasPermission('bulk_actions') ? `<input type="checkbox" class="bulk-select-cb" data-id="${s.id}" onchange="toggleBulkSelect('${s.id}', this.checked)" ${_bulkSelectedIds.has(s.id)?'checked':''} style="width:18px;height:18px;margin-left:8px;" />` : '';
                 actions = `<div class="request-actions">
                     <button class="btn-sm approve" onclick="approveStudent('${s.id}')">✅ ${isAr?'قبول':'Approve'}</button>
                     <button class="btn-sm reject" onclick="rejectStudent('${s.id}')">❌ ${isAr?'رفض':'Reject'}</button></div>`;
@@ -775,7 +791,7 @@ function updateBulkActionsBar(){
     const isAr = currentLang==='ar';
     const bar = document.getElementById('bulkActionsBar');
     const countEl = document.getElementById('bulkSelectedCount');
-    if(_bulkSelectedIds.size>0){
+    if(_bulkSelectedIds.size>0 && hasPermission('bulk_actions')){
         bar.classList.remove('hidden');
         countEl.textContent = isAr ? `✅ ${_bulkSelectedIds.size} محدد` : `✅ ${_bulkSelectedIds.size} selected`;
     } else {
@@ -1042,10 +1058,13 @@ async function renderAdminDashboard(){
     filterAdminList();
 
     createCharts(students||[], results||[]);
-    loadQuestionsList();
     loadStaffList();
     loadActivityLog();
     loadSettingsIntoForm();
+    renderAdvancedAnalytics();
+    applyTabVisibility('#pageAdminDashboard');
+    const exportBtn = document.getElementById('exportStudentsBtnEl');
+    if(exportBtn) exportBtn.style.display = hasPermission('export_data') ? '' : 'none';
 }
 function filterAdminList(){
     const isAr = currentLang==='ar';
@@ -1171,7 +1190,7 @@ async function loadQuestionsList(mode){
                 </div>
                 <div style="display:flex;flex-direction:column;gap:6px;align-items:center;white-space:nowrap;">
                     ${marksControl}
-                    ${cfg.editable ? `<button class="btn-mini reject" onclick="deleteQuestion('${q.id}')">${isAr?'حذف':'Delete'}</button>` : ''}
+                    ${cfg.editable && hasPermission('delete_records') ? `<button class="btn-mini reject" onclick="deleteQuestion('${q.id}')">${isAr?'حذف':'Delete'}</button>` : ''}
                 </div>
             </div>
         </div>`;
@@ -1344,6 +1363,44 @@ function askChatQuestion(key){
 }
 
 // ---------------- ADMIN TABS ----------------
+// ---------------- ACCOUNT RESTRICTIONS (صلاحيات دقيقة لكل حساب) ----------------
+function hasPermission(key){
+    if(!currentUserProfile) return false;
+    if(currentUserProfile.role === 'admin') return true; // مدير النظام دائماً كل الصلاحيات
+    const perms = currentUserProfile.extra_permissions;
+    if(perms === null || perms === undefined) return true; // حساب قديم قبل هذي الميزة = صلاحيات كاملة افتراضياً
+    return Array.isArray(perms) && perms.includes(key);
+}
+function applyTabVisibility(dashboardSelector){
+    const tabs = currentUserProfile?.visible_tabs;
+    if(!tabs || tabs.length===0) return; // فارغة أو غير محددة = كل التبويبات ظاهرة
+    const allowed = new Set(tabs);
+    let anyVisibleActive = false;
+    document.querySelectorAll(`${dashboardSelector} .admin-tab-btn`).forEach(btn=>{
+        if(!allowed.has(btn.dataset.tab)){ btn.style.display='none'; }
+        else if(btn.classList.contains('active')){ anyVisibleActive = true; }
+    });
+    if(!anyVisibleActive){
+        const firstVisibleBtn = Array.from(document.querySelectorAll(`${dashboardSelector} .admin-tab-btn`)).find(b=>b.style.display!=='none');
+        if(firstVisibleBtn) firstVisibleBtn.click();
+    }
+}
+function applyGradeRestriction(selectIds){
+    const grades = currentUserProfile?.allowed_grades;
+    if(!grades || grades.length===0) return; // فارغة = كل المراحل
+    const allowed = new Set(grades);
+    selectIds.forEach(id=>{
+        const sel = document.getElementById(id);
+        if(!sel) return;
+        Array.from(sel.options).forEach(opt=>{ if(opt.value && !allowed.has(opt.value)) opt.style.display='none'; });
+    });
+}
+function isGradeAllowed(grade){
+    const grades = currentUserProfile?.allowed_grades;
+    if(!grades || grades.length===0) return true;
+    return grades.includes(grade);
+}
+
 function switchAdminTab(tabId){
     document.querySelectorAll('#pageAdminDashboard .admin-tab').forEach(el=>el.classList.remove('active'));
     document.querySelectorAll('#pageAdminDashboard .admin-tab-btn').forEach(el=>el.classList.remove('active'));
@@ -1400,11 +1457,18 @@ async function exportQuestionBankJSON(){
 
 // ---------------- SUPERVISOR / STAGE MANAGER DASHBOARD ----------------
 async function renderSupervisorDashboard(){
+    applyGradeRestriction(['regQGrade','regQListGrade']);
     loadQuestionsList('registrar');
     await renderLeaderboard();
-    const { data: students } = await sb.from('students').select('*').eq('status','approved').order('name');
+    let query = sb.from('students').select('*').eq('status','approved').order('name');
+    if(currentUserProfile?.allowed_grades?.length) query = query.in('grade', currentUserProfile.allowed_grades);
+    if(currentUserProfile?.branch) query = query.eq('branch', currentUserProfile.branch);
+    const { data: students } = await query;
     window._supervisorStudentsCache = students || [];
     filterSupervisorStudentList();
+    applyTabVisibility('#pageSupervisorDashboard');
+    const exportBtn = document.getElementById('exportQuestionsBtnEl');
+    if(exportBtn) exportBtn.style.display = hasPermission('export_data') ? '' : 'none';
 }
 function switchSupervisorTab(tabId){
     document.querySelectorAll('#pageSupervisorDashboard .admin-tab').forEach(el=>el.classList.remove('active'));
@@ -1425,6 +1489,133 @@ function filterSupervisorStudentList(){
             <span>👤 ${s.name} · 🆔 ${s.national_id} · 📚 ${getGradeLabel(s.grade)} · 🏫 ${getBranchLabel(s.branch)}</span>
             <button class="btn-mini view" onclick="showStudentScores('${s.id}')">📊 ${isAr?'عرض النتائج':'View Results'}</button>
         </div>`).join('');
+}
+
+// ---------------- ADMIN: ADVANCED ANALYTICS ----------------
+async function renderAdvancedAnalytics(){
+    const isAr = currentLang==='ar';
+    const { data: students } = await sb.from('students').select('*');
+    const { data: results } = await sb.from('exam_results').select('*');
+    const { data: profiles } = await sb.from('profiles').select('id,name');
+    const { data: settingsRows } = await sb.from('settings').select('*').eq('key','pass_threshold');
+    const passThreshold = settingsRows && settingsRows[0] ? parseFloat(settingsRows[0].value) : 60;
+    const profileName = id => (profiles||[]).find(p=>p.id===id)?.name || (isAr?'غير معروف':'Unknown');
+
+    // ---- Funnel ----
+    const total = (students||[]).length;
+    const approved = (students||[]).filter(s=>s.status==='approved').length;
+    const startedIds = new Set((results||[]).map(r=>r.student_id));
+    const started = startedIds.size;
+    const scoredResults = (results||[]).filter(r=>r.score!=null);
+    const byStudent = {};
+    scoredResults.forEach(r=>{ byStudent[r.student_id]=byStudent[r.student_id]||[]; byStudent[r.student_id].push(r.score/r.total*100); });
+    const passed = Object.values(byStudent).filter(arr=>(arr.reduce((a,b)=>a+b,0)/arr.length) >= passThreshold).length;
+
+    const funnelStages = [
+        { label: isAr?'مسجلين':'Registered', value: total, color:'#2B4570' },
+        { label: isAr?'مقبولين':'Approved', value: approved, color:'#2F9E63' },
+        { label: isAr?'بدأوا الاختبار':'Started Exam', value: started, color:'#C89B3C' },
+        { label: isAr?`ناجحون (${passThreshold}%+)`:`Passed (${passThreshold}%+)`, value: passed, color:'#D64545' }
+    ];
+    const maxVal = Math.max(1, total);
+    document.getElementById('funnelDisplay').innerHTML = funnelStages.map(s=>`
+        <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:3px;"><span>${s.label}</span><span>${s.value}</span></div>
+            <div style="background:var(--bg);border-radius:8px;overflow:hidden;height:20px;"><div style="width:${(s.value/maxVal*100).toFixed(1)}%;height:100%;background:${s.color};"></div></div>
+        </div>`).join('');
+
+    // ---- Branch comparison ----
+    ['ajyal','kids'].forEach(branch=>{
+        const bStudents = (students||[]).filter(s=>s.branch===branch);
+        const bApproved = bStudents.filter(s=>s.status==='approved').length;
+        const bIds = new Set(bStudents.map(s=>s.id));
+        const bScores = scoredResults.filter(r=>bIds.has(r.student_id)).map(r=>r.score/r.total*10);
+        const bAvg = bScores.length ? (bScores.reduce((a,b)=>a+b,0)/bScores.length).toFixed(1) : '--';
+        const rate = bStudents.length ? ((bApproved/bStudents.length)*100).toFixed(0) : 0;
+        const box = `
+            <div style="border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--card);">
+                <div style="font-weight:800;margin-bottom:8px;">${getBranchLabel(branch)}</div>
+                <div style="font-size:13px;line-height:2;">
+                    <div>${isAr?'إجمالي التسجيلات':'Total registrations'}: <strong>${bStudents.length}</strong></div>
+                    <div>${isAr?'نسبة القبول':'Approval rate'}: <strong>${rate}%</strong></div>
+                    <div>${isAr?'متوسط الأداء':'Average score'}: <strong>${bAvg} / 10</strong></div>
+                </div>
+            </div>`;
+        document.getElementById('branchCompareDisplay').insertAdjacentHTML(branch==='ajyal'?'afterbegin':'beforeend', box);
+    });
+
+    // ---- Registrar performance ----
+    const byRegistrar = {};
+    (students||[]).filter(s=>s.approved_by).forEach(s=>{
+        byRegistrar[s.approved_by] = byRegistrar[s.approved_by] || { count:0, totalHrs:0 };
+        byRegistrar[s.approved_by].count++;
+        if(s.approved_at && s.created_at){
+            byRegistrar[s.approved_by].totalHrs += (new Date(s.approved_at) - new Date(s.created_at)) / 3600000;
+        }
+    });
+    const regEntries = Object.entries(byRegistrar);
+    document.getElementById('registrarPerfDisplay').innerHTML = regEntries.length===0
+        ? `<div class="empty-state">${isAr?'لا توجد بيانات كافية بعد':'Not enough data yet'}</div>`
+        : regEntries.map(([id,d])=>`
+            <div class="qa-list-item"><span>👤 <strong>${profileName(id)}</strong> — ${isAr?'عدد القرارات':'Decisions'}: ${d.count}</span>
+            <span style="font-size:12px;color:var(--muted);">${isAr?'متوسط زمن الرد':'Avg response time'}: ${(d.totalHrs/d.count).toFixed(1)} ${isAr?'ساعة':'hrs'}</span></div>`).join('');
+
+    // ---- Teacher marking performance ----
+    const byTeacher = {};
+    (results||[]).filter(r=>r.corrected_by).forEach(r=>{
+        byTeacher[r.corrected_by] = byTeacher[r.corrected_by] || { count:0, totalHrs:0 };
+        byTeacher[r.corrected_by].count++;
+        if(r.corrected_at && r.created_at){
+            byTeacher[r.corrected_by].totalHrs += (new Date(r.corrected_at) - new Date(r.created_at)) / 3600000;
+        }
+    });
+    const teachEntries = Object.entries(byTeacher);
+    document.getElementById('teacherPerfDisplay').innerHTML = teachEntries.length===0
+        ? `<div class="empty-state">${isAr?'لا توجد بيانات كافية بعد':'Not enough data yet'}</div>`
+        : teachEntries.map(([id,d])=>`
+            <div class="qa-list-item"><span>👤 <strong>${profileName(id)}</strong> — ${isAr?'أوراق مصححة':'Papers marked'}: ${d.count}</span>
+            <span style="font-size:12px;color:var(--muted);">${isAr?'متوسط زمن التصحيح':'Avg marking time'}: ${(d.totalHrs/d.count).toFixed(1)} ${isAr?'ساعة':'hrs'}</span></div>`).join('');
+
+    // ---- Duplicate detection ----
+    const groups = {};
+    (students||[]).forEach(s=>{
+        const key = `${s.name.trim().toLowerCase()}|${s.birthdate}`;
+        groups[key] = groups[key] || [];
+        groups[key].push(s);
+    });
+    const dupGroups = Object.values(groups).filter(g=>g.length>1);
+    document.getElementById('duplicatesDisplay').innerHTML = dupGroups.length===0
+        ? `<div class="empty-state">${isAr?'لا يوجد تكرار محتمل ✅':'No potential duplicates ✅'}</div>`
+        : dupGroups.map(g=>`
+            <div class="qa-list-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                <strong>${g[0].name} — ${g[0].birthdate}</strong>
+                <span style="font-size:12px;color:var(--muted);">${g.map(s=>`🆔 ${s.national_id} (${getStatusLabel(s.status)})`).join(' · ')}</span>
+            </div>`).join('');
+}
+
+const ROLE_TABS = {
+    admin: [
+        { id:'tabStats', ar:'الإحصائيات', en:'Stats' },
+        { id:'tabStaff', ar:'الموظفين', en:'Staff' },
+        { id:'tabRequests', ar:'الطلبات', en:'Requests' },
+        { id:'tabActivity', ar:'سجل النشاط', en:'Activity Log' },
+        { id:'tabAnalytics', ar:'تحليلات متقدمة', en:'Advanced Analytics' }
+    ],
+    supervisor: [
+        { id:'supTabQuestions', ar:'بنك الأسئلة', en:'Question Bank' },
+        { id:'supTabResults', ar:'النتائج والدرجات', en:'Results & Grades' }
+    ]
+};
+ROLE_TABS.stage_manager = ROLE_TABS.supervisor;
+function updateStaffTabsSection(){
+    const role = document.getElementById('staffRole').value;
+    const section = document.getElementById('staffVisibleTabsSection');
+    const container = document.getElementById('staffTabsCheckboxes');
+    const tabs = ROLE_TABS[role];
+    if(!tabs){ section.classList.add('hidden'); container.innerHTML=''; return; }
+    const isAr = currentLang==='ar';
+    section.classList.remove('hidden');
+    container.innerHTML = tabs.map(t=>`<label><input type="checkbox" value="${t.id}" checked /> ${isAr?t.ar:t.en}</label>`).join('');
 }
 
 // ---------------- ADMIN: STAFF MANAGEMENT ----------------
@@ -1448,8 +1639,15 @@ async function createStaffUser(){
     btn.disabled = true;
     status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الإنشاء...':'Creating...'}`;
 
+    const allowedGrades = Array.from(document.querySelectorAll('#staffGradesCheckboxes input:checked')).map(el=>el.value);
+    const extraPermissions = Array.from(document.querySelectorAll('#staffPermissionsCheckboxes input:checked')).map(el=>el.value);
+    const visibleTabsSection = document.getElementById('staffVisibleTabsSection');
+    const visibleTabs = !visibleTabsSection.classList.contains('hidden')
+        ? Array.from(document.querySelectorAll('#staffTabsCheckboxes input:checked')).map(el=>el.value)
+        : [];
+
     const { data, error } = await sb.functions.invoke('create-staff-user', {
-        body: { name, email, password, role, branch: branch || null }
+        body: { name, email, password, role, branch: branch || null, allowed_grades: allowedGrades, extra_permissions: extraPermissions, visible_tabs: visibleTabs }
     });
     btn.disabled = false;
 
@@ -1470,6 +1668,9 @@ async function createStaffUser(){
     document.getElementById('staffEmail').value='';
     document.getElementById('staffPassword').value='';
     document.getElementById('staffBranch').value='';
+    document.querySelectorAll('#staffGradesCheckboxes input').forEach(el=>el.checked=false);
+    document.querySelectorAll('#staffPermissionsCheckboxes input').forEach(el=>el.checked=true);
+    updateStaffTabsSection();
     loadStaffList();
 }
 
@@ -1484,7 +1685,7 @@ async function loadStaffList(){
     container.innerHTML = profiles.map(p=>`
         <div class="qa-list-item">
             <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong>${p.branch?` · ${getBranchLabel(p.branch)}`:''}</span>
-            ${p.id!==currentUserProfile?.id ? `<button class="btn-mini reject" onclick="deleteStaffUser('${p.id}','${p.name.replace(/'/g,"")}')">${isAr?'حذف':'Delete'}</button>` : `<span style="font-size:11px;color:var(--muted);">${isAr?'(أنت)':'(you)'}</span>`}
+            ${p.id!==currentUserProfile?.id && hasPermission('delete_records') ? `<button class="btn-mini reject" onclick="deleteStaffUser('${p.id}','${p.name.replace(/'/g,"")}')">${isAr?'حذف':'Delete'}</button>` : (p.id===currentUserProfile?.id ? `<span style="font-size:11px;color:var(--muted);">${isAr?'(أنت)':'(you)'}</span>` : '')}
         </div>`).join('');
 }
 async function deleteStaffUser(userId, name){
