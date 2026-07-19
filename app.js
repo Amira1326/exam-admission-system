@@ -76,7 +76,8 @@ const translations = {
         searchPh:'ابحث بالاسم أو رقم الهوية...', allSubjects:'كل المواد', allGrades:'كل المراحل',
         stepBranch:'الفرع', stepRole:'الصلاحية', stepDetails:'البيانات',
         chatTitle:'مساعد المنصة', chatWelcome:'👋 أهلاً! اختر سؤال من الأسفل وبجاوبك فوراً.',
-        questionMgmtTitleReview:'مراجعة بنك الأسئلة', questionMgmtSubReview:'عرض للمراجعة فقط — الإضافة والتعديل من صلاحية مسؤول القبول'
+        questionMgmtTitleReview:'مراجعة بنك الأسئلة', questionMgmtSubReview:'عرض للمراجعة فقط — الإضافة والتعديل من صلاحية مسؤول القبول',
+        checkExistingStatusLink:'تحقق من حالة طلب سابق'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -115,7 +116,8 @@ const translations = {
         searchPh:'Search by name or ID...', allSubjects:'All Subjects', allGrades:'All Grades',
         stepBranch:'Branch', stepRole:'Role', stepDetails:'Details',
         chatTitle:'Platform Assistant', chatWelcome:'👋 Hi! Pick a question below and I\'ll answer instantly.',
-        questionMgmtTitleReview:'Question Bank Review', questionMgmtSubReview:'Read-only view — additions and edits are managed by the admissions officer'
+        questionMgmtTitleReview:'Question Bank Review', questionMgmtSubReview:'Read-only view — additions and edits are managed by the admissions officer',
+        checkExistingStatusLink:'Check a previous application status'
     }
 };
 
@@ -206,6 +208,46 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }, 3200);
 });
+
+// ---------------- STANDALONE STATUS CHECK (لطالب راجع بجلسة جديدة) ----------------
+function openStatusCheckModal(){
+    const isAr = currentLang==='ar';
+    const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+    title.textContent = isAr ? '🔍 التحقق من حالة الطلب' : '🔍 Check Application Status';
+    content.innerHTML = `
+        <div class="form-group"><label>${isAr?'رقم الهوية':'National ID'}</label>
+            <input type="text" id="standaloneCheckId" placeholder="${isAr?'أدخل رقم هويتك':'Enter your national ID'}" /></div>
+        <div class="form-group"><label>${isAr?'الرمز السري':'Secret Code'}</label>
+            <input type="text" id="standaloneCheckCode" placeholder="${isAr?'الرمز السري الذي استلمته':'The secret code you received'}" /></div>
+        <div id="standaloneCheckResult" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="btn btn-primary" onclick="submitStandaloneCheck()" style="flex:1;">${isAr?'تحقق':'Check'}</button>
+            <button class="btn btn-secondary" onclick="closeModal()" style="flex:1;">${isAr?'إغلاق':'Close'}</button>
+        </div>`;
+    modal.classList.add('open');
+}
+async function submitStandaloneCheck(){
+    const isAr = currentLang==='ar';
+    const nid = document.getElementById('standaloneCheckId').value.trim();
+    const code = document.getElementById('standaloneCheckCode').value.trim();
+    const resultEl = document.getElementById('standaloneCheckResult');
+    if(!nid||!code){ resultEl.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'أدخل رقم الهوية والرمز السري':'Enter your ID and secret code'}</span>`; return; }
+
+    resultEl.innerHTML = `<span class="spinner"></span> ${isAr?'جاري التحقق...':'Checking...'}`;
+    const { data, error } = await sb.rpc('check_student_status', { p_national_id:nid, p_secret_code:code });
+    if(error){ resultEl.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'لم يتم العثور على بيانات مطابقة':'No matching record found'}</span>`; return; }
+
+    currentStudent = { id:data.id, secret_code:data.secret_code, national_id:nid };
+    resultEl.innerHTML = `<span style="color:var(--success);">${getStatusLabel(data.status)}</span>`;
+
+    if(data.status==='approved'){
+        const msg = isAr ? '✅ تمت الموافقة على طلبك! هل تريد دخول الاختبار الآن؟' : '✅ Your request has been approved! Do you want to start the exam now?';
+        if(confirm(msg)){ closeModal(); goToExam(data.id, data.secret_code); }
+    } else if(data.status==='rejected'){
+        const reasonTxt = data.rejection_reason ? `: ${data.rejection_reason}` : '';
+        resultEl.innerHTML += `<div style="margin-top:6px;">${isAr?'سبب الرفض':'Rejection reason'}${reasonTxt}</div>`;
+    }
+}
 
 // ---------------- STEP INDICATOR ----------------
 function updateStepIndicator(step){
