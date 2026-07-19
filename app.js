@@ -229,6 +229,7 @@ window.addEventListener('DOMContentLoaded', () => {
             splash.style.display = 'none';
             branch.classList.add('active');
             updateStepIndicator(1);
+            setBranchRoleBg(true);
         }, 500);
     }, 3200);
 });
@@ -295,6 +296,12 @@ async function submitStandaloneCheck(){
     }
 }
 
+// ---------------- BRANCH/ROLE FULL-PAGE BACKGROUND ----------------
+function setBranchRoleBg(active){
+    const wrapper = document.querySelector('.app-wrapper');
+    if(wrapper) wrapper.classList.toggle('branch-role-bg', active);
+}
+
 // ---------------- STEP INDICATOR ----------------
 function updateStepIndicator(step){
     const el = document.getElementById('stepIndicator');
@@ -354,18 +361,21 @@ function goToNextPage(){
         document.getElementById('registerForm').style.display='block';
         document.getElementById('waitingMessage').classList.add('hidden');
         updateStepIndicator(3);
+        setBranchRoleBg(false);
         return;
     }
     updateSchoolLogo(selectedBranch);
     document.getElementById('pageRole').classList.remove('active');
     document.getElementById('pageLogin').classList.add('active');
     updateStepIndicator(3);
+    setBranchRoleBg(false);
 }
 function backToRoleFromForm(){
     document.getElementById('pageLogin').classList.remove('active');
     document.getElementById('pageStudentRegister').classList.remove('active');
     document.getElementById('pageRole').classList.add('active');
     updateStepIndicator(2);
+    setBranchRoleBg(true);
 }
 let _studentsRealtimeChannel = null;
 function subscribeToNewStudents(){
@@ -393,6 +403,7 @@ function logout(){
     document.getElementById('btnRoleNext').disabled=true;
     document.getElementById('pageBranch').classList.add('active');
     updateStepIndicator(1);
+    setBranchRoleBg(true);
     showToast(currentLang==='ar' ? '👋 تم تسجيل الخروج' : '👋 Signed out successfully', 'info');
 }
 function updateSchoolLogo(branch){
@@ -878,22 +889,35 @@ async function openCorrectionModal(resultId){
     const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
     title.textContent = `✏️ ${isAr?'تصحيح':'Marking'} ${r.students?.name||''} - ${getSubjectLabel(r.subject)}`;
 
-    let uploadsHtml = '';
     const uploads = r.written_uploads || {};
-    Object.keys(uploads).forEach(qid=>{
-        uploadsHtml += `<div style="margin-bottom:10px;"><p style="font-size:13px;font-weight:700;">${isAr?'سؤال':'Question'} ${qid}</p>
-            <img src="${uploads[qid]}" onclick="openImageZoom('${uploads[qid].replace(/'/g,"")}')" style="max-width:100%;border-radius:10px;border:1px solid var(--border);cursor:zoom-in;" />
-            <p style="font-size:11px;color:var(--muted);margin-top:2px;">${isAr?'اضغط على الصورة للتكبير':'Click image to zoom'}</p></div>`;
+    const qIds = Object.keys(uploads);
+    let questionsMap = {};
+    if(qIds.length>0){
+        const { data: qs } = await sb.from('questions').select('id, question_text, marks').in('id', qIds);
+        (qs||[]).forEach(q=>{ questionsMap[q.id]=q; });
+    }
+
+    const writtenMarks = r.written_marks || {};
+    let questionsHtml = '';
+    qIds.forEach((qid, idx)=>{
+        const q = questionsMap[qid];
+        const maxMarks = q?.marks ?? 1;
+        const currentVal = writtenMarks[qid] != null ? writtenMarks[qid] : '';
+        questionsHtml += `
+            <div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--bg);">
+                <p style="font-size:13px;font-weight:700;margin-bottom:8px;">${isAr?'سؤال':'Question'} ${idx+1}${q?.question_text ? ': '+q.question_text.slice(0,80) : ''}</p>
+                <img src="${uploads[qid]}" onclick="openImageZoom('${uploads[qid].replace(/'/g,"")}')" style="max-width:100%;border-radius:10px;border:1px solid var(--border);cursor:zoom-in;margin-bottom:8px;" />
+                <label style="font-size:12px;font-weight:700;">${isAr?'الدرجة (من':'Marks (out of'} ${maxMarks})</label>
+                <input type="number" class="written-mark-input" data-qid="${qid}" data-max="${maxMarks}" min="0" max="${maxMarks}" step="0.5" value="${currentVal}" placeholder="0 - ${maxMarks}" />
+            </div>`;
     });
 
     content.innerHTML = `
-        <div style="margin-bottom:14px;">${uploadsHtml || `<p class="page-sub">${isAr?'لا توجد صور مرفوعة لهذه المادة':'No uploaded images for this subject'}</p>`}</div>
-        <div class="form-group"><label>${isAr?'الدرجة (من':'Score (out of'} ${r.total})</label>
-            <input type="number" id="correctionScore" min="0" max="${r.total}" placeholder="0 - ${r.total}" /></div>
-        <div class="form-group"><label>${isAr?'ملاحظة للطالب (اختياري)':'Note for student (optional)'}</label>
+        <div style="margin-bottom:10px;">${questionsHtml || `<p class="page-sub">${isAr?'لا توجد صور مرفوعة لهذه المادة':'No uploaded images for this subject'}</p>`}</div>
+        <div class="form-group"><label>${isAr?'ملاحظة عامة للطالب (اختياري)':'General note for student (optional)'}</label>
             <textarea id="correctionNote" rows="3" placeholder="${isAr?'مثال: راجع قواعد الجمع، خط اليد يحتاج تحسين...':'e.g. Review addition rules, handwriting needs improvement...'}" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);font-family:inherit;">${r.teacher_note||''}</textarea></div>
         <div style="display:flex;gap:10px;margin-top:14px;">
-            <button class="btn btn-primary" onclick="submitCorrection('${resultId}', ${r.total})" style="flex:1;">${isAr?'تأكيد':'Confirm'}</button>
+            <button class="btn btn-primary" onclick="submitCorrection('${resultId}')" style="flex:1;">${isAr?'تأكيد':'Confirm'}</button>
             <button class="btn btn-secondary" onclick="closeModal()" style="flex:1;">${isAr?'إلغاء':'Cancel'}</button>
         </div>`;
     document.getElementById('modalOverlay').classList.add('open');
@@ -902,17 +926,33 @@ function openImageZoom(url){
     const w = window.open('', '_blank');
     w.document.write(`<title>${currentLang==='ar'?'تكبير الصورة':'Image Zoom'}</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${url}" style="max-width:100%;max-height:100vh;" /></body>`);
 }
-async function submitCorrection(resultId, total){
+async function submitCorrection(resultId){
     const isAr = currentLang==='ar';
-    const val = parseFloat(document.getElementById('correctionScore').value);
+    const { data: r } = await sb.from('exam_results').select('auto_score, total').eq('id', resultId).single();
+    if(!r){ showToast('❌ '+(isAr?'تعذر جلب بيانات النتيجة':'Could not fetch result data'), 'error'); return; }
+
+    const inputs = document.querySelectorAll('.written-mark-input');
+    const writtenMarks = {};
+    let writtenTotal = 0;
+    for(const inp of inputs){
+        const val = parseFloat(inp.value);
+        const max = parseFloat(inp.dataset.max);
+        if(isNaN(val) || val<0 || val>max){
+            showToast(isAr?'⚠️ يرجى إدخال درجة صحيحة لكل سؤال':'⚠️ Please enter a valid mark for every question', 'warning');
+            return;
+        }
+        writtenMarks[inp.dataset.qid] = val;
+        writtenTotal += val;
+    }
     const note = document.getElementById('correctionNote').value.trim();
-    if(isNaN(val) || val<0 || val>total){ showToast(isAr?'⚠️ يرجى إدخال درجة صحيحة':'⚠️ Please enter a valid score', 'warning'); return; }
+    const finalScore = (r.auto_score || 0) + writtenTotal;
+
     const { error } = await sb.from('exam_results').update({
-        score: val, status:'corrected', corrected_by: currentUserProfile?.id, corrected_at: new Date().toISOString(),
-        teacher_note: note || null
+        score: finalScore, status:'corrected', corrected_by: currentUserProfile?.id, corrected_at: new Date().toISOString(),
+        teacher_note: note || null, written_marks: writtenMarks
     }).eq('id', resultId);
     if(error){ showToast('❌ '+error.message,'error'); return; }
-    logActivity(isAr?'صحّح ورقة اختبار':'Marked an exam paper', `${val}/${total}`);
+    logActivity(isAr?'صحّح ورقة اختبار':'Marked an exam paper', `${finalScore}/${r.total}`);
     closeModal();
     showToast(isAr?'✅ تم حفظ التصحيح':'✅ Marking saved', 'success');
     renderTeacherDashboard();
