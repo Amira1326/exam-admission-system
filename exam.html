@@ -559,20 +559,14 @@ async function finishStage(){
 
 function showFinalResult(){
     clearProgress();
-    let html='';
-    let totalScore=0, totalMarks=0, anyWaiting=false;
-    allResults.forEach(r=>{
-        totalMarks += r.total;
-        if(r.hasWritten){ anyWaiting=true; html += `<p>${SUBJECT_LABELS[r.subject]}: بانتظار تصحيح المعلم</p>`; }
-        else { totalScore += r.score; html += `<p>${SUBJECT_LABELS[r.subject]}: ${r.score} / ${r.total}</p>`; }
-    });
     document.getElementById('questionContainer').innerHTML = `
         <div class="final-result">
-            <h2>🎉 تم إكمال جميع مراحل الاختبار</h2>
-            ${anyWaiting ? '<p style="color:#888;">بعض النتائج تحتاج تصحيح المعلم لأسئلة كتابية</p>' : ''}
-            <div class="total-score">${totalScore} / ${totalMarks}</div>
-            ${html}
-            <p style="color:#888;margin-top:10px;">يمكنك إغلاق هذه الصفحة الآن، ستصلك النتيجة النهائية من المدرسة.</p>
+            <div style="font-size:50px;margin-bottom:10px;">🎉</div>
+            <h2>تم إكمال الاختبار بنجاح</h2>
+            <p style="color:#888;margin-top:14px;line-height:1.9;">
+                تم تسليم إجاباتك بنجاح لكل المواد.<br />
+                يمكنك إغلاق هذه الصفحة الآن، وستصلك نتيجتك النهائية من إدارة المدرسة لاحقاً.
+            </p>
         </div>`;
     document.getElementById('dotsContainer').classList.add('hidden');
     document.querySelector('.exam-actions').classList.add('hidden');
