@@ -330,12 +330,23 @@
         .request-actions .btn-sm.exam { background: var(--gold-gradient); color: #fff; }
         .request-actions .btn-sm.view-score { background: rgba(52,152,219,.15); color: #2980b9; }
 
-        .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+        .chart-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
         .chart-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
         .chart-box h5 { font-size: 13px; margin-bottom: 8px; color: var(--muted); font-weight: 500; }
         .chart-box canvas { max-height: 180px; width: 100% !important; }
 
-        .admin-question-form { display: grid; gap: 10px; margin-top: 10px; }
+        .admin-question-form { display: grid; gap: 12px; margin-top: 10px; }
+        .admin-question-form label { display:block; font-weight:700; font-size:13px; margin-bottom:5px; color:var(--navy); }
+        [data-theme="dark"] .admin-question-form label { color: var(--text); }
+        .admin-question-form input, .admin-question-form select, .admin-question-form textarea {
+            width: 100%; padding: 13px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+            background: rgba(255,255,255,.7); color: var(--text); font-family: var(--font-main); font-size: 14px; outline: none; transition: .3s;
+        }
+        [data-theme="dark"] .admin-question-form input, [data-theme="dark"] .admin-question-form select { background: rgba(255,255,255,.06); }
+        .admin-question-form input:focus, .admin-question-form select:focus { border-color: var(--gold-solid); box-shadow: 0 0 0 4px rgba(43,69,112,.12); }
+        .admin-question-form .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .admin-question-form .field-hint { font-size:11px; color:var(--muted); margin-top:-6px; }
+        @media (max-width:600px){ .admin-question-form .field-row { grid-template-columns:1fr; } }
         .qa-list-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
@@ -675,27 +686,56 @@
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">إدارة الأسئلة</span></h4>
                 <p class="page-sub" data-i18n="questionMgmtSub">أضف أسئلة الاختبار (اختياري) للمادة والمرحلة المطلوبة</p>
                 <div class="admin-question-form">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                        <select id="regQSubject">
-                            <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
-                            <option value="math" data-i18n="subjMath">📗 رياضيات</option>
-                            <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
-                        </select>
-                        <select id="regQGrade">
-                            <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
-                            <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
-                            <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
-                            <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
-                            <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
-                        </select>
+                    <div class="field-row">
+                        <div>
+                            <label data-i18n="subjectLabel">المادة</label>
+                            <select id="regQSubject">
+                                <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
+                                <option value="math" data-i18n="subjMath">📗 رياضيات</option>
+                                <option value="arabic" data-i18n="subjArabic">📙 عربي</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label data-i18n="gradeLabel">المرحلة الدراسية</label>
+                            <select id="regQGrade">
+                                <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                                <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                                <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                                <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                                <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                            </select>
+                        </div>
                     </div>
-                    <input type="text" id="regQText" data-i18n-placeholder="qTextPh" placeholder="نص السؤال" />
-                    <input type="text" id="regQOptions" data-i18n-placeholder="qOptionsPh" placeholder="الخيارات مفصولة بفاصلة , مثال: أ,ب,ج" />
-                    <input type="number" id="regQCorrect" data-i18n-placeholder="qCorrectPh" placeholder="فهرس الإجابة الصحيحة (0 = أول خيار)" min="0" />
-                    <input type="number" id="regQMarks" data-i18n-placeholder="qMarksPh" placeholder="عدد الدرجات" value="1" min="1" />
+                    <div>
+                        <label data-i18n="questionTextLabel">نص السؤال</label>
+                        <input type="text" id="regQText" data-i18n-placeholder="qTextPh" placeholder="نص السؤال" />
+                    </div>
+                    <div>
+                        <label data-i18n="optionsLabel">الخيارات</label>
+                        <input type="text" id="regQOptions" data-i18n-placeholder="qOptionsPh" placeholder="الخيارات مفصولة بفاصلة , مثال: أ,ب,ج" />
+                        <div class="field-hint" data-i18n="optionsHint">افصل كل خيار بفاصلة — مثال: التفاحة,البرتقالة,الموزة</div>
+                    </div>
+                    <div class="field-row">
+                        <div>
+                            <label data-i18n="correctIndexLabel">الإجابة الصحيحة</label>
+                            <input type="number" id="regQCorrect" data-i18n-placeholder="qCorrectPh" placeholder="فهرس الإجابة الصحيحة (0 = أول خيار)" min="0" />
+                            <div class="field-hint" data-i18n="correctIndexHint">0 = الخيار الأول، 1 = الثاني، وهكذا</div>
+                        </div>
+                        <div>
+                            <label data-i18n="marksFieldLabel">عدد الدرجات</label>
+                            <input type="number" id="regQMarks" data-i18n-placeholder="qMarksPh" placeholder="عدد الدرجات" value="1" min="1" />
+                        </div>
+                    </div>
                     <button class="btn btn-primary" onclick="addQuestion('regQ')"><span data-i18n="addQuestionBtn">إضافة السؤال</span></button>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+                <div class="dashboard-section" style="margin-top:16px;background:var(--bg);">
+                    <h4 style="font-size:15px;"><i class="fas fa-file-import"></i> <span data-i18n="bulkImportTitle">استيراد أسئلة بالجملة</span></h4>
+                    <p class="page-sub" style="font-size:12px;" data-i18n="bulkImportSub">ملف JSON يحتوي مصفوفة أسئلة بنفس صيغة قاعدة البيانات (subject, grade, type, question_text, options, correct_index, marks...)</p>
+                    <input type="file" id="bulkImportFile" accept=".json" style="margin-bottom:10px;" />
+                    <button class="btn btn-secondary" onclick="bulkImportQuestions()"><i class="fas fa-upload"></i> <span data-i18n="bulkImportBtn">استيراد الملف</span></button>
+                    <div id="bulkImportStatus" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
+                </div>
+                <div class="field-row" style="margin-top:20px;">
                     <select id="regQListSubject" onchange="loadQuestionsList('registrar')">
                         <option value="" data-i18n="allSubjects">كل المواد</option>
                         <option value="english" data-i18n="subjEnglish">📘 إنجليزي</option>
@@ -742,6 +782,7 @@
                 <button class="admin-tab-btn" data-tab="tabStaff" onclick="switchAdminTab('tabStaff')"><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">الموظفين</span></button>
                 <button class="admin-tab-btn" data-tab="tabQuestions" onclick="switchAdminTab('tabQuestions')"><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">الأسئلة</span></button>
                 <button class="admin-tab-btn" data-tab="tabRequests" onclick="switchAdminTab('tabRequests')"><i class="fas fa-clipboard-list"></i> <span data-i18n="recentRequestsTitle">الطلبات</span></button>
+                <button class="admin-tab-btn" data-tab="tabActivity" onclick="switchAdminTab('tabActivity')"><i class="fas fa-clock-rotate-left"></i> <span data-i18n="activityLogTitle">سجل النشاط</span></button>
             </div>
             <div class="dashboard-section admin-tab active" id="tabStats">
                 <h4><i class="fas fa-chart-pie"></i> <span data-i18n="statsTitle">الإحصائيات</span></h4>
@@ -749,20 +790,42 @@
                     <div class="chart-box"><h5 data-i18n="byGrade">حسب المرحلة</h5><canvas id="gradeChart"></canvas></div>
                     <div class="chart-box"><h5 data-i18n="byBranch">حسب الفرع</h5><canvas id="branchChart"></canvas></div>
                     <div class="chart-box"><h5 data-i18n="byStatus">حسب الحالة</h5><canvas id="statusChart"></canvas></div>
+                    <div class="chart-box"><h5 data-i18n="bySubjectPerf">متوسط الأداء حسب المادة</h5><canvas id="subjectPerfChart"></canvas></div>
                 </div>
             </div>
             <div class="dashboard-section admin-tab" id="tabStaff">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="staffMgmtTitle">إدارة حسابات الموظفين</span></h4>
                 <p class="page-sub" data-i18n="staffMgmtSub">أضف حساب دخول جديد لمعلم أو مسؤول قبول أو مدير نظام</p>
                 <div class="admin-question-form">
-                    <input type="text" id="staffName" data-i18n-placeholder="staffNamePh" placeholder="الاسم الكامل" />
-                    <input type="email" id="staffEmail" data-i18n-placeholder="staffEmailPh" placeholder="البريد الإلكتروني" />
-                    <input type="password" id="staffPassword" data-i18n-placeholder="staffPasswordPh" placeholder="كلمة المرور (6 أحرف على الأقل)" />
-                    <select id="staffRole">
-                        <option value="teacher" data-i18n="roleTeacher">معلم</option>
-                        <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
-                        <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
-                    </select>
+                    <div>
+                        <label data-i18n="fullNameLabel">الاسم الكامل</label>
+                        <input type="text" id="staffName" data-i18n-placeholder="staffNamePh" placeholder="الاسم الكامل" />
+                    </div>
+                    <div>
+                        <label data-i18n="emailLabel">البريد الإلكتروني</label>
+                        <input type="email" id="staffEmail" data-i18n-placeholder="staffEmailPh" placeholder="البريد الإلكتروني" />
+                    </div>
+                    <div>
+                        <label data-i18n="passwordLabel">كلمة المرور</label>
+                        <input type="password" id="staffPassword" data-i18n-placeholder="staffPasswordPh" placeholder="كلمة المرور (6 أحرف على الأقل)" />
+                    </div>
+                    <div>
+                        <label data-i18n="roleLabel">الدور الوظيفي</label>
+                        <select id="staffRole">
+                            <option value="teacher" data-i18n="roleTeacher">معلم</option>
+                            <option value="registrar" data-i18n="roleRegistrar">مسؤول قبول</option>
+                            <option value="admin" data-i18n="roleAdmin">مدير النظام</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label data-i18n="staffBranchLabel">الفرع المخصص له (اختياري)</label>
+                        <select id="staffBranch">
+                            <option value="" data-i18n="allBranches">كل الفروع</option>
+                            <option value="ajyal" data-i18n="branchAjyalName">أجيال المعرفة</option>
+                            <option value="kids" data-i18n="branchKidsName">بوابة الطفل</option>
+                        </select>
+                        <div class="field-hint" data-i18n="staffBranchHint">إذا حددت فرعاً، المعلم أو مسؤول القبول بيشوف طلاب هذا الفرع فقط</div>
+                    </div>
                     <button class="btn btn-primary" onclick="createStaffUser()" id="createStaffBtn"><span data-i18n="createStaffBtn">إنشاء الحساب</span></button>
                 </div>
                 <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
@@ -792,11 +855,17 @@
             </div>
             <div class="dashboard-section admin-tab" id="tabRequests">
                 <h4><i class="fas fa-user-plus"></i> <span data-i18n="recentRequestsTitle">آخر طلبات التسجيل</span></h4>
+                <button class="btn btn-secondary" onclick="exportStudentsCSV()" style="margin-bottom:12px;"><i class="fas fa-file-csv"></i> <span data-i18n="exportCsvBtn">تصدير Excel/CSV</span></button>
                 <input type="text" id="adminSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterAdminList()" style="margin-bottom:14px;" />
                 <table class="data-table">
                     <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thBranch">الفرع</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
                     <tbody id="adminRequestsBody"></tbody>
                 </table>
+            </div>
+            <div class="dashboard-section admin-tab" id="tabActivity">
+                <h4><i class="fas fa-clock-rotate-left"></i> <span data-i18n="activityLogTitle">سجل النشاط</span></h4>
+                <p class="page-sub" data-i18n="activityLogSub">آخر 50 عملية تمت من قبل الموظفين</p>
+                <div id="activityLogList"></div>
             </div>
         </div>
     </div>
