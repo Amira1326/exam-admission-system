@@ -77,11 +77,21 @@
             background-size: 100% 34px;
             background-position: 0 64px;
         }
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
+            background-size: 420px;
+            background-repeat: repeat;
+            opacity: 0.05;
+        }
         [data-theme="dark"] .animated-bg {
             background-color: var(--bg);
             background-image: linear-gradient(var(--border) 1px, transparent 1px);
             background-size: 100% 34px;
         }
+        [data-theme="dark"] .animated-bg::before { opacity: 0.08; }
 
         .glowing-circles { display: none; }
         .circle { display: none; }
@@ -344,9 +354,9 @@
         }
         [data-theme="dark"] .admin-question-form input, [data-theme="dark"] .admin-question-form select { background: rgba(255,255,255,.06); }
         .admin-question-form input:focus, .admin-question-form select:focus { border-color: var(--gold-solid); box-shadow: 0 0 0 4px rgba(43,69,112,.12); }
-        .admin-question-form .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .field-row, .admin-question-form .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
         .admin-question-form .field-hint { font-size:11px; color:var(--muted); margin-top:-6px; }
-        @media (max-width:600px){ .admin-question-form .field-row { grid-template-columns:1fr; } }
+        @media (max-width:600px){ .field-row, .admin-question-form .field-row { grid-template-columns:1fr; } }
         .qa-list-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 9999; }
@@ -648,6 +658,14 @@
                     <button class="tab-btn active" id="teacherTabWaiting" onclick="switchTeacherTab('waiting')" data-i18n="statWaitingCorrection">بانتظار التصحيح</button>
                     <button class="tab-btn" id="teacherTabDone" onclick="switchTeacherTab('done')" data-i18n="statDone">تم تصحيحها</button>
                 </div>
+                <select id="teacherGradeFilter" onchange="renderTeacherTable()" style="max-width:220px;margin-bottom:12px;">
+                    <option value="" data-i18n="allGrades">كل المراحل</option>
+                    <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                    <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                    <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                    <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                    <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                </select>
                 <table class="data-table">
                     <thead><tr><th data-i18n="thStudent">الطالب</th><th data-i18n="thSubject">المادة</th><th data-i18n="thStatus">الحالة</th><th data-i18n="thAction">إجراء</th></tr></thead>
                     <tbody id="teacherStudentsBody"></tbody>
@@ -679,7 +697,27 @@
             </div>
             <div class="dashboard-section admin-tab active" id="regTabRequests">
                 <h4><i class="fas fa-clipboard-list"></i> <span data-i18n="requestsTitle">طلبات التسجيل</span></h4>
-                <input type="text" id="registrarSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterRegistrarList()" style="margin-bottom:14px;" />
+                <input type="text" id="registrarSearch" data-i18n-placeholder="searchPh" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="filterRegistrarList()" style="margin-bottom:10px;" />
+                <div class="field-row" style="margin-bottom:10px;">
+                    <select id="registrarGradeFilter" onchange="filterRegistrarList()">
+                        <option value="" data-i18n="allGrades">كل المراحل</option>
+                        <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                        <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                        <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                        <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                        <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                    </select>
+                    <select id="registrarNationalityFilter" onchange="filterRegistrarList()">
+                        <option value="" data-i18n="allNationalityTypes">كل التصنيفات</option>
+                        <option value="arab" data-i18n="typeArab">🌍 عربي</option>
+                        <option value="foreign" data-i18n="typeForeign">🌍 أجنبي</option>
+                    </select>
+                </div>
+                <div id="bulkActionsBar" class="hidden" style="display:flex;gap:10px;align-items:center;margin-bottom:12px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
+                    <span id="bulkSelectedCount" style="font-weight:700;font-size:13px;"></span>
+                    <button class="btn-mini accept" onclick="bulkApprove()">✅ <span data-i18n="bulkApproveBtn">قبول المحدد</span></button>
+                    <button class="btn-mini reject" onclick="bulkReject()">❌ <span data-i18n="bulkRejectBtn">رفض المحدد</span></button>
+                </div>
                 <div id="registrarRequestsList"></div>
             </div>
             <div class="dashboard-section admin-tab" id="regTabQuestions">
@@ -830,10 +868,36 @@
                 </div>
                 <div id="staffMgmtStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
                 <div id="staffList" style="margin-top:14px;"></div>
+                <div class="dashboard-section" style="margin-top:18px;background:var(--bg);">
+                    <h4 style="font-size:15px;"><i class="fas fa-sliders"></i> <span data-i18n="systemSettingsTitle">إعدادات النظام العامة</span></h4>
+                    <div class="field-row">
+                        <div>
+                            <label data-i18n="timeEnglishLabel">وقت مادة الإنجليزي (دقيقة)</label>
+                            <input type="number" id="settingTimeEnglish" min="5" />
+                        </div>
+                        <div>
+                            <label data-i18n="timeMathLabel">وقت مادة الرياضيات (دقيقة)</label>
+                            <input type="number" id="settingTimeMath" min="5" />
+                        </div>
+                    </div>
+                    <div class="field-row" style="margin-top:12px;">
+                        <div>
+                            <label data-i18n="timeArabicLabel">وقت مادة العربي (دقيقة)</label>
+                            <input type="number" id="settingTimeArabic" min="5" />
+                        </div>
+                        <div>
+                            <label data-i18n="passThresholdLabel">درجة النجاح (%)</label>
+                            <input type="number" id="settingPassThreshold" min="1" max="100" />
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:14px;"><i class="fas fa-save"></i> <span data-i18n="saveSettingsBtn">حفظ الإعدادات</span></button>
+                    <div id="settingsStatus" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
+                </div>
             </div>
             <div class="dashboard-section admin-tab" id="tabQuestions">
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitleReview">مراجعة بنك الأسئلة</span></h4>
                 <p class="page-sub" data-i18n="questionMgmtSubReview">عرض للمراجعة فقط — الإضافة والتعديل من صلاحية مسؤول القبول</p>
+                <button class="btn btn-secondary" onclick="exportQuestionBankJSON()" style="margin-bottom:12px;"><i class="fas fa-download"></i> <span data-i18n="exportQuestionsBtn">تصدير بنك الأسئلة (نسخة احتياطية)</span></button>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <select id="qListSubject" onchange="loadQuestionsList()">
                         <option value="" data-i18n="allSubjects">كل المواد</option>
