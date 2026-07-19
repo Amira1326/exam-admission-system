@@ -273,12 +273,17 @@ function revealExamContent(){
     startTimer();
 }
 
+function questionLabelFor(subject, n, total){
+    if(subject==='arabic') return `س${n} من ${total}`;
+    return `Q${n} of ${total}`;
+}
+
 function renderQuestion(){
     const stage = stagesList[currentStageIdx];
     const q = stage.questions[currentQuestionIdx];
     const total = stage.questions.length;
 
-    document.getElementById('qNumber').textContent = `السؤال ${currentQuestionIdx+1} من ${total}`;
+    document.getElementById('qNumber').textContent = questionLabelFor(stage.subject, currentQuestionIdx+1, total);
     document.getElementById('qText').textContent = q.question_text;
 
     const passageContainer = document.getElementById('passageContainer');
@@ -336,7 +341,7 @@ function renderQuestion(){
 
     const pct = ((currentQuestionIdx+1)/total)*100;
     document.getElementById('progressFill').style.width = pct+'%';
-    document.getElementById('questionCounter').textContent = `السؤال ${currentQuestionIdx+1} من ${total}`;
+    document.getElementById('questionCounter').textContent = questionLabelFor(stage.subject, currentQuestionIdx+1, total);
     document.getElementById('scoreDisplay').textContent = `📊 ${Object.keys(answers).length} من ${total} تمت الإجابة`;
 
     document.getElementById('prevBtn').disabled = currentQuestionIdx===0;
