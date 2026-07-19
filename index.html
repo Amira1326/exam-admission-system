@@ -77,29 +77,19 @@
             background-size: 100% 34px;
             background-position: 0 64px;
         }
-        .animated-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
-            background-size: 420px;
-            background-repeat: repeat;
-            opacity: 0.05;
-        }
         [data-theme="dark"] .animated-bg {
             background-color: var(--bg);
             background-image: linear-gradient(var(--border) 1px, transparent 1px);
             background-size: 100% 34px;
         }
-        [data-theme="dark"] .animated-bg::before { opacity: 0.08; }
-        .app-wrapper.branch-role-bg {
+        .app-wrapper {
             background-image: linear-gradient(rgba(251,247,236,.82), rgba(251,247,236,.82)), url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
             background-size: cover, 420px;
             background-repeat: no-repeat, repeat;
             background-position: center, center;
             background-attachment: fixed, fixed;
         }
-        [data-theme="dark"] .app-wrapper.branch-role-bg {
+        [data-theme="dark"] .app-wrapper {
             background-image: linear-gradient(rgba(20,32,26,.88), rgba(20,32,26,.88)), url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
         }
 
