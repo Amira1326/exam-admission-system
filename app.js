@@ -90,7 +90,7 @@ const translations = {
         systemSettingsTitle:'إعدادات النظام العامة', timeEnglishLabel:'وقت مادة الإنجليزي (دقيقة)',
         timeMathLabel:'وقت مادة الرياضيات (دقيقة)', timeArabicLabel:'وقت مادة العربي (دقيقة)',
         passThresholdLabel:'درجة النجاح (%)', saveSettingsBtn:'حفظ الإعدادات', exportQuestionsBtn:'تصدير بنك الأسئلة (نسخة احتياطية)',
-        previewExamBtn:'معاينة الاختبار'
+        previewExamBtn:'معاينة الاختبار', forgotPasswordLink:'نسيت كلمة المرور؟'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -143,7 +143,7 @@ const translations = {
         systemSettingsTitle:'General System Settings', timeEnglishLabel:'English Subject Time (minutes)',
         timeMathLabel:'Math Subject Time (minutes)', timeArabicLabel:'Arabic Subject Time (minutes)',
         passThresholdLabel:'Pass Threshold (%)', saveSettingsBtn:'Save Settings', exportQuestionsBtn:'Export Question Bank (Backup)',
-        previewExamBtn:'Preview Exam'
+        previewExamBtn:'Preview Exam', forgotPasswordLink:'Forgot your password?'
     }
 };
 
@@ -211,12 +211,17 @@ function showToast(message, type = 'info', duration = 4500){
     container.appendChild(toast);
     setTimeout(()=>toast.remove(), duration);
 }
-function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('open');
+    const box = document.getElementById('modalBox');
+    if(box) box.style.maxWidth = '';
+}
 
 // ---------------- SPLASH ----------------
 window.addEventListener('DOMContentLoaded', () => {
     setLangAttributes();
     applyTranslations();
+    checkPasswordRecovery();
     const saved = localStorage.getItem('theme');
     if(saved==='dark'){ document.documentElement.setAttribute('data-theme','dark'); const b=document.getElementById('themeToggle'); if(b) b.innerHTML='<i class="fas fa-sun"></i>'; }
 
@@ -246,16 +251,66 @@ async function logActivity(action, details){
         });
     } catch(e){ /* تجاهل أخطاء التسجيل حتى لا توقف العملية الأساسية */ }
 }
-async function loadActivityLog(){
+let _activityLogPage = 0;
+async function loadActivityLog(loadMore){
     const isAr = currentLang==='ar';
     const container = document.getElementById('activityLogList');
     if(!container) return;
-    const { data, error } = await sb.from('activity_log').select('*').order('created_at',{ascending:false}).limit(50);
-    if(error || !data || data.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد نشاط مسجل بعد':'No activity logged yet'}</div>`; return; }
-    container.innerHTML = data.map(a=>{
+    if(!loadMore) _activityLogPage = 0;
+    const pageSize = 30;
+    const { data, error } = await sb.from('activity_log').select('*').order('created_at',{ascending:false}).range(_activityLogPage*pageSize, _activityLogPage*pageSize + pageSize - 1);
+    if(error){ container.innerHTML = `<div class="empty-state">${error.message}</div>`; return; }
+    if(!data || data.length===0){
+        if(_activityLogPage===0) container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد نشاط مسجل بعد':'No activity logged yet'}</div>`;
+        return;
+    }
+    const rowsHtml = data.map(a=>{
         const time = new Date(a.created_at).toLocaleString(isAr?'ar-SA':'en-GB');
         return `<div class="qa-list-item"><span>👤 <strong>${a.actor_name||'—'}</strong> — ${a.action}${a.details?' · '+a.details:''}</span><span style="font-size:11px;color:var(--muted);white-space:nowrap;">${time}</span></div>`;
     }).join('');
+    if(!loadMore) container.innerHTML = rowsHtml;
+    else container.innerHTML += rowsHtml;
+    const existingBtn = document.getElementById('activityLoadMoreBtn');
+    if(existingBtn) existingBtn.remove();
+    if(data.length===pageSize){
+        container.insertAdjacentHTML('beforeend', `<button class="btn btn-secondary" id="activityLoadMoreBtn" onclick="_activityLogPage++; loadActivityLog(true);" style="width:100%;margin-top:8px;">${isAr?'تحميل المزيد':'Load more'}</button>`);
+    }
+}
+
+// ---------------- FORGOT PASSWORD ----------------
+async function forgotPassword(){
+    const isAr = currentLang==='ar';
+    const email = document.getElementById('loginEmail').value.trim();
+    if(!email){
+        showToast(isAr?'⚠️ اكتب بريدك الإلكتروني بالحقل فوق أولاً':'⚠️ Enter your email in the field above first', 'warning');
+        return;
+    }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+    if(error){ showToast('❌ '+error.message, 'error'); return; }
+    showToast(isAr?'📧 تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك':'📧 A password reset link has been sent to your email', 'success', 7000);
+}
+async function checkPasswordRecovery(){
+    if(window.location.hash.includes('type=recovery')){
+        const isAr = currentLang==='ar';
+        const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+        title.textContent = isAr ? '🔑 تعيين كلمة مرور جديدة' : '🔑 Set a New Password';
+        content.innerHTML = `
+            <div class="form-group"><label>${isAr?'كلمة المرور الجديدة (6 أحرف على الأقل)':'New password (at least 6 characters)'}</label>
+                <input type="password" id="newPasswordInput" /></div>
+            <div id="newPasswordStatus" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
+            <button class="btn btn-primary" onclick="submitNewPassword()" style="width:100%;margin-top:10px;">${isAr?'حفظ كلمة المرور':'Save Password'}</button>`;
+        modal.classList.add('open');
+    }
+}
+async function submitNewPassword(){
+    const isAr = currentLang==='ar';
+    const pwd = document.getElementById('newPasswordInput').value;
+    const status = document.getElementById('newPasswordStatus');
+    if(pwd.length < 6){ status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'6 أحرف على الأقل':'At least 6 characters'}</span>`; return; }
+    const { error } = await sb.auth.updateUser({ password: pwd });
+    if(error){ status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`; return; }
+    status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?'تم تحديث كلمة المرور، سجّل دخولك الآن':'Password updated, please sign in now'}</span>`;
+    setTimeout(()=>{ closeModal(); history.replaceState(null,'',window.location.pathname); }, 2000);
 }
 
 // ---------------- STANDALONE STATUS CHECK (لطالب راجع بجلسة جديدة) ----------------
@@ -660,6 +715,7 @@ async function renderRegistrarDashboard(){
 }
 
 let _bulkSelectedIds = new Set();
+let _registrarListLimit = 20;
 function filterRegistrarList(){
     const isAr = currentLang==='ar';
     const students = window._registrarStudentsCache || [];
@@ -674,9 +730,11 @@ function filterRegistrarList(){
     if(gradeFilter) filteredStudents = filteredStudents.filter(s=>s.grade===gradeFilter);
     if(nationalityFilter) filteredStudents = filteredStudents.filter(s=>s.nationality_type===nationalityFilter);
 
-    if(filteredStudents.length===0){ list.innerHTML = `<div class="empty-state">${isAr?(query?'لا توجد نتائج مطابقة':'لا توجد طلبات حالياً'):(query?'No matching results':'No requests yet')}</div>`; }
-    else {
-        filteredStudents.forEach(s=>{
+    if(filteredStudents.length===0){ list.innerHTML = `<div class="empty-state">${isAr?(query?'لا توجد نتائج مطابقة':'لا توجد طلبات حالياً'):(query?'No matching results':'No requests yet')}</div>`; updateBulkActionsBar(); return; }
+
+    const visibleStudents = filteredStudents.slice(0, _registrarListLimit);
+    {
+        visibleStudents.forEach(s=>{
             const statusBadge = `<span class="badge-status ${s.status==='pending'?'pending':s.status==='approved'?'accepted':'rejected'}">${getStatusLabel(s.status)}</span>`;
             let actions='';
             let checkbox = '';
@@ -700,6 +758,9 @@ function filterRegistrarList(){
                     <span>🏫 ${getBranchLabel(s.branch)}</span>${statusBadge}
                 </div>${actions}</div>`;
         });
+        if(filteredStudents.length > _registrarListLimit){
+            list.insertAdjacentHTML('beforeend', `<button class="btn btn-secondary" onclick="_registrarListLimit+=20; filterRegistrarList();" style="width:100%;margin-top:8px;">${isAr?`تحميل المزيد (${filteredStudents.length - _registrarListLimit} متبقي)`:`Load more (${filteredStudents.length - _registrarListLimit} remaining)`}</button>`);
+        }
     }
     updateBulkActionsBar();
 }
@@ -1155,8 +1216,8 @@ async function previewExam(){
             bodyHtml += `<img src="${q.image_url}" style="max-width:100%;max-height:180px;border-radius:10px;margin-bottom:8px;" />`;
         }
         if(q.type==='mcq' && q.options){
-            bodyHtml += `<div class="options" style="margin-bottom:0;">${q.options.map((opt,i)=>`
-                <div class="option">${letters[i]||i}. ${opt}</div>`).join('')}</div>`;
+            bodyHtml += `<div style="display:flex;flex-direction:column;gap:8px;">${q.options.map((opt,i)=>`
+                <div style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;background:var(--bg);">${letters[i]||i}. ${opt}</div>`).join('')}</div>`;
         } else if(q.type==='match' && q.match_items){
             bodyHtml += `<div style="display:flex;flex-wrap:wrap;gap:8px;">${q.match_items.map(it=>`
                 <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:13px;">${it.image?`<img src="${it.image}" style="max-height:50px;display:block;margin:0 auto 4px;"/>`:it.label} → <select disabled style="border-radius:6px;"><option>--</option>${(q.match_options||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`).join('')}</div>`;
@@ -1173,7 +1234,7 @@ async function previewExam(){
     const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
     document.getElementById('modalBox').style.maxWidth = '760px';
     title.textContent = isAr ? '👁️ معاينة الاختبار' : '👁️ Exam Preview';
-    content.innerHTML = bodyHtml + `<button class="btn btn-secondary" onclick="closeModal(); document.getElementById('modalBox').style.maxWidth='600px';" style="width:100%;margin-top:10px;">${isAr?'إغلاق':'Close'}</button>`;
+    content.innerHTML = bodyHtml + `<button class="btn btn-secondary" onclick="closeModal();" style="width:100%;margin-top:10px;">${isAr?'إغلاق':'Close'}</button>`;
     modal.classList.add('open');
 }
 
