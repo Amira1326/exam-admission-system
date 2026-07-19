@@ -89,7 +89,8 @@ const translations = {
         allNationalityTypes:'كل التصنيفات', bulkApproveBtn:'قبول المحدد', bulkRejectBtn:'رفض المحدد',
         systemSettingsTitle:'إعدادات النظام العامة', timeEnglishLabel:'وقت مادة الإنجليزي (دقيقة)',
         timeMathLabel:'وقت مادة الرياضيات (دقيقة)', timeArabicLabel:'وقت مادة العربي (دقيقة)',
-        passThresholdLabel:'درجة النجاح (%)', saveSettingsBtn:'حفظ الإعدادات', exportQuestionsBtn:'تصدير بنك الأسئلة (نسخة احتياطية)'
+        passThresholdLabel:'درجة النجاح (%)', saveSettingsBtn:'حفظ الإعدادات', exportQuestionsBtn:'تصدير بنك الأسئلة (نسخة احتياطية)',
+        previewExamBtn:'معاينة الاختبار'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -141,7 +142,8 @@ const translations = {
         allNationalityTypes:'All Categories', bulkApproveBtn:'Approve Selected', bulkRejectBtn:'Reject Selected',
         systemSettingsTitle:'General System Settings', timeEnglishLabel:'English Subject Time (minutes)',
         timeMathLabel:'Math Subject Time (minutes)', timeArabicLabel:'Arabic Subject Time (minutes)',
-        passThresholdLabel:'Pass Threshold (%)', saveSettingsBtn:'Save Settings', exportQuestionsBtn:'Export Question Bank (Backup)'
+        passThresholdLabel:'Pass Threshold (%)', saveSettingsBtn:'Save Settings', exportQuestionsBtn:'Export Question Bank (Backup)',
+        previewExamBtn:'Preview Exam'
     }
 };
 
@@ -1111,6 +1113,70 @@ async function loadQuestionsList(mode){
         </div>`;
     }).join('');
 }
+async function previewExam(){
+    const isAr = currentLang==='ar';
+    const subject = document.getElementById('regQListSubject').value;
+    const grade = document.getElementById('regQListGrade').value;
+    if(!subject || !grade){
+        showToast(isAr?'⚠️ اختر مادة ومرحلة محددة أولاً للمعاينة':'⚠️ Select a specific subject and grade first to preview', 'warning');
+        return;
+    }
+    const { data: questions } = await sb.from('questions').select('*').eq('subject',subject).eq('grade',grade).order('order_index');
+    const { data: passages } = await sb.from('passages').select('*').eq('subject',subject).eq('grade',grade).limit(1);
+    const passage = passages && passages[0];
+
+    if(!questions || questions.length===0){
+        showToast(isAr?'⚠️ لا توجد أسئلة لهذا الاختيار':'⚠️ No questions for this selection', 'warning');
+        return;
+    }
+
+    const isLtr = subject==='english' || subject==='math';
+    const letters = ['أ','ب','ج','د'];
+    const typeLabel = ty => ({ mcq: isAr?'اختياري':'MCQ', written: isAr?'كتابي':'Written', match: isAr?'وصل':'Match', sort: isAr?'ترتيب':'Sort' }[ty] || ty);
+    const totalMarks = questions.reduce((s,q)=>s+(q.marks||0),0);
+
+    let bodyHtml = `<div style="direction:${isLtr?'ltr':'rtl'};text-align:${isLtr?'left':'right'};">`;
+    bodyHtml += `<div style="margin-bottom:14px;padding:10px 14px;background:var(--bg);border-radius:10px;font-weight:700;">
+        ${getSubjectLabel(subject)} · ${getGradeLabel(grade)} · ${questions.length} ${isAr?'سؤال':'questions'} · ${totalMarks} ${isAr?'درجة':'marks'}
+    </div>`;
+    if(passage){
+        bodyHtml += `<div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px;border-right:4px solid var(--primary);">
+            <div style="font-weight:700;margin-bottom:6px;">${passage.title||''}</div>
+            ${passage.image_url ? `<img src="${passage.image_url}" style="max-width:100%;border-radius:10px;margin-bottom:8px;" />` : ''}
+            <div style="line-height:1.8;">${passage.body||''}</div>
+        </div>`;
+    }
+    questions.forEach((q, idx)=>{
+        const label = subject==='arabic' ? `${isAr?'س':'Q'}${idx+1}` : `Q${idx+1}`;
+        bodyHtml += `<div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${label} · ${typeLabel(q.type)} · ${q.marks} ${isAr?'د':'pts'}</div>
+            <div style="font-weight:700;margin-bottom:8px;">${q.question_text}</div>`;
+        if(q.image_url){
+            bodyHtml += `<img src="${q.image_url}" style="max-width:100%;max-height:180px;border-radius:10px;margin-bottom:8px;" />`;
+        }
+        if(q.type==='mcq' && q.options){
+            bodyHtml += `<div class="options" style="margin-bottom:0;">${q.options.map((opt,i)=>`
+                <div class="option">${letters[i]||i}. ${opt}</div>`).join('')}</div>`;
+        } else if(q.type==='match' && q.match_items){
+            bodyHtml += `<div style="display:flex;flex-wrap:wrap;gap:8px;">${q.match_items.map(it=>`
+                <div style="padding:8px 12px;background:var(--bg);border-radius:8px;font-size:13px;">${it.image?`<img src="${it.image}" style="max-height:50px;display:block;margin:0 auto 4px;"/>`:it.label} → <select disabled style="border-radius:6px;"><option>--</option>${(q.match_options||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`).join('')}</div>`;
+        } else if(q.type==='sort' && q.sort_items){
+            bodyHtml += `<div style="display:flex;flex-wrap:wrap;gap:8px;">${q.sort_items.map(it=>`
+                <span style="padding:6px 14px;border:2px solid var(--border);border-radius:16px;">${it.text}</span>`).join('')}</div>`;
+        } else if(q.type==='written'){
+            bodyHtml += `<div style="font-size:12px;color:var(--muted);">${q.instructions||''}</div>`;
+        }
+        bodyHtml += `</div>`;
+    });
+    bodyHtml += `</div>`;
+
+    const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+    document.getElementById('modalBox').style.maxWidth = '760px';
+    title.textContent = isAr ? '👁️ معاينة الاختبار' : '👁️ Exam Preview';
+    content.innerHTML = bodyHtml + `<button class="btn btn-secondary" onclick="closeModal(); document.getElementById('modalBox').style.maxWidth='600px';" style="width:100%;margin-top:10px;">${isAr?'إغلاق':'Close'}</button>`;
+    modal.classList.add('open');
+}
+
 async function quickSaveMarks(id, inputEl){
     const isAr = currentLang==='ar';
     const val = parseFloat(inputEl.value);
