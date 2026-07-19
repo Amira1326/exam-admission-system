@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>اختبار الطالب</title>
+<title>اختبار الطالب - منصة التقييم الإلكتروني</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232B4570'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E" />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -58,7 +59,14 @@ body { font-family:'IBM Plex Sans Arabic',sans-serif; background:#FBF7EC; backgr
     </div>
 
     <div id="examUI" class="hidden">
-        <div class="exam-header">
+        <div id="readyScreen" class="hidden" style="text-align:center;padding:30px 10px;">
+            <div style="font-size:40px;margin-bottom:10px;" id="readyIcon">📘</div>
+            <h2 style="margin-bottom:8px;" id="readyTitle"></h2>
+            <p style="color:#7A8378;margin-bottom:4px;" id="readyQCount"></p>
+            <p style="color:#7A8378;margin-bottom:20px;" id="readyTime"></p>
+            <button class="btn btn-primary" onclick="beginStageExam()" style="max-width:220px;margin:0 auto;">ابدأ الاختبار <i class="fas fa-play"></i></button>
+        </div>
+        <div class="exam-header" id="examHeaderBar">
             <div class="exam-title">📝 اختبار <span id="subjectTitle"></span><span class="stage-badge" id="stageBadge"></span></div>
             <div class="exam-timer" id="timerDisplay">⏱️ --:--</div>
         </div>
@@ -128,13 +136,44 @@ let timerInterval = null;
 let allResults = [];
 
 const SUBJECT_LABELS = { english:'📘 إنجليزي', math:'📗 رياضيات', arabic:'📙 عربي' };
-const SUBJECT_TIME = { english:25, math:20, arabic:20 };
+let SUBJECT_TIME = { english:25, math:20, arabic:20 };
+
+async function loadSettings(){
+    try{
+        const { data } = await sb.from('settings').select('*');
+        if(data){
+            data.forEach(row=>{
+                if(row.key==='time_english') SUBJECT_TIME.english = parseInt(row.value)||25;
+                if(row.key==='time_math') SUBJECT_TIME.math = parseInt(row.value)||20;
+                if(row.key==='time_arabic') SUBJECT_TIME.arabic = parseInt(row.value)||20;
+            });
+        }
+    } catch(e){ /* استخدام القيم الافتراضية عند الفشل */ }
+}
+
+function progressKey(){ return `examProgress_${studentId}`; }
+function saveProgress(){
+    try{
+        sessionStorage.setItem(progressKey(), JSON.stringify({
+            stageIdx: currentStageIdx, questionIdx: currentQuestionIdx,
+            answers, matchAnswers, sortAnswers, writtenUploads, timerSeconds
+        }));
+    } catch(e){ /* تجاهل لو المتصفح رفض التخزين */ }
+}
+function clearProgress(){ try{ sessionStorage.removeItem(progressKey()); } catch(e){} }
+function loadSavedProgress(){
+    try{
+        const raw = sessionStorage.getItem(progressKey());
+        return raw ? JSON.parse(raw) : null;
+    } catch(e){ return null; }
+}
 
 async function init(){
     if(!studentId || !secretCode){
         document.getElementById('loadingScreen').innerHTML = '<h2>⚠️ لم يتم العثور على بيانات الطالب. الرجاء الدخول من صفحة التسجيل.</h2>';
         return;
     }
+    await loadSettings();
     // التحقق من صلاحية الطالب يتم ضمنياً داخل get_exam_questions لكل مادة
     await loadStages();
 }
@@ -168,20 +207,34 @@ async function loadStages(){
     }
     document.getElementById('loadingScreen').classList.add('hidden');
     document.getElementById('examUI').classList.remove('hidden');
-    startStage(0);
+
+    const saved = loadSavedProgress();
+    if(saved && stagesList[saved.stageIdx]){
+        currentStageIdx = saved.stageIdx;
+        currentQuestionIdx = saved.questionIdx || 0;
+        answers = saved.answers || {}; matchAnswers = saved.matchAnswers || {};
+        sortAnswers = saved.sortAnswers || {}; writtenUploads = saved.writtenUploads || {};
+        timerSeconds = saved.timerSeconds || (stagesList[saved.stageIdx].timeMinutes*60);
+        startStage(currentStageIdx, true);
+    } else {
+        startStage(0);
+    }
 }
 
-function startStage(idx){
+function startStage(idx, resuming){
     currentStageIdx = idx;
-    currentQuestionIdx = 0;
-    answers = {}; writtenUploads = {}; matchAnswers = {}; sortAnswers = {};
     const stage = stagesList[idx];
-    clearInterval(timerInterval);
-    timerSeconds = stage.timeMinutes*60;
-    document.getElementById('timerDisplay').textContent = '⏱️ ' + String(stage.timeMinutes).padStart(2,'0') + ':00';
+
+    if(!resuming){
+        currentQuestionIdx = 0;
+        answers = {}; writtenUploads = {}; matchAnswers = {}; sortAnswers = {};
+        timerSeconds = stage.timeMinutes*60;
+    }
+
     document.getElementById('subjectTitle').textContent = SUBJECT_LABELS[stage.subject];
     document.getElementById('stageBadge').textContent = `المرحلة ${idx+1} من ${stagesList.length}`;
     document.getElementById('sectionBadge').textContent = 'قسم ' + SUBJECT_LABELS[stage.subject];
+    document.getElementById('examApp').classList.toggle('ltr', stage.subject==='english' || stage.subject==='math');
 
     const passageContainer = document.getElementById('passageContainer');
     if(stage.passage){
@@ -192,8 +245,30 @@ function startStage(idx){
         else passageImageContainer.classList.add('hidden');
     } else passageContainer.classList.add('hidden');
 
-    document.getElementById('examApp').classList.toggle('ltr', stage.subject==='english' || stage.subject==='math');
+    if(resuming){
+        revealExamContent();
+        return;
+    }
 
+    document.getElementById('readyIcon').textContent = stage.subject==='english'?'📘':stage.subject==='math'?'📗':'📙';
+    document.getElementById('readyTitle').textContent = `استعد لاختبار ${SUBJECT_LABELS[stage.subject]}`;
+    document.getElementById('readyQCount').textContent = `عدد الأسئلة: ${stage.questions.length}`;
+    document.getElementById('readyTime').textContent = `الوقت المخصص: ${stage.timeMinutes} دقيقة`;
+    document.getElementById('readyScreen').classList.remove('hidden');
+    document.getElementById('examHeaderBar').classList.add('hidden');
+    document.getElementById('examContent').classList.add('hidden');
+}
+
+function beginStageExam(){
+    document.getElementById('readyScreen').classList.add('hidden');
+    revealExamContent();
+}
+
+function revealExamContent(){
+    document.getElementById('examHeaderBar').classList.remove('hidden');
+    document.getElementById('examContent').classList.remove('hidden');
+    const stage = stagesList[currentStageIdx];
+    document.getElementById('timerDisplay').textContent = '⏱️ ' + String(Math.floor(timerSeconds/60)).padStart(2,'0') + ':' + String(timerSeconds%60).padStart(2,'0');
     renderQuestion();
     startTimer();
 }
@@ -226,7 +301,7 @@ function renderQuestion(){
         (q.options||[]).forEach((opt,i)=>{
             const div=document.createElement('div');
             div.className='option'+(answers[q.id]===i?' selected':'');
-            div.onclick=()=>{ answers[q.id]=i; renderQuestion(); };
+            div.onclick=()=>{ answers[q.id]=i; renderQuestion(); saveProgress(); };
             div.innerHTML=`<div class="radio"></div><div>${letters[i]||i}. ${opt}</div>`;
             optionsContainer.appendChild(div);
         });
@@ -309,6 +384,7 @@ function addSortWord(qId, itemId){
     renderSortQuestion(q);
     document.getElementById('nextBtn').disabled = !isAnswered(q);
     renderDots();
+    saveProgress();
 }
 function removeSortWord(qId, itemId){
     const state = sortAnswers[qId];
@@ -318,6 +394,7 @@ function removeSortWord(qId, itemId){
     renderSortQuestion(q);
     document.getElementById('nextBtn').disabled = !isAnswered(q);
     renderDots();
+    saveProgress();
 }
 function resetSort(){
     const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
@@ -350,6 +427,7 @@ function selectMatch(qId, idx, value){
     const q = stage.questions[currentQuestionIdx];
     document.getElementById('nextBtn').disabled = !isAnswered(q);
     renderDots();
+    saveProgress();
 }
 function renderDots(){
     const stage = stagesList[currentStageIdx];
@@ -370,6 +448,7 @@ function uploadWrittenSolution(input){
         const q = stagesList[currentStageIdx].questions[currentQuestionIdx];
         writtenUploads[q.id] = e.target.result;
         renderQuestion();
+        saveProgress();
     };
     reader.readAsDataURL(file);
 }
@@ -433,6 +512,7 @@ async function finishStage(){
 }
 
 function showFinalResult(){
+    clearProgress();
     let html='';
     let totalScore=0, totalMarks=0, anyWaiting=false;
     allResults.forEach(r=>{
@@ -459,6 +539,7 @@ function startTimer(){
         timerSeconds--;
         const m=Math.floor(timerSeconds/60), s=timerSeconds%60;
         document.getElementById('timerDisplay').textContent = '⏱️ '+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+        if(timerSeconds % 10 === 0) saveProgress();
         if(timerSeconds<=0){ clearInterval(timerInterval); alert('⏰ انتهى الوقت!'); finishStage(); }
     }, 1000);
 }
