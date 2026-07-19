@@ -92,19 +92,17 @@
             background-size: 100% 34px;
         }
         [data-theme="dark"] .animated-bg::before { opacity: 0.08; }
-        #pageBranch, #pageRole { position: relative; }
-        #pageBranch::before, #pageRole::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background-image: url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
-            background-size: 420px;
-            background-repeat: repeat;
-            opacity: 0.16;
-            pointer-events: none;
+        #pageBranch, #pageRole {
+            background-image: linear-gradient(rgba(251,247,236,.82), rgba(251,247,236,.82)), url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
+            background-size: cover, 420px;
+            background-repeat: no-repeat, repeat;
+            background-position: center, center;
+            border-radius: var(--radius);
+            padding: 24px;
         }
-        [data-theme="dark"] #pageBranch::before, [data-theme="dark"] #pageRole::before { opacity: 0.1; }
+        [data-theme="dark"] #pageBranch, [data-theme="dark"] #pageRole {
+            background-image: linear-gradient(rgba(20,32,26,.88), rgba(20,32,26,.88)), url('https://cdn.phototourl.com/free/2026-07-14-96310037-a17b-4225-8ffe-f1e6a4b79101.jpg');
+        }
 
         .glowing-circles { display: none; }
         .circle { display: none; }
