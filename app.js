@@ -47,9 +47,9 @@ const translations = {
         roleStudent:'طالب', roleTeacher:'معلم', roleRegistrar:'مسؤول قبول', roleAdmin:'مدير النظام',
         loginTitle:'تسجيل الدخول', loginSub:'أدخل بيانات حسابك الوظيفي', emailLabel:'البريد الإلكتروني', passwordLabel:'كلمة المرور', loginBtn:'تسجيل الدخول',
         registerTitle:'تسجيل طالب', registerSub:'أدخل بيانات الطالب للتسجيل',
-        fullNameLabel:'الاسم الكامل', fullNamePh:'أدخل الاسم رباعياً', idLabel:'رقم الهوية (10 أرقام)', phoneLabel:'رقم الجوال (966+10 أرقام)',
+        fullNameLabel:'الاسم الكامل (بالإنجليزي)', fullNamePh:'Enter full name in English', idLabel:'رقم الهوية (10 أرقام)', phoneLabel:'رقم الجوال',
         birthdateLabel:'تاريخ الميلاد', genderLabel:'الجنس', chooseOpt:'-- اختر --', genderMale:'👨 ذكر', genderFemale:'👩 أنثى',
-        typeLabel:'التصنيف', typeArab:'🌍 عربي', typeForeign:'🌍 أجنبي', nationalityLabel:'الجنسية',
+        typeLabel:'فئة', typeArab:'🌍 عربي', typeForeign:'🌍 أجنبي', nationalityLabel:'الجنسية',
         sectionLabel:'قسم الفرع (بنين / بنات)', sectionBoys:'👦 بنين', sectionGirls:'👧 بنات', gradeLabel:'المرحلة الدراسية',
         g_kg2:'🎈 KG2', g_g1:'📚 الصف الأول', g_g2:'📚 الصف الثاني', g_g3:'📚 الصف الثالث', g_g4:'📚 الصف الرابع',
         g_g5:'📚 الصف الخامس', g_g6:'📚 الصف السادس', g_g7:'📚 الصف السابع', g_g8:'📚 الصف الثامن', g_g9:'📚 الصف التاسع',
@@ -90,7 +90,9 @@ const translations = {
         systemSettingsTitle:'إعدادات النظام العامة', timeEnglishLabel:'وقت مادة الإنجليزي (دقيقة)',
         timeMathLabel:'وقت مادة الرياضيات (دقيقة)', timeArabicLabel:'وقت مادة العربي (دقيقة)',
         passThresholdLabel:'درجة النجاح (%)', saveSettingsBtn:'حفظ الإعدادات', exportQuestionsBtn:'تصدير بنك الأسئلة (نسخة احتياطية)',
-        previewExamBtn:'معاينة الاختبار', forgotPasswordLink:'نسيت كلمة المرور؟'
+        previewExamBtn:'معاينة الاختبار', forgotPasswordLink:'نسيت كلمة المرور؟',
+        roleSupervisor:'مشرف أكاديمي', roleStageManager:'مدير مرحلة', supervisorDashTitle:'لوحة المشرف الأكاديمي',
+        resultsTitle:'النتائج والدرجات', lookupStudentTitle:'البحث عن نتيجة طالب'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -100,7 +102,7 @@ const translations = {
         roleStudent:'Student', roleTeacher:'Teacher', roleRegistrar:'Admissions Officer', roleAdmin:'System Administrator',
         loginTitle:'Sign In', loginSub:'Enter your staff account details', emailLabel:'Email Address', passwordLabel:'Password', loginBtn:'Sign In',
         registerTitle:'Student Registration', registerSub:'Enter the student details to register',
-        fullNameLabel:'Full Name', fullNamePh:'Enter full name (4 parts)', idLabel:'National ID (10 digits)', phoneLabel:'Mobile Number (966+10 digits)',
+        fullNameLabel:'Full Name (English)', fullNamePh:'Enter full name in English', idLabel:'National ID (10 digits)', phoneLabel:'Mobile Number',
         birthdateLabel:'Date of Birth', genderLabel:'Gender', chooseOpt:'-- Select --', genderMale:'👨 Male', genderFemale:'👩 Female',
         typeLabel:'Category', typeArab:'🌍 Arab', typeForeign:'🌍 Foreign', nationalityLabel:'Nationality',
         sectionLabel:'Section (Boys / Girls)', sectionBoys:'👦 Boys', sectionGirls:'👧 Girls', gradeLabel:'Grade Level',
@@ -143,7 +145,9 @@ const translations = {
         systemSettingsTitle:'General System Settings', timeEnglishLabel:'English Subject Time (minutes)',
         timeMathLabel:'Math Subject Time (minutes)', timeArabicLabel:'Arabic Subject Time (minutes)',
         passThresholdLabel:'Pass Threshold (%)', saveSettingsBtn:'Save Settings', exportQuestionsBtn:'Export Question Bank (Backup)',
-        previewExamBtn:'Preview Exam', forgotPasswordLink:'Forgot your password?'
+        previewExamBtn:'Preview Exam', forgotPasswordLink:'Forgot your password?',
+        roleSupervisor:'Academic Supervisor', roleStageManager:'Stage Manager', supervisorDashTitle:'Academic Supervisor Dashboard',
+        resultsTitle:'Results & Grades', lookupStudentTitle:'Look Up a Student Result'
     }
 };
 
@@ -406,7 +410,7 @@ function updateGradeOptions(branch){
 function selectRole(role){
     selectedRole = role;
     document.querySelectorAll('.role-btn').forEach(el=>el.classList.remove('active'));
-    const map = { student:'roleStudent', teacher:'roleTeacher', registrar:'roleRegistrar', admin:'roleAdmin' };
+    const map = { student:'roleStudent', teacher:'roleTeacher', registrar:'roleRegistrar', admin:'roleAdmin', supervisor:'roleSupervisor', stage_manager:'roleStageManager' };
     document.getElementById(map[role]).classList.add('active');
     document.getElementById('btnRoleNext').disabled = false;
 }
@@ -523,6 +527,10 @@ async function login(){
         document.getElementById('adminNameDisplay').textContent = profile.name;
         await renderAdminDashboard();
         document.getElementById('pageAdminDashboard').classList.add('active');
+    } else if(profile.role==='supervisor' || profile.role==='stage_manager'){
+        document.getElementById('supervisorNameDisplay').textContent = profile.name;
+        await renderSupervisorDashboard();
+        document.getElementById('pageSupervisorDashboard').classList.add('active');
     }
     showToast(currentLang==='ar' ? '✅ تم تسجيل الدخول بنجاح' : '✅ Signed in successfully', 'success');
 }
@@ -578,7 +586,8 @@ function calculateAge(){
 async function registerStudent(){
     const name = document.getElementById('studentName').value.trim();
     const id = document.getElementById('studentId').value.trim();
-    const phone = document.getElementById('studentPhone').value.trim();
+    const phoneLocal = document.getElementById('studentPhone').value.trim();
+    const phone = phoneLocal ? '966' + phoneLocal : '';
     const birthdate = document.getElementById('studentBirthdate').value;
     const gender = document.getElementById('studentGender').value;
     const nationalityType = document.getElementById('studentNationalityType').value;
@@ -589,8 +598,11 @@ async function registerStudent(){
     const btn = document.getElementById('registerBtn');
     const isAr = currentLang==='ar';
 
-    if(!name||!id||!phone||!birthdate||!gender||!nationalityType||!grade){
+    if(!name||!id||!phoneLocal||!birthdate||!gender||!nationalityType||!grade){
         status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'يرجى تعبئة جميع الحقول المطلوبة':'Please fill in all required fields'}</span>`; return;
+    }
+    if(!/^[a-zA-Z\s]+$/.test(name)){
+        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'الاسم يجب أن يكتب بالإنجليزي فقط':'Name must be written in English only'}</span>`; return;
     }
     if(selectedBranch==='ajyal' && !ajyalSection){
         status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'يرجى اختيار قسم الفرع':'Please select the section'}</span>`; return;
@@ -598,8 +610,8 @@ async function registerStudent(){
     if(id.length!==10){
         status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'رقم الهوية يجب أن يكون 10 أرقام':'National ID must be 10 digits'}</span>`; return;
     }
-    if(phone.length!==13 || !phone.startsWith('966')){
-        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'رقم الجوال يجب أن يبدأ بـ966 ويكون 13 رقم':'Mobile number must start with 966 and be 13 digits'}</span>`; return;
+    if(phoneLocal.length!==10){
+        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'رقم الجوال يجب أن يكون 10 أرقام بعد 966+':'Mobile number must be 10 digits after +966'}</span>`; return;
     }
     const today=new Date(), birth=new Date(birthdate);
     let age = today.getFullYear()-birth.getFullYear();
@@ -703,15 +715,7 @@ async function renderRegistrarDashboard(){
     document.getElementById('registrarStatAccepted').textContent = students.filter(s=>s.status==='approved').length;
     document.getElementById('registrarStatRejected').textContent = students.filter(s=>s.status==='rejected').length;
 
-    const { data: results } = await sb.from('exam_results').select('student_id, score, total').not('score','is',null);
-    const avgByStudent = {};
-    (results||[]).forEach(r=>{ avgByStudent[r.student_id] = avgByStudent[r.student_id] || []; avgByStudent[r.student_id].push(r.score/r.total*10); });
-    const allAvgs = Object.values(avgByStudent).map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length);
-    document.getElementById('registrarStatAvg').textContent = allAvgs.length ? (allAvgs.reduce((a,b)=>a+b,0)/allAvgs.length).toFixed(1) : 0;
-
     filterRegistrarList();
-    await renderLeaderboard();
-    loadQuestionsList('registrar');
 }
 
 let _bulkSelectedIds = new Set();
@@ -745,8 +749,7 @@ function filterRegistrarList(){
                     <button class="btn-sm reject" onclick="rejectStudent('${s.id}')">❌ ${isAr?'رفض':'Reject'}</button></div>`;
             } else if(s.status==='approved'){
                 actions = `<div class="request-actions">
-                    <button class="btn-sm exam" onclick="goToExam('${s.id}','${s.secret_code}')">📝 ${isAr?'دخول الاختبار':'Start Exam'}</button>
-                    <button class="btn-sm view-score" onclick="showStudentScores('${s.id}')">📊 ${isAr?'عرض النتائج':'View Results'}</button></div>`;
+                    <button class="btn-sm exam" onclick="goToExam('${s.id}','${s.secret_code}')">📝 ${isAr?'دخول الاختبار':'Start Exam'}</button></div>`;
             } else {
                 actions = `<span style="color:var(--danger);font-weight:700;">${isAr?'سبب الرفض':'Rejection reason'}: ${s.rejection_reason||(isAr?'غير محدد':'Not specified')}</span>`;
             }
@@ -1057,7 +1060,7 @@ function filterAdminList(){
     else recent.forEach(s=>{
         const badge = `<span class="badge-status ${s.status==='pending'?'pending':s.status==='approved'?'accepted':'rejected'}">${getStatusLabel(s.status)}</span>`;
         body.innerHTML += `<tr><td>${s.name}</td><td>${getBranchLabel(s.branch)}</td><td>${badge}</td>
-            <td>${s.status==='approved'?`<button class="btn-mini view" onclick="showStudentScores('${s.id}')">📊 ${isAr?'عرض':'View'}</button>`:'--'}</td></tr>`;
+            <td>--</td></tr>`;
     });
 }
 function createCharts(students, results){
@@ -1393,6 +1396,35 @@ async function exportQuestionBankJSON(){
     link.click();
     logActivity(isAr?'صدّر نسخة احتياطية من بنك الأسئلة':'Exported question bank backup', `${questions.length} ${isAr?'سؤال':'questions'}`);
     showToast(isAr?'✅ تم تصدير بنك الأسئلة':'✅ Question bank exported', 'success');
+}
+
+// ---------------- SUPERVISOR / STAGE MANAGER DASHBOARD ----------------
+async function renderSupervisorDashboard(){
+    loadQuestionsList('registrar');
+    await renderLeaderboard();
+    const { data: students } = await sb.from('students').select('*').eq('status','approved').order('name');
+    window._supervisorStudentsCache = students || [];
+    filterSupervisorStudentList();
+}
+function switchSupervisorTab(tabId){
+    document.querySelectorAll('#pageSupervisorDashboard .admin-tab').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('#pageSupervisorDashboard .admin-tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById(tabId)?.classList.add('active');
+    document.querySelector(`#pageSupervisorDashboard .admin-tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
+}
+function filterSupervisorStudentList(){
+    const isAr = currentLang==='ar';
+    const students = window._supervisorStudentsCache || [];
+    const list = document.getElementById('supervisorStudentsList');
+    if(!list) return;
+    const query = (document.getElementById('supervisorSearch')?.value||'').trim().toLowerCase();
+    const filtered = query ? students.filter(s=>s.name.toLowerCase().includes(query) || s.national_id.includes(query)) : students.slice(0,15);
+    if(filtered.length===0){ list.innerHTML = `<div class="empty-state">${isAr?'لا توجد نتائج':'No results'}</div>`; return; }
+    list.innerHTML = filtered.map(s=>`
+        <div class="qa-list-item">
+            <span>👤 ${s.name} · 🆔 ${s.national_id} · 📚 ${getGradeLabel(s.grade)} · 🏫 ${getBranchLabel(s.branch)}</span>
+            <button class="btn-mini view" onclick="showStudentScores('${s.id}')">📊 ${isAr?'عرض النتائج':'View Results'}</button>
+        </div>`).join('');
 }
 
 // ---------------- ADMIN: STAFF MANAGEMENT ----------------
