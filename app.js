@@ -99,7 +99,11 @@ const translations = {
         allowedGradesLabel:'🎓 المراحل المسموحة', allowedGradesHint:'اختر مرحلة أو أكثر. اتركها فارغة يعني كل المراحل.',
         extraPermissionsLabel:'🔑 صلاحيات إضافية لهذا الحساب', extraPermissionsHint:'تُمنح فوق صلاحيات الدور الأساسي. مدير النظام لديه كل الصلاحيات دائماً.',
         permBulkActions:'الإجراءات الجماعية', permExportData:'تصدير البيانات', permDeleteRecords:'حذف الأسئلة/الحسابات',
-        visibleTabsLabel:'📑 التبويبات الظاهرة لهذا الحساب', visibleTabsHint:'أزل علامة أي تبويب لإخفائه عن هذا الحساب فقط.'
+        visibleTabsLabel:'📑 التبويبات الظاهرة لهذا الحساب', visibleTabsHint:'أزل علامة أي تبويب لإخفائه عن هذا الحساب فقط.',
+        brandingTitle:'تخصيص الهوية البصرية', brandingSub:'يتغير مباشرة على شاشة التلاشي وباقي الموقع لكل الزوار',
+        splashGoldLabel:'العنوان المميز (شاشة التلاشي)', splashLightLabel:'النص الفرعي (شاشة التلاشي)',
+        primaryColorLabel:'اللون الرئيسي للموقع', saveBrandingBtn:'حفظ الهوية البصرية',
+        heatmapTitle:'خريطة التسجيلات اليومية (آخر 90 يوم)', heatmapLess:'أقل', heatmapMore:'أكثر'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -161,7 +165,11 @@ const translations = {
         allowedGradesLabel:'🎓 Allowed Grades', allowedGradesHint:'Select one or more grades. Leave empty for all grades.',
         extraPermissionsLabel:'🔑 Extra Permissions for This Account', extraPermissionsHint:'Granted on top of the base role permissions. System admin always has full access.',
         permBulkActions:'Bulk Actions', permExportData:'Export Data', permDeleteRecords:'Delete Questions/Accounts',
-        visibleTabsLabel:'📑 Visible Tabs for This Account', visibleTabsHint:'Uncheck a tab to hide it for this account only.'
+        visibleTabsLabel:'📑 Visible Tabs for This Account', visibleTabsHint:'Uncheck a tab to hide it for this account only.',
+        brandingTitle:'Branding Customization', brandingSub:'Changes apply instantly on the splash screen and site-wide for all visitors',
+        splashGoldLabel:'Highlighted Title (Splash Screen)', splashLightLabel:'Subtitle (Splash Screen)',
+        primaryColorLabel:'Site Primary Color', saveBrandingBtn:'Save Branding',
+        heatmapTitle:'Daily Registration Heatmap (Last 90 Days)', heatmapLess:'Less', heatmapMore:'More'
     }
 };
 
@@ -240,6 +248,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setLangAttributes();
     applyTranslations();
     checkPasswordRecovery();
+    applyBranding();
     const saved = localStorage.getItem('theme');
     if(saved==='dark'){ document.documentElement.setAttribute('data-theme','dark'); const b=document.getElementById('themeToggle'); if(b) b.innerHTML='<i class="fas fa-sun"></i>'; }
 
@@ -1061,6 +1070,8 @@ async function renderAdminDashboard(){
     loadStaffList();
     loadActivityLog();
     loadSettingsIntoForm();
+    loadBrandingIntoForm();
+    refreshNotifBadge();
     renderAdvancedAnalytics();
     applyTabVisibility('#pageAdminDashboard');
     const exportBtn = document.getElementById('exportStudentsBtnEl');
@@ -1363,6 +1374,146 @@ function askChatQuestion(key){
 }
 
 // ---------------- ADMIN TABS ----------------
+// ---------------- COMMAND PALETTE (بحث شامل) ----------------
+async function openCommandPalette(){
+    const isAr = currentLang==='ar';
+    const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+    title.textContent = isAr ? '🔍 بحث شامل' : '🔍 Global Search';
+    content.innerHTML = `
+        <input type="text" id="cmdPaletteInput" placeholder="${isAr?'ابحث عن طالب، موظف، أو سؤال...':'Search for a student, staff, or question...'}" autofocus style="width:100%;padding:13px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:rgba(255,255,255,.7);font-family:var(--font-main);font-size:14px;outline:none;" />
+        <div id="cmdPaletteResults" style="margin-top:12px;max-height:50vh;overflow-y:auto;"></div>`;
+    modal.classList.add('open');
+    const input = document.getElementById('cmdPaletteInput');
+    input.focus();
+    input.addEventListener('input', ()=>runCommandPaletteSearch(input.value));
+}
+async function runCommandPaletteSearch(query){
+    const isAr = currentLang==='ar';
+    const resultsEl = document.getElementById('cmdPaletteResults');
+    query = query.trim();
+    if(query.length < 2){ resultsEl.innerHTML = ''; return; }
+    resultsEl.innerHTML = `<div style="text-align:center;padding:10px;"><span class="spinner"></span></div>`;
+
+    const [studentsRes, staffRes, questionsRes] = await Promise.all([
+        sb.from('students').select('id,name,national_id,grade,status').or(`name.ilike.%${query}%,national_id.ilike.%${query}%`).limit(6),
+        sb.from('profiles').select('id,name,role').ilike('name',`%${query}%`).limit(6),
+        sb.from('questions').select('id,subject,grade,question_text').ilike('question_text',`%${query}%`).limit(6)
+    ]);
+
+    let html = '';
+    if(studentsRes.data?.length){
+        html += `<div style="font-size:11px;font-weight:700;color:var(--muted);margin:8px 0 4px;">${isAr?'👤 طلاب':'👤 Students'}</div>`;
+        html += studentsRes.data.map(s=>`<div class="qa-list-item"><span>${s.name} · 🆔 ${s.national_id} · ${getGradeLabel(s.grade)}</span><span class="badge-status ${s.status==='pending'?'pending':s.status==='approved'?'accepted':'rejected'}">${getStatusLabel(s.status)}</span></div>`).join('');
+    }
+    if(staffRes.data?.length){
+        html += `<div style="font-size:11px;font-weight:700;color:var(--muted);margin:8px 0 4px;">${isAr?'👔 موظفون':'👔 Staff'}</div>`;
+        html += staffRes.data.map(p=>`<div class="qa-list-item"><span>${p.name} · ${t(({admin:'roleAdmin',teacher:'roleTeacher',registrar:'roleRegistrar',supervisor:'roleSupervisor',stage_manager:'roleStageManager'})[p.role]||'roleRegistrar')}</span></div>`).join('');
+    }
+    if(questionsRes.data?.length){
+        html += `<div style="font-size:11px;font-weight:700;color:var(--muted);margin:8px 0 4px;">${isAr?'❓ أسئلة':'❓ Questions'}</div>`;
+        html += questionsRes.data.map(q=>`<div class="qa-list-item"><span>${getSubjectLabel(q.subject)} · ${getGradeLabel(q.grade)} · ${q.question_text.slice(0,50)}</span></div>`).join('');
+    }
+    resultsEl.innerHTML = html || `<div class="empty-state">${isAr?'لا توجد نتائج':'No results'}</div>`;
+}
+document.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey || e.metaKey) && e.key==='k'){
+        e.preventDefault();
+        if(currentUserProfile) openCommandPalette();
+    }
+});
+
+// ---------------- NOTIFICATION BELL ----------------
+async function computeNotifications(){
+    const isAr = currentLang==='ar';
+    const notifs = [];
+    const dayAgo = new Date(Date.now() - 24*3600*1000).toISOString();
+
+    const { data: stalePending } = await sb.from('students').select('id,name,created_at').eq('status','pending').lt('created_at', dayAgo);
+    if(stalePending && stalePending.length>0){
+        notifs.push({ icon:'⏳', text: isAr ? `${stalePending.length} طلب تسجيل بانتظار الرد لأكثر من 24 ساعة` : `${stalePending.length} registration request(s) waiting over 24 hours` });
+    }
+
+    const { data: staleCorrection } = await sb.from('exam_results').select('id,created_at').eq('status','waiting_correction').lt('created_at', dayAgo);
+    if(staleCorrection && staleCorrection.length>0){
+        notifs.push({ icon:'📝', text: isAr ? `${staleCorrection.length} ورقة كتابية بانتظار التصحيح لأكثر من 24 ساعة` : `${staleCorrection.length} written paper(s) waiting to be marked over 24 hours` });
+    }
+
+    const { data: rejectedRecent } = await sb.from('students').select('id').eq('status','rejected').gt('created_at', dayAgo);
+    if(rejectedRecent && rejectedRecent.length >= 5){
+        notifs.push({ icon:'⚠️', text: isAr ? `${rejectedRecent.length} حالات رفض خلال آخر 24 ساعة — يستحق المراجعة` : `${rejectedRecent.length} rejections in the last 24 hours — worth reviewing` });
+    }
+
+    return notifs;
+}
+async function toggleNotificationPanel(){
+    const panel = document.getElementById('notifPanel');
+    if(!panel.classList.contains('hidden')){ panel.classList.add('hidden'); return; }
+    const isAr = currentLang==='ar';
+    panel.innerHTML = `<div style="text-align:center;padding:10px;"><span class="spinner"></span></div>`;
+    panel.classList.remove('hidden');
+    const notifs = await computeNotifications();
+    panel.innerHTML = notifs.length===0
+        ? `<div class="empty-state">${isAr?'لا يوجد تنبيهات حالياً ✅':'No alerts right now ✅'}</div>`
+        : notifs.map(n=>`<div class="qa-list-item"><span>${n.icon} ${n.text}</span></div>`).join('');
+}
+async function refreshNotifBadge(){
+    const notifs = await computeNotifications();
+    const badge = document.getElementById('notifBadge');
+    if(!badge) return;
+    if(notifs.length>0){ badge.textContent = notifs.length; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+}
+
+// ---------------- BRANDING (تخصيص الهوية البصرية) ----------------
+async function applyBranding(){
+    try{
+        const { data } = await sb.from('settings').select('*').in('key', ['splash_title_gold','splash_title_light','primary_color']);
+        if(!data) return;
+        const map = {}; data.forEach(r=>map[r.key]=r.value);
+        if(map.splash_title_gold){
+            const el = document.getElementById('splashGoldText');
+            if(el) el.textContent = map.splash_title_gold;
+        }
+        if(map.splash_title_light){
+            const el = document.getElementById('splashLightText');
+            if(el) el.textContent = map.splash_title_light;
+        }
+        if(map.primary_color){
+            document.documentElement.style.setProperty('--primary', map.primary_color);
+        }
+    } catch(e){ /* استخدام الهوية الافتراضية عند الفشل */ }
+}
+async function loadBrandingIntoForm(){
+    const { data } = await sb.from('settings').select('*').in('key', ['splash_title_gold','splash_title_light','primary_color']);
+    if(!data) return;
+    const map = {}; data.forEach(r=>map[r.key]=r.value);
+    if(document.getElementById('settingSplashGold')) document.getElementById('settingSplashGold').value = map.splash_title_gold || '';
+    if(document.getElementById('settingSplashLight')) document.getElementById('settingSplashLight').value = map.splash_title_light || '';
+    if(document.getElementById('settingPrimaryColor')) document.getElementById('settingPrimaryColor').value = map.primary_color || '#2B4570';
+    if(document.getElementById('settingPrimaryColorHex')) document.getElementById('settingPrimaryColorHex').value = map.primary_color || '#2B4570';
+}
+async function saveBranding(){
+    const isAr = currentLang==='ar';
+    const status = document.getElementById('brandingStatus');
+    const gold = document.getElementById('settingSplashGold').value.trim();
+    const light = document.getElementById('settingSplashLight').value.trim();
+    const color = document.getElementById('settingPrimaryColorHex').value.trim() || document.getElementById('settingPrimaryColor').value;
+    if(!/^#[0-9A-Fa-f]{6}$/.test(color)){
+        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'صيغة اللون غير صحيحة (مثال: #2B4570)':'Invalid color format (e.g. #2B4570)'}</span>`; return;
+    }
+    status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الحفظ...':'Saving...'}`;
+    const values = { splash_title_gold: gold, splash_title_light: light, primary_color: color };
+    for(const [key, value] of Object.entries(values)){
+        if(!value) continue;
+        const { error } = await sb.from('settings').upsert({ key, value });
+        if(error){ status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`; return; }
+    }
+    logActivity(isAr?'حدّث الهوية البصرية':'Updated branding', '');
+    status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?'تم الحفظ، سيظهر التحديث لكل الزوار فوراً':'Saved, the update will appear for all visitors immediately'}</span>`;
+    showToast(isAr?'✅ تم حفظ الهوية البصرية':'✅ Branding saved', 'success');
+    applyBranding();
+}
+
 // ---------------- ACCOUNT RESTRICTIONS (صلاحيات دقيقة لكل حساب) ----------------
 function hasPermission(key){
     if(!currentUserProfile) return false;
@@ -1560,6 +1711,25 @@ async function renderAdvancedAnalytics(){
             <div class="qa-list-item"><span>👤 <strong>${profileName(id)}</strong> — ${isAr?'عدد القرارات':'Decisions'}: ${d.count}</span>
             <span style="font-size:12px;color:var(--muted);">${isAr?'متوسط زمن الرد':'Avg response time'}: ${(d.totalHrs/d.count).toFixed(1)} ${isAr?'ساعة':'hrs'}</span></div>`).join('');
 
+    // ---- Registration heatmap (آخر 90 يوم) ----
+    const dayCounts = {};
+    (students||[]).forEach(s=>{
+        const day = s.created_at ? s.created_at.slice(0,10) : null;
+        if(day) dayCounts[day] = (dayCounts[day]||0) + 1;
+    });
+    const heatmapDays = [];
+    for(let i=89; i>=0; i--){
+        const d = new Date(); d.setDate(d.getDate()-i);
+        const key = d.toISOString().slice(0,10);
+        heatmapDays.push({ key, count: dayCounts[key]||0 });
+    }
+    const maxCount = Math.max(1, ...heatmapDays.map(d=>d.count));
+    document.getElementById('heatmapDisplay').innerHTML = heatmapDays.map(d=>{
+        const intensity = d.count===0 ? 0 : Math.ceil((d.count/maxCount)*4);
+        const colors = ['var(--bg)','rgba(43,69,112,.25)','rgba(43,69,112,.5)','rgba(43,69,112,.75)','rgba(43,69,112,1)'];
+        return `<div title="${d.key}: ${d.count}" style="aspect-ratio:1;border-radius:3px;background:${colors[intensity]};border:1px solid var(--border);"></div>`;
+    }).join('');
+
     // ---- Teacher marking performance ----
     const byTeacher = {};
     (results||[]).filter(r=>r.corrected_by).forEach(r=>{
@@ -1681,12 +1851,41 @@ async function loadStaffList(){
     const { data: profiles, error } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
     if(error){ container.innerHTML = `<div class="empty-state">${error.message}</div>`; return; }
     if(!profiles || profiles.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد موظفون بعد':'No staff members yet'}</div>`; return; }
-    const roleLabel = r => r==='admin'?t('roleAdmin'): r==='teacher'?t('roleTeacher'): t('roleRegistrar');
+    window._staffProfilesCache = profiles;
+    const roleLabelMap = { admin:'roleAdmin', teacher:'roleTeacher', registrar:'roleRegistrar', supervisor:'roleSupervisor', stage_manager:'roleStageManager' };
+    const roleLabel = r => t(roleLabelMap[r] || 'roleRegistrar');
     container.innerHTML = profiles.map(p=>`
         <div class="qa-list-item">
             <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong>${p.branch?` · ${getBranchLabel(p.branch)}`:''}</span>
-            ${p.id!==currentUserProfile?.id && hasPermission('delete_records') ? `<button class="btn-mini reject" onclick="deleteStaffUser('${p.id}','${p.name.replace(/'/g,"")}')">${isAr?'حذف':'Delete'}</button>` : (p.id===currentUserProfile?.id ? `<span style="font-size:11px;color:var(--muted);">${isAr?'(أنت)':'(you)'}</span>` : '')}
+            <span style="display:flex;gap:6px;align-items:center;">
+                <button class="btn-mini neutral" onclick="previewStaffPermissions('${p.id}')">👁️ ${isAr?'الصلاحيات':'Permissions'}</button>
+                ${p.id!==currentUserProfile?.id && hasPermission('delete_records') ? `<button class="btn-mini reject" onclick="deleteStaffUser('${p.id}','${p.name.replace(/'/g,"")}')">${isAr?'حذف':'Delete'}</button>` : (p.id===currentUserProfile?.id ? `<span style="font-size:11px;color:var(--muted);">${isAr?'(أنت)':'(you)'}</span>` : '')}
+            </span>
         </div>`).join('');
+}
+function previewStaffPermissions(userId){
+    const isAr = currentLang==='ar';
+    const p = (window._staffProfilesCache||[]).find(x=>x.id===userId);
+    if(!p) return;
+    const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+    title.textContent = `👁️ ${isAr?'صلاحيات':'Permissions for'} ${p.name}`;
+    const roleLabelMap = { admin:'roleAdmin', teacher:'roleTeacher', registrar:'roleRegistrar', supervisor:'roleSupervisor', stage_manager:'roleStageManager' };
+    const gradesText = p.allowed_grades?.length ? p.allowed_grades.map(getGradeLabel).join('، ') : (isAr?'كل المراحل':'All grades');
+    const permsMap = { bulk_actions: isAr?'الإجراءات الجماعية':'Bulk actions', export_data: isAr?'تصدير البيانات':'Export data', delete_records: isAr?'حذف الأسئلة/الحسابات':'Delete questions/accounts' };
+    const permsText = p.role==='admin' ? (isAr?'كل الصلاحيات (مدير النظام)':'All permissions (system admin)')
+        : (p.extra_permissions===null || p.extra_permissions===undefined) ? (isAr?'كل الصلاحيات (حساب قديم)':'All permissions (legacy account)')
+        : (p.extra_permissions.length ? p.extra_permissions.map(k=>permsMap[k]||k).join('، ') : (isAr?'بدون صلاحيات إضافية':'No extra permissions'));
+    const tabsText = p.visible_tabs?.length ? p.visible_tabs.join('، ') : (isAr?'كل التبويبات':'All tabs');
+    content.innerHTML = `
+        <div style="line-height:2.2;font-size:14px;">
+            <div>🎭 ${isAr?'الدور':'Role'}: <strong>${t(roleLabelMap[p.role]||'roleRegistrar')}</strong></div>
+            <div>🏫 ${isAr?'الفرع':'Branch'}: <strong>${p.branch?getBranchLabel(p.branch):(isAr?'كل الفروع':'All branches')}</strong></div>
+            <div>🎓 ${isAr?'المراحل المسموحة':'Allowed grades'}: <strong>${gradesText}</strong></div>
+            <div>🔑 ${isAr?'الصلاحيات الإضافية':'Extra permissions'}: <strong>${permsText}</strong></div>
+            <div>📑 ${isAr?'التبويبات الظاهرة':'Visible tabs'}: <strong>${tabsText}</strong></div>
+        </div>
+        <button class="btn btn-secondary" onclick="closeModal()" style="width:100%;margin-top:16px;">${isAr?'إغلاق':'Close'}</button>`;
+    modal.classList.add('open');
 }
 async function deleteStaffUser(userId, name){
     const isAr = currentLang==='ar';
