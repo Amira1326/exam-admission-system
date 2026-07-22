@@ -103,7 +103,18 @@ const translations = {
         brandingTitle:'تخصيص الهوية البصرية', brandingSub:'يتغير مباشرة على شاشة التلاشي وباقي الموقع لكل الزوار',
         splashGoldLabel:'العنوان المميز (شاشة التلاشي)', splashLightLabel:'النص الفرعي (شاشة التلاشي)',
         primaryColorLabel:'اللون الرئيسي للموقع', saveBrandingBtn:'حفظ الهوية البصرية',
-        heatmapTitle:'خريطة التسجيلات اليومية (آخر 90 يوم)', heatmapLess:'أقل', heatmapMore:'أكثر'
+        heatmapTitle:'خريطة التسجيلات اليومية (آخر 90 يوم)', heatmapLess:'أقل', heatmapMore:'أكثر',
+        promotionTitle:'ترقية الطلاب الجماعية (نهاية العام الدراسي)', promotionSub:'ينقل كل الطلاب المقبولين من مرحلة لمرحلة أعلى دفعة واحدة',
+        fromGradeLabel:'من مرحلة', toGradeLabel:'إلى مرحلة', promoteBtn:'ترقية الطلاب',
+        fullBackupTitle:'نسخة احتياطية شاملة', fullBackupSub:'تصدير/استيراد بنك الأسئلة والإعدادات معاً في ملف واحد',
+        fullBackupExportBtn:'تصدير نسخة شاملة', fullBackupRestoreBtn:'استعادة من نسخة',
+        filterAllActivity:'كل العمليات', filterLoginsOnly:'عمليات الدخول فقط',
+        academicAnalysisTitle:'التحليل الأكاديمي', coverageMatrixTitle:'مصفوفة تغطية المنهج',
+        coverageMatrixSub:'أخضر = مكتمل ومضبوط 30 درجة · أصفر = موجود لكن الدرجات غير مضبوطة · أحمر = ناقص كلياً',
+        difficultyAnalysisTitle:'تحليل صعوبة الأسئلة', difficultyAnalysisSub:'حسب إجابات الطلاب الفعلية — يساعدك تكتشف الأسئلة الصعبة جداً أو السهلة جداً',
+        runAnalysisBtn:'تشغيل التحليل', scoreDistTitle:'توزيع الدرجات', dupQuestionsTitle:'تكرار محتمل بالأسئلة',
+        eligibleThresholdLabel:'حد "مجتاز" (%)', eligibleThresholdHint:'50% فأكثر = مجتاز بدون شروط',
+        conditionalThresholdLabel:'حد "مجتاز بشرط" (%)', conditionalThresholdHint:'بين هذا الحد وحد "مجتاز" = مجتاز بشرط الالتحاق ببرنامج ما بعد المدرسة'
     },
     en: {
         loaderText:'Preparing...', splashTitle1:'The', splashTitle2:'Electronic Assessment Platform', splashTitle3:"Ajyal Al Maarefah Schools - Kids' Gateway",
@@ -169,7 +180,18 @@ const translations = {
         brandingTitle:'Branding Customization', brandingSub:'Changes apply instantly on the splash screen and site-wide for all visitors',
         splashGoldLabel:'Highlighted Title (Splash Screen)', splashLightLabel:'Subtitle (Splash Screen)',
         primaryColorLabel:'Site Primary Color', saveBrandingBtn:'Save Branding',
-        heatmapTitle:'Daily Registration Heatmap (Last 90 Days)', heatmapLess:'Less', heatmapMore:'More'
+        heatmapTitle:'Daily Registration Heatmap (Last 90 Days)', heatmapLess:'Less', heatmapMore:'More',
+        promotionTitle:'Bulk Grade Promotion (End of School Year)', promotionSub:'Moves all approved students from one grade to the next in one batch',
+        fromGradeLabel:'From Grade', toGradeLabel:'To Grade', promoteBtn:'Promote Students',
+        fullBackupTitle:'Full Backup', fullBackupSub:'Export/import the question bank and settings together in one file',
+        fullBackupExportBtn:'Export Full Backup', fullBackupRestoreBtn:'Restore from Backup',
+        filterAllActivity:'All Actions', filterLoginsOnly:'Logins Only',
+        academicAnalysisTitle:'Academic Analysis', coverageMatrixTitle:'Curriculum Coverage Matrix',
+        coverageMatrixSub:'Green = complete, exactly 30 marks · Yellow = exists but marks not balanced · Red = fully missing',
+        difficultyAnalysisTitle:'Question Difficulty Analysis', difficultyAnalysisSub:'Based on actual student answers — helps you spot questions that are too hard or too easy',
+        runAnalysisBtn:'Run Analysis', scoreDistTitle:'Score Distribution', dupQuestionsTitle:'Possible Duplicate Questions',
+        eligibleThresholdLabel:'"Eligible" Threshold (%)', eligibleThresholdHint:'50% or above = eligible with no conditions',
+        conditionalThresholdLabel:'"Conditional" Threshold (%)', conditionalThresholdHint:'Between this and the eligible threshold = conditionally eligible, must join after-school program'
     }
 };
 
@@ -285,7 +307,10 @@ async function loadActivityLog(loadMore){
     if(!container) return;
     if(!loadMore) _activityLogPage = 0;
     const pageSize = 30;
-    const { data, error } = await sb.from('activity_log').select('*').order('created_at',{ascending:false}).range(_activityLogPage*pageSize, _activityLogPage*pageSize + pageSize - 1);
+    let query = sb.from('activity_log').select('*').order('created_at',{ascending:false});
+    const filterVal = document.getElementById('activityLogFilter')?.value || '';
+    if(filterVal==='login') query = query.in('action', ['سجّل دخول','Logged in']);
+    const { data, error } = await query.range(_activityLogPage*pageSize, _activityLogPage*pageSize + pageSize - 1);
     if(error){ container.innerHTML = `<div class="empty-state">${error.message}</div>`; return; }
     if(!data || data.length===0){
         if(_activityLogPage===0) container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد نشاط مسجل بعد':'No activity logged yet'}</div>`;
@@ -533,6 +558,7 @@ async function login(){
         return;
     }
     currentUserProfile = profile;
+    logActivity(currentLang==='ar'?'سجّل دخول':'Logged in', '');
     status.innerHTML = `<span style="color:var(--success);">✅ ${currentLang==='ar'?'مرحباً! جاري تحويلك...':'Welcome! Redirecting...'}</span>`;
 
     document.getElementById('pageLogin').classList.remove('active');
@@ -860,22 +886,51 @@ async function showStudentScores(studentId){
     const isAr = currentLang==='ar';
     const { data: student } = await sb.from('students').select('*').eq('id',studentId).single();
     const { data: results } = await sb.from('exam_results').select('*').eq('student_id',studentId);
+    const { data: settingsRows } = await sb.from('settings').select('*').in('key',['eligible_threshold','conditional_threshold']);
+    const sMap = {}; (settingsRows||[]).forEach(r=>sMap[r.key]=parseFloat(r.value));
+    const eligibleT = sMap.eligible_threshold ?? 50;
+    const conditionalT = sMap.conditional_threshold ?? 20;
+
     const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
     title.textContent = `📊 ${isAr?'درجات':'Scores for'} ${student?.name||''}`;
     if(!results || results.length===0){ content.innerHTML = `<div class="empty-state">${isAr?'لا توجد نتائج بعد':'No results yet'}</div>`; modal.classList.add('open'); return; }
 
     let html = '<div style="background:var(--bg);border-radius:12px;padding:14px;">';
-    let total=0, count=0;
+    let total=0, count=0, anyWaiting=false;
     results.forEach(r=>{
         const scoreText = r.status==='waiting_correction' ? getStatusLabel('waiting_correction') : `${r.score} / ${r.total}`;
+        if(r.status==='waiting_correction') anyWaiting = true;
         if(r.status!=='waiting_correction' && r.score!=null){ total+=r.score/r.total*10; count++; }
         html += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
             <span>${getSubjectLabel(r.subject)}</span><span style="font-weight:800;">${scoreText}</span></div>`;
     });
-    const avg = count>0 ? (total/count).toFixed(1) : '--';
+    const avg = count>0 ? (total/count) : null;
     html += `<div style="display:flex;justify-content:space-between;padding:10px 0;margin-top:8px;border-top:2px solid var(--gold-solid);">
-        <span style="font-weight:800;">${isAr?'المعدل (من 10)':'Average (out of 10)'}</span><span style="font-weight:900;font-size:20px;color:var(--gold-solid);">${avg}</span></div></div>
-        <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:14px;width:100%;">${isAr?'إغلاق':'Close'}</button>`;
+        <span style="font-weight:800;">${isAr?'المعدل (من 10)':'Average (out of 10)'}</span><span style="font-weight:900;font-size:20px;color:var(--gold-solid);">${avg!=null?avg.toFixed(1):'--'}</span></div></div>`;
+
+    if(avg!=null && !anyWaiting){
+        const pct = avg*10;
+        let tier, color, note;
+        if(pct >= eligibleT){
+            tier = isAr?'✅ مجتاز':'✅ Eligible'; color='var(--success)';
+            note = '';
+        } else if(pct >= conditionalT){
+            tier = isAr?'🟠 مجتاز بشرط':'🟠 Conditionally Eligible'; color='var(--gold-solid)';
+            note = isAr
+                ? 'يشترط الالتحاق ببرنامج ما بعد المدرسة في مادتي الرياضيات والإنجليزي على الأقل، مع تعهد خطي.'
+                : 'Must join the After-School Program in at least Math & English, with a written pledge.';
+        } else {
+            tier = isAr?'🔴 غير مجتاز':'🔴 Not Eligible'; color='var(--danger)';
+            note = isAr
+                ? 'يمكن للطالب طلب إعادة التقييم مقابل رسوم إضافية.'
+                : 'The student may request re-evaluation for an additional fee.';
+        }
+        html += `<div style="margin-top:12px;padding:12px 14px;background:rgba(0,0,0,.03);border-radius:10px;border-right:4px solid ${color};">
+            <div style="font-weight:800;color:${color};margin-bottom:4px;">${tier} (${pct.toFixed(0)}%)</div>
+            ${note ? `<div style="font-size:12px;color:var(--muted);">${note}</div>` : ''}
+        </div>`;
+    }
+    html += `<button class="btn btn-secondary" onclick="closeModal()" style="margin-top:14px;width:100%;">${isAr?'إغلاق':'Close'}</button>`;
     content.innerHTML = html; modal.classList.add('open');
 }
 async function renderLeaderboard(){
@@ -1374,6 +1429,26 @@ function askChatQuestion(key){
 }
 
 // ---------------- ADMIN TABS ----------------
+function showKeyboardShortcuts(){
+    const isAr = currentLang==='ar';
+    const modal=document.getElementById('modalOverlay'), title=document.getElementById('modalTitle'), content=document.getElementById('modalContent');
+    title.textContent = isAr ? '⌨️ اختصارات لوحة المفاتيح' : '⌨️ Keyboard Shortcuts';
+    const shortcuts = [
+        { keys:'Ctrl + K', desc: isAr?'فتح البحث الشامل':'Open global search' },
+        { keys:'Esc', desc: isAr?'إغلاق أي نافذة منبثقة':'Close any open modal' }
+    ];
+    content.innerHTML = shortcuts.map(s=>`
+        <div class="qa-list-item"><span>${s.desc}</span><span style="font-family:var(--font-mono);background:var(--bg);padding:3px 10px;border-radius:6px;font-weight:700;">${s.keys}</span></div>`).join('')
+        + `<button class="btn btn-secondary" onclick="closeModal()" style="width:100%;margin-top:12px;">${isAr?'إغلاق':'Close'}</button>`;
+    modal.classList.add('open');
+}
+document.addEventListener('keydown', (e)=>{
+    if(e.key==='Escape'){
+        const overlay = document.getElementById('modalOverlay');
+        if(overlay && overlay.classList.contains('open')) closeModal();
+    }
+});
+
 // ---------------- COMMAND PALETTE (بحث شامل) ----------------
 async function openCommandPalette(){
     const isAr = currentLang==='ar';
@@ -1462,6 +1537,71 @@ async function refreshNotifBadge(){
     if(!badge) return;
     if(notifs.length>0){ badge.textContent = notifs.length; badge.classList.remove('hidden'); }
     else badge.classList.add('hidden');
+}
+
+function applyColorPreset(color){
+    document.getElementById('settingPrimaryColor').value = color;
+    document.getElementById('settingPrimaryColorHex').value = color;
+    document.documentElement.style.setProperty('--primary', color);
+}
+
+// ---------------- BULK GRADE PROMOTION ----------------
+async function promoteStudents(){
+    const isAr = currentLang==='ar';
+    const fromGrade = document.getElementById('promoteFromGrade').value;
+    const toGrade = document.getElementById('promoteToGrade').value;
+    const status = document.getElementById('promoteStatus');
+    if(fromGrade===toGrade){ status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'اختر مرحلتين مختلفتين':'Choose two different grades'}</span>`; return; }
+
+    const { count } = await sb.from('students').select('id', {count:'exact', head:true}).eq('grade', fromGrade).eq('status','approved');
+    if(!count || count===0){ status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'لا يوجد طلاب مقبولين بهذه المرحلة':'No approved students in this grade'}</span>`; return; }
+
+    const isAr2 = isAr;
+    if(!confirm(isAr2 ? `متأكد تبي ترقي ${count} طالب من ${getGradeLabel(fromGrade)} إلى ${getGradeLabel(toGrade)}؟ هذا الإجراء لا يمكن التراجع عنه تلقائياً.` : `Promote ${count} students from ${getGradeLabel(fromGrade)} to ${getGradeLabel(toGrade)}? This cannot be auto-undone.`)) return;
+
+    status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الترقية...':'Promoting...'}`;
+    const { error } = await sb.from('students').update({ grade: toGrade }).eq('grade', fromGrade).eq('status','approved');
+    if(error){ status.innerHTML = `<span style="color:var(--danger);">❌ ${error.message}</span>`; return; }
+    logActivity(isAr?'ترقية جماعية للطلاب':'Bulk grade promotion', `${getGradeLabel(fromGrade)} → ${getGradeLabel(toGrade)} (${count})`);
+    status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?`تم ترقية ${count} طالب بنجاح`:`Successfully promoted ${count} students`}</span>`;
+    showToast(isAr?'✅ تمت الترقية بنجاح':'✅ Promotion successful', 'success');
+}
+
+// ---------------- FULL BACKUP / RESTORE ----------------
+async function exportFullBackup(){
+    const isAr = currentLang==='ar';
+    const { data: questions } = await sb.from('questions').select('subject,grade,type,question_text,options,correct_index,marks,image_url,instructions,match_items,match_options,sort_items,correct_order,order_index');
+    const { data: passages } = await sb.from('passages').select('subject,grade,title,body,image_url');
+    const { data: settingsRows } = await sb.from('settings').select('*');
+    const backup = { version:1, exported_at: new Date().toISOString(), questions: questions||[], passages: passages||[], settings: settingsRows||[] };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `full_backup_${Date.now()}.json`;
+    link.click();
+    logActivity(isAr?'صدّر نسخة احتياطية شاملة':'Exported a full backup', '');
+    showToast(isAr?'✅ تم تصدير النسخة الشاملة':'✅ Full backup exported', 'success');
+}
+async function restoreFullBackup(){
+    const isAr = currentLang==='ar';
+    const status = document.getElementById('fullBackupStatus');
+    const file = document.getElementById('fullBackupFile').files[0];
+    if(!file){ status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'اختر ملف أولاً':'Choose a file first'}</span>`; return; }
+    if(!confirm(isAr?'⚠️ هذا سيضيف الأسئلة والإعدادات من الملف لقاعدة البيانات الحالية (بدون حذف الموجود). متابعة؟':'⚠️ This will add the questions and settings from the file to the current database (without deleting existing data). Continue?')) return;
+
+    status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الاستعادة...':'Restoring...'}`;
+    try{
+        const text = await file.text();
+        const backup = JSON.parse(text);
+        if(backup.questions?.length){ await sb.from('questions').insert(backup.questions); }
+        if(backup.passages?.length){ await sb.from('passages').insert(backup.passages); }
+        if(backup.settings?.length){ for(const s of backup.settings){ await sb.from('settings').upsert(s); } }
+        logActivity(isAr?'استعاد نسخة احتياطية شاملة':'Restored a full backup', `${backup.questions?.length||0} ${isAr?'سؤال':'questions'}`);
+        status.innerHTML = `<span style="color:var(--success);">✅ ${isAr?'تمت الاستعادة بنجاح':'Restored successfully'}</span>`;
+        showToast(isAr?'✅ تمت الاستعادة بنجاح':'✅ Restored successfully', 'success');
+    } catch(e){
+        status.innerHTML = `<span style="color:var(--danger);">❌ ${isAr?'ملف غير صالح':'Invalid file'}</span>`;
+    }
 }
 
 // ---------------- BRANDING (تخصيص الهوية البصرية) ----------------
@@ -1573,7 +1713,8 @@ async function loadSettingsIntoForm(){
     if(document.getElementById('settingTimeEnglish')) document.getElementById('settingTimeEnglish').value = map.time_english || 25;
     if(document.getElementById('settingTimeMath')) document.getElementById('settingTimeMath').value = map.time_math || 20;
     if(document.getElementById('settingTimeArabic')) document.getElementById('settingTimeArabic').value = map.time_arabic || 20;
-    if(document.getElementById('settingPassThreshold')) document.getElementById('settingPassThreshold').value = map.pass_threshold || 60;
+    if(document.getElementById('settingEligibleThreshold')) document.getElementById('settingEligibleThreshold').value = map.eligible_threshold || 50;
+    if(document.getElementById('settingConditionalThreshold')) document.getElementById('settingConditionalThreshold').value = map.conditional_threshold || 20;
 }
 async function saveSettings(){
     const isAr = currentLang==='ar';
@@ -1582,8 +1723,13 @@ async function saveSettings(){
         time_english: document.getElementById('settingTimeEnglish').value,
         time_math: document.getElementById('settingTimeMath').value,
         time_arabic: document.getElementById('settingTimeArabic').value,
-        pass_threshold: document.getElementById('settingPassThreshold').value
+        eligible_threshold: document.getElementById('settingEligibleThreshold').value,
+        conditional_threshold: document.getElementById('settingConditionalThreshold').value
     };
+    if(parseFloat(values.conditional_threshold) >= parseFloat(values.eligible_threshold)){
+        status.innerHTML = `<span style="color:var(--danger);">⚠️ ${isAr?'حد "مجتاز بشرط" يجب أن يكون أقل من حد "مجتاز"':'The conditional threshold must be lower than the eligible threshold'}</span>`;
+        return;
+    }
     status.innerHTML = `<span class="spinner"></span> ${isAr?'جاري الحفظ...':'Saving...'}`;
     for(const [key, value] of Object.entries(values)){
         const { error } = await sb.from('settings').upsert({ key, value: String(value) });
@@ -1606,6 +1752,131 @@ async function exportQuestionBankJSON(){
     showToast(isAr?'✅ تم تصدير بنك الأسئلة':'✅ Question bank exported', 'success');
 }
 
+// ---------------- SUPERVISOR: ACADEMIC ANALYSIS ----------------
+const ALL_GRADES_ORDERED = ['kg2','g1','g2','g3','g4','g5','g6','g7','g8','g9','g10','g11','g12','g13'];
+const ALL_SUBJECTS = ['english','math','arabic'];
+
+async function renderCoverageMatrix(){
+    const isAr = currentLang==='ar';
+    const { data: questions } = await sb.from('questions').select('subject,grade,marks');
+    const map = {};
+    (questions||[]).forEach(q=>{
+        const key = `${q.subject}|${q.grade}`;
+        map[key] = map[key] || { count:0, marks:0 };
+        map[key].count++;
+        map[key].marks += (q.marks||0);
+    });
+    let html = `<table style="border-collapse:collapse;width:100%;font-size:12px;text-align:center;">
+        <tr><th style="padding:6px;"></th>${ALL_SUBJECTS.map(s=>`<th style="padding:6px;">${getSubjectLabel(s)}</th>`).join('')}</tr>`;
+    ALL_GRADES_ORDERED.forEach(g=>{
+        html += `<tr><td style="padding:6px;font-weight:700;text-align:${isAr?'right':'left'};">${getGradeLabel(g)}</td>`;
+        ALL_SUBJECTS.forEach(s=>{
+            const cell = map[`${s}|${g}`];
+            let bg, label;
+            if(!cell){ bg='rgba(214,69,69,.18)'; label='—'; }
+            else if(Math.round(cell.marks)===30){ bg='rgba(47,158,99,.25)'; label=`${cell.count}${isAr?'س':'q'}`; }
+            else { bg='rgba(200,155,60,.28)'; label=`${cell.marks}${isAr?'د':'pt'}`; }
+            html += `<td style="padding:6px;background:${bg};border:1px solid var(--border);border-radius:4px;">${label}</td>`;
+        });
+        html += `</tr>`;
+    });
+    html += `</table>`;
+    document.getElementById('coverageMatrixDisplay').innerHTML = html;
+}
+
+async function runDifficultyAnalysis(){
+    const isAr = currentLang==='ar';
+    const subject = document.getElementById('difficultySubject').value;
+    const grade = document.getElementById('difficultyGrade').value;
+    const displayEl = document.getElementById('difficultyDisplay');
+    displayEl.innerHTML = `<div style="text-align:center;padding:12px;"><span class="spinner"></span></div>`;
+
+    const { data: questions } = await sb.from('questions').select('id,question_text,marks').eq('subject',subject).eq('grade',grade).eq('type','mcq').order('order_index');
+    const { data: studentsInGrade } = await sb.from('students').select('id').eq('grade',grade);
+    const studentIds = (studentsInGrade||[]).map(s=>s.id);
+    if(!questions || questions.length===0 || studentIds.length===0){
+        displayEl.innerHTML = `<div class="empty-state">${isAr?'لا توجد بيانات كافية (تحتاج أسئلة اختيارية ونتائج طلاب فعلية)':'Not enough data (needs MCQ questions and actual student results)'}</div>`;
+        renderScoreDistribution([]);
+        return;
+    }
+    const { data: results } = await sb.from('exam_results').select('answers,score,total').eq('subject',subject).in('student_id', studentIds);
+    if(!results || results.length===0){
+        displayEl.innerHTML = `<div class="empty-state">${isAr?'ما فيه طلاب أدوا هذا الاختبار بعد':'No students have taken this exam yet'}</div>`;
+        renderScoreDistribution([]);
+        return;
+    }
+
+    const stats = questions.map(q=>{
+        let attempted=0, correct=0;
+        results.forEach(r=>{
+            const ans = r.answers ? r.answers[q.id] : undefined;
+            if(ans !== undefined && ans !== null){ attempted++; }
+        });
+        // نحتاج correct_index الأصلي من الأسئلة
+        return { q, attempted };
+    });
+
+    const { data: fullQ } = await sb.from('questions').select('id,question_text,correct_index').eq('subject',subject).eq('grade',grade).eq('type','mcq');
+    const correctMap = {}; (fullQ||[]).forEach(q=>correctMap[q.id]=q.correct_index);
+
+    const analysis = questions.map(q=>{
+        let attempted=0, correctCount=0;
+        results.forEach(r=>{
+            const ans = r.answers ? r.answers[q.id] : undefined;
+            if(ans !== undefined && ans !== null){
+                attempted++;
+                if(ans === correctMap[q.id]) correctCount++;
+            }
+        });
+        const pct = attempted>0 ? (correctCount/attempted*100) : null;
+        return { text: q.question_text, pct, attempted };
+    }).filter(a=>a.attempted>0).sort((a,b)=>a.pct-b.pct);
+
+    if(analysis.length===0){
+        displayEl.innerHTML = `<div class="empty-state">${isAr?'ما فيه إجابات كافية على هذي الأسئلة بعد':'Not enough answers on these questions yet'}</div>`;
+    } else {
+        displayEl.innerHTML = analysis.map(a=>{
+            const color = a.pct<40 ? 'var(--danger)' : a.pct<70 ? 'var(--gold-solid)' : 'var(--success)';
+            const tag = a.pct<40 ? (isAr?'صعب جداً':'Very hard') : a.pct<70 ? (isAr?'متوسط':'Moderate') : (isAr?'سهل':'Easy');
+            return `<div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span>${a.text.slice(0,60)}</span><span style="font-weight:700;color:${color};">${a.pct.toFixed(0)}% ${tag}</span></div>
+                <div style="background:var(--bg);border-radius:8px;overflow:hidden;height:14px;"><div style="width:${a.pct}%;height:100%;background:${color};"></div></div>
+            </div>`;
+        }).join('');
+    }
+    renderScoreDistribution(results);
+}
+
+function renderScoreDistribution(results){
+    const isAr = currentLang==='ar';
+    const scored = (results||[]).filter(r=>r.score!=null).map(r=>r.score/r.total*100);
+    const buckets = [0,0,0,0,0]; // 0-20,20-40,40-60,60-80,80-100
+    scored.forEach(pct=>{ const idx = Math.min(4, Math.floor(pct/20)); buckets[idx]++; });
+    const ctx = document.getElementById('scoreDistChart').getContext('2d');
+    if(charts.scoreDist) charts.scoreDist.destroy();
+    charts.scoreDist = new Chart(ctx, {
+        type:'bar',
+        data:{ labels:['0-20%','20-40%','40-60%','60-80%','80-100%'], datasets:[{ label: isAr?'عدد الطلاب':'Number of students', data:buckets, backgroundColor:'rgba(43,69,112,.55)' }] },
+        options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } }
+    });
+}
+
+async function renderDuplicateQuestions(){
+    const isAr = currentLang==='ar';
+    const { data: questions } = await sb.from('questions').select('id,subject,grade,question_text');
+    const groups = {};
+    (questions||[]).forEach(q=>{
+        const key = `${q.subject}|${q.grade}|${q.question_text.trim().toLowerCase()}`;
+        groups[key] = groups[key] || [];
+        groups[key].push(q);
+    });
+    const dups = Object.values(groups).filter(g=>g.length>1);
+    const el = document.getElementById('dupQuestionsDisplay');
+    el.innerHTML = dups.length===0
+        ? `<div class="empty-state">${isAr?'لا يوجد تكرار محتمل ✅':'No potential duplicates ✅'}</div>`
+        : dups.map(g=>`<div class="qa-list-item"><span>${getSubjectLabel(g[0].subject)} · ${getGradeLabel(g[0].grade)} · "${g[0].question_text.slice(0,50)}" (${g.length}x)</span></div>`).join('');
+}
+
 // ---------------- SUPERVISOR / STAGE MANAGER DASHBOARD ----------------
 async function renderSupervisorDashboard(){
     applyGradeRestriction(['regQGrade','regQListGrade']);
@@ -1620,6 +1891,8 @@ async function renderSupervisorDashboard(){
     applyTabVisibility('#pageSupervisorDashboard');
     const exportBtn = document.getElementById('exportQuestionsBtnEl');
     if(exportBtn) exportBtn.style.display = hasPermission('export_data') ? '' : 'none';
+    renderCoverageMatrix();
+    renderDuplicateQuestions();
 }
 function switchSupervisorTab(tabId){
     document.querySelectorAll('#pageSupervisorDashboard .admin-tab').forEach(el=>el.classList.remove('active'));
@@ -1648,8 +1921,10 @@ async function renderAdvancedAnalytics(){
     const { data: students } = await sb.from('students').select('*');
     const { data: results } = await sb.from('exam_results').select('*');
     const { data: profiles } = await sb.from('profiles').select('id,name');
-    const { data: settingsRows } = await sb.from('settings').select('*').eq('key','pass_threshold');
-    const passThreshold = settingsRows && settingsRows[0] ? parseFloat(settingsRows[0].value) : 60;
+    const { data: settingsRows } = await sb.from('settings').select('*').in('key',['eligible_threshold','conditional_threshold']);
+    const sMap = {}; (settingsRows||[]).forEach(r=>sMap[r.key]=parseFloat(r.value));
+    const eligibleT = sMap.eligible_threshold ?? 50;
+    const conditionalT = sMap.conditional_threshold ?? 20;
     const profileName = id => (profiles||[]).find(p=>p.id===id)?.name || (isAr?'غير معروف':'Unknown');
 
     // ---- Funnel ----
@@ -1660,13 +1935,18 @@ async function renderAdvancedAnalytics(){
     const scoredResults = (results||[]).filter(r=>r.score!=null);
     const byStudent = {};
     scoredResults.forEach(r=>{ byStudent[r.student_id]=byStudent[r.student_id]||[]; byStudent[r.student_id].push(r.score/r.total*100); });
-    const passed = Object.values(byStudent).filter(arr=>(arr.reduce((a,b)=>a+b,0)/arr.length) >= passThreshold).length;
+    const avgByStudent = Object.values(byStudent).map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length);
+    const eligible = avgByStudent.filter(pct=>pct>=eligibleT).length;
+    const conditional = avgByStudent.filter(pct=>pct>=conditionalT && pct<eligibleT).length;
+    const notEligible = avgByStudent.filter(pct=>pct<conditionalT).length;
 
     const funnelStages = [
         { label: isAr?'مسجلين':'Registered', value: total, color:'#2B4570' },
         { label: isAr?'مقبولين':'Approved', value: approved, color:'#2F9E63' },
         { label: isAr?'بدأوا الاختبار':'Started Exam', value: started, color:'#C89B3C' },
-        { label: isAr?`ناجحون (${passThreshold}%+)`:`Passed (${passThreshold}%+)`, value: passed, color:'#D64545' }
+        { label: isAr?`✅ مجتاز (${eligibleT}%+)`:`✅ Eligible (${eligibleT}%+)`, value: eligible, color:'#2F9E63' },
+        { label: isAr?`🟠 مجتاز بشرط (${conditionalT}-${eligibleT}%)`:`🟠 Conditional (${conditionalT}-${eligibleT}%)`, value: conditional, color:'#C89B3C' },
+        { label: isAr?`🔴 غير مجتاز (<${conditionalT}%)`:`🔴 Not Eligible (<${conditionalT}%)`, value: notEligible, color:'#D64545' }
     ];
     const maxVal = Math.max(1, total);
     document.getElementById('funnelDisplay').innerHTML = funnelStages.map(s=>`
@@ -1852,11 +2132,27 @@ async function loadStaffList(){
     if(error){ container.innerHTML = `<div class="empty-state">${error.message}</div>`; return; }
     if(!profiles || profiles.length===0){ container.innerHTML = `<div class="empty-state">${isAr?'لا يوجد موظفون بعد':'No staff members yet'}</div>`; return; }
     window._staffProfilesCache = profiles;
+
+    const loginActionText = isAr ? 'سجّل دخول' : 'Logged in';
+    const { data: loginLogs } = await sb.from('activity_log').select('actor_id, created_at').eq('action', loginActionText).order('created_at', {ascending:false});
+    const lastActiveMap = {};
+    (loginLogs||[]).forEach(l=>{ if(!lastActiveMap[l.actor_id]) lastActiveMap[l.actor_id] = l.created_at; });
+    function relativeTime(iso){
+        if(!iso) return isAr?'لم يسجل دخول بعد':'Never logged in';
+        const diffMs = Date.now() - new Date(iso).getTime();
+        const days = Math.floor(diffMs / 86400000);
+        if(days<=0) return isAr?'اليوم':'Today';
+        if(days===1) return isAr?'أمس':'Yesterday';
+        return isAr?`منذ ${days} يوم`:`${days} days ago`;
+    }
+
     const roleLabelMap = { admin:'roleAdmin', teacher:'roleTeacher', registrar:'roleRegistrar', supervisor:'roleSupervisor', stage_manager:'roleStageManager' };
     const roleLabel = r => t(roleLabelMap[r] || 'roleRegistrar');
     container.innerHTML = profiles.map(p=>`
         <div class="qa-list-item">
-            <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong>${p.branch?` · ${getBranchLabel(p.branch)}`:''}</span>
+            <span>👤 ${p.name} — <strong>${roleLabel(p.role)}</strong>${p.branch?` · ${getBranchLabel(p.branch)}`:''}
+                <span style="display:block;font-size:11px;color:var(--muted);margin-top:2px;">🕒 ${isAr?'آخر دخول':'Last active'}: ${relativeTime(lastActiveMap[p.id])}</span>
+            </span>
             <span style="display:flex;gap:6px;align-items:center;">
                 <button class="btn-mini neutral" onclick="previewStaffPermissions('${p.id}')">👁️ ${isAr?'الصلاحيات':'Permissions'}</button>
                 ${p.id!==currentUserProfile?.id && hasPermission('delete_records') ? `<button class="btn-mini reject" onclick="deleteStaffUser('${p.id}','${p.name.replace(/'/g,"")}')">${isAr?'حذف':'Delete'}</button>` : (p.id===currentUserProfile?.id ? `<span style="font-size:11px;color:var(--muted);">${isAr?'(أنت)':'(you)'}</span>` : '')}
