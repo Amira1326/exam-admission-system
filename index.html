@@ -750,6 +750,7 @@
             <div class="admin-tabs">
                 <button class="admin-tab-btn active" data-tab="supTabQuestions" onclick="switchSupervisorTab('supTabQuestions')"><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">بنك الأسئلة</span></button>
                 <button class="admin-tab-btn" data-tab="supTabResults" onclick="switchSupervisorTab('supTabResults')"><i class="fas fa-trophy"></i> <span data-i18n="resultsTitle">النتائج والدرجات</span></button>
+                <button class="admin-tab-btn" data-tab="supTabAnalysis" onclick="switchSupervisorTab('supTabAnalysis')"><i class="fas fa-microscope"></i> <span data-i18n="academicAnalysisTitle">التحليل الأكاديمي</span></button>
             </div>
             <div class="dashboard-section admin-tab active" id="supTabQuestions">
                 <h4><i class="fas fa-list-check"></i> <span data-i18n="questionMgmtTitle">إدارة الأسئلة</span></h4>
@@ -832,6 +833,34 @@
                 <h4 style="margin-top:22px;"><i class="fas fa-trophy"></i> <span data-i18n="leaderboardTitle">لوحة المتصدرين</span></h4>
                 <div id="registrarLeaderboard"></div>
             </div>
+            <div class="dashboard-section admin-tab" id="supTabAnalysis">
+                <h4><i class="fas fa-table-cells"></i> <span data-i18n="coverageMatrixTitle">مصفوفة تغطية المنهج</span></h4>
+                <p class="page-sub" data-i18n="coverageMatrixSub">أخضر = مكتمل ومضبوط 30 درجة · أصفر = موجود لكن الدرجات غير مضبوطة · أحمر = ناقص كلياً</p>
+                <div id="coverageMatrixDisplay" style="overflow-x:auto;margin-bottom:24px;"></div>
+
+                <h4><i class="fas fa-crosshairs"></i> <span data-i18n="difficultyAnalysisTitle">تحليل صعوبة الأسئلة</span></h4>
+                <p class="page-sub" data-i18n="difficultyAnalysisSub">حسب إجابات الطلاب الفعلية — يساعدك تكتشف الأسئلة الصعبة جداً أو السهلة جداً</p>
+                <div class="field-row" style="margin-bottom:10px;">
+                    <select id="difficultySubject">
+                        <option value="english">📘 إنجليزي</option><option value="math">📗 رياضيات</option><option value="arabic">📙 عربي</option>
+                    </select>
+                    <select id="difficultyGrade">
+                        <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                        <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                        <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                        <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                        <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                    </select>
+                </div>
+                <button class="btn btn-secondary" onclick="runDifficultyAnalysis()" style="margin-bottom:12px;"><i class="fas fa-play"></i> <span data-i18n="runAnalysisBtn">تشغيل التحليل</span></button>
+                <div id="difficultyDisplay" style="margin-bottom:24px;"></div>
+
+                <h4><i class="fas fa-chart-column"></i> <span data-i18n="scoreDistTitle">توزيع الدرجات</span></h4>
+                <div id="scoreDistDisplay" style="margin-bottom:24px;"><canvas id="scoreDistChart" height="90"></canvas></div>
+
+                <h4><i class="fas fa-triangle-exclamation"></i> <span data-i18n="dupQuestionsTitle">تكرار محتمل بالأسئلة</span></h4>
+                <div id="dupQuestionsDisplay"></div>
+            </div>
         </div>
 
 
@@ -842,6 +871,7 @@
                 <div class="page-sub"><span data-i18n="welcome">مرحباً،</span> <strong id="adminNameDisplay">مدير النظام</strong></div></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                     <button onclick="openCommandPalette()" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:15px;" title="بحث شامل (Ctrl+K)"><i class="fas fa-magnifying-glass"></i></button>
+                    <button onclick="showKeyboardShortcuts()" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:15px;" title="اختصارات لوحة المفاتيح"><i class="fas fa-keyboard"></i></button>
                     <button onclick="toggleNotificationPanel()" id="notifBellBtn" style="position:relative;width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:15px;">
                         <i class="fas fa-bell"></i>
                         <span id="notifBadge" class="hidden" style="position:absolute;top:-4px;left:-4px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;"></span>
@@ -963,9 +993,17 @@
                             <label data-i18n="timeArabicLabel">وقت مادة العربي (دقيقة)</label>
                             <input type="number" id="settingTimeArabic" min="5" />
                         </div>
+                    </div>
+                    <div class="field-row" style="margin-top:12px;">
                         <div>
-                            <label data-i18n="passThresholdLabel">درجة النجاح (%)</label>
-                            <input type="number" id="settingPassThreshold" min="1" max="100" />
+                            <label data-i18n="eligibleThresholdLabel">حد "مجتاز" (%)</label>
+                            <input type="number" id="settingEligibleThreshold" min="1" max="100" />
+                            <div class="field-hint" data-i18n="eligibleThresholdHint">50% فأكثر = مجتاز بدون شروط</div>
+                        </div>
+                        <div>
+                            <label data-i18n="conditionalThresholdLabel">حد "مجتاز بشرط" (%)</label>
+                            <input type="number" id="settingConditionalThreshold" min="1" max="100" />
+                            <div class="field-hint" data-i18n="conditionalThresholdHint">بين هذا الحد وحد "مجتاز" = مجتاز بشرط الالتحاق ببرنامج ما بعد المدرسة</div>
                         </div>
                     </div>
                     <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:14px;"><i class="fas fa-save"></i> <span data-i18n="saveSettingsBtn">حفظ الإعدادات</span></button>
@@ -989,10 +1027,56 @@
                             <input type="color" id="settingPrimaryColor" oninput="document.getElementById('settingPrimaryColorHex').value=this.value" style="width:50px;height:40px;padding:2px;border-radius:8px;cursor:pointer;" />
                             <input type="text" id="settingPrimaryColorHex" oninput="if(/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('settingPrimaryColor').value=this.value;" placeholder="#2B4570" style="flex:1;" />
                         </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                            <div onclick="applyColorPreset('#2B4570')" title="Navy" style="width:28px;height:28px;border-radius:50%;background:#2B4570;cursor:pointer;border:2px solid var(--border);"></div>
+                            <div onclick="applyColorPreset('#1E7A5C')" title="Emerald" style="width:28px;height:28px;border-radius:50%;background:#1E7A5C;cursor:pointer;border:2px solid var(--border);"></div>
+                            <div onclick="applyColorPreset('#8B2635')" title="Maroon" style="width:28px;height:28px;border-radius:50%;background:#8B2635;cursor:pointer;border:2px solid var(--border);"></div>
+                            <div onclick="applyColorPreset('#5B3A8E')" title="Purple" style="width:28px;height:28px;border-radius:50%;background:#5B3A8E;cursor:pointer;border:2px solid var(--border);"></div>
+                            <div onclick="applyColorPreset('#B8722A')" title="Amber" style="width:28px;height:28px;border-radius:50%;background:#B8722A;cursor:pointer;border:2px solid var(--border);"></div>
+                            <div onclick="applyColorPreset('#2C3E50')" title="Slate" style="width:28px;height:28px;border-radius:50%;background:#2C3E50;cursor:pointer;border:2px solid var(--border);"></div>
+                        </div>
                     </div>
                     <button class="btn btn-primary" onclick="saveBranding()" style="margin-top:4px;"><i class="fas fa-save"></i> <span data-i18n="saveBrandingBtn">حفظ الهوية البصرية</span></button>
                     <div id="brandingStatus" style="font-size:13px;font-weight:600;"></div>
                     </div>
+                </div>
+                <div class="dashboard-section" style="margin-top:16px;background:var(--bg);">
+                    <h4 style="font-size:15px;"><i class="fas fa-arrow-up-right-dots"></i> <span data-i18n="promotionTitle">ترقية الطلاب الجماعية (نهاية العام الدراسي)</span></h4>
+                    <p class="page-sub" style="font-size:12px;" data-i18n="promotionSub">ينقل كل الطلاب المقبولين من مرحلة لمرحلة أعلى دفعة واحدة</p>
+                    <div class="admin-question-form">
+                        <div class="field-row">
+                            <div>
+                                <label data-i18n="fromGradeLabel">من مرحلة</label>
+                                <select id="promoteFromGrade">
+                                    <option value="kg2">KG2</option><option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                                    <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                                    <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                                    <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                                    <option value="g12" data-i18n="g_g12_short">الثاني عشر</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label data-i18n="toGradeLabel">إلى مرحلة</label>
+                                <select id="promoteToGrade">
+                                    <option value="g1" data-i18n="g_g1_short">الأول</option><option value="g2" data-i18n="g_g2_short">الثاني</option>
+                                    <option value="g3" data-i18n="g_g3_short">الثالث</option><option value="g4" data-i18n="g_g4_short">الرابع</option><option value="g5" data-i18n="g_g5_short">الخامس</option>
+                                    <option value="g6" data-i18n="g_g6_short">السادس</option><option value="g7" data-i18n="g_g7_short">السابع</option><option value="g8" data-i18n="g_g8_short">الثامن</option>
+                                    <option value="g9" data-i18n="g_g9_short">التاسع</option><option value="g10" data-i18n="g_g10_short">العاشر</option><option value="g11" data-i18n="g_g11_short">الحادي عشر</option>
+                                    <option value="g12" data-i18n="g_g12_short">الثاني عشر</option><option value="g13" data-i18n="g_g13_short">الثالث الثانوي</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="promoteStudents()"><i class="fas fa-arrow-up-right-dots"></i> <span data-i18n="promoteBtn">ترقية الطلاب</span></button>
+                        <div id="promoteStatus" style="font-size:13px;font-weight:600;"></div>
+                    </div>
+                </div>
+                <div class="dashboard-section" style="margin-top:16px;background:var(--bg);">
+                    <h4 style="font-size:15px;"><i class="fas fa-box-archive"></i> <span data-i18n="fullBackupTitle">نسخة احتياطية شاملة</span></h4>
+                    <p class="page-sub" style="font-size:12px;" data-i18n="fullBackupSub">تصدير/استيراد بنك الأسئلة والإعدادات معاً في ملف واحد</p>
+                    <button class="btn btn-secondary" onclick="exportFullBackup()"><i class="fas fa-download"></i> <span data-i18n="fullBackupExportBtn">تصدير نسخة شاملة</span></button>
+                    <input type="file" id="fullBackupFile" accept=".json" style="margin:10px 0;" />
+                    <button class="btn btn-secondary" onclick="restoreFullBackup()"><i class="fas fa-upload"></i> <span data-i18n="fullBackupRestoreBtn">استعادة من نسخة</span></button>
+                    <div id="fullBackupStatus" style="margin-top:8px;font-size:13px;font-weight:600;"></div>
                 </div>
             </div>
             <div class="dashboard-section admin-tab" id="tabRequests">
@@ -1007,6 +1091,10 @@
             <div class="dashboard-section admin-tab" id="tabActivity">
                 <h4><i class="fas fa-clock-rotate-left"></i> <span data-i18n="activityLogTitle">سجل النشاط</span></h4>
                 <p class="page-sub" data-i18n="activityLogSub">آخر 50 عملية تمت من قبل الموظفين</p>
+                <select id="activityLogFilter" onchange="loadActivityLog()" style="max-width:220px;margin-bottom:12px;">
+                    <option value="" data-i18n="filterAllActivity">كل العمليات</option>
+                    <option value="login" data-i18n="filterLoginsOnly">عمليات الدخول فقط</option>
+                </select>
                 <div id="activityLogList"></div>
             </div>
             <div class="dashboard-section admin-tab" id="tabAnalytics">
