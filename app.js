@@ -1226,10 +1226,11 @@ async function loadQuestionsList(mode){
     }
 
     const typeLabel = ty => ({ mcq: isAr?'اختياري':'MCQ', written: isAr?'كتابي':'Written', match: isAr?'وصل':'Match', sort: isAr?'ترتيب':'Sort' }[ty] || ty);
-    const letters = ['أ','ب','ج','د'];
+    const lettersFor = subj => subj==='arabic' ? ['أ','ب','ج','د'] : ['A','B','C','D'];
 
     container.innerHTML = questions.map((q, idx)=>{
         let bodyHtml = '';
+        const letters = lettersFor(q.subject);
         if(q.type==='mcq' && q.options){
             bodyHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${q.options.map((opt,i)=>`
                 <span style="padding:4px 10px;border-radius:8px;font-size:12px;border:1px solid ${i===q.correct_index?'var(--success)':'var(--border)'};${i===q.correct_index?'background:rgba(47,158,99,.1);color:var(--success);font-weight:700;':'color:var(--muted);'}">${letters[i]||i}. ${opt}${i===q.correct_index?' ✓':''}</span>
@@ -1280,7 +1281,7 @@ async function previewExam(){
     }
 
     const isLtr = subject==='english' || subject==='math';
-    const letters = ['أ','ب','ج','د'];
+    const letters = isLtr ? ['A','B','C','D'] : ['أ','ب','ج','د'];
     const typeLabel = ty => ({ mcq: isAr?'اختياري':'MCQ', written: isAr?'كتابي':'Written', match: isAr?'وصل':'Match', sort: isAr?'ترتيب':'Sort' }[ty] || ty);
     const totalMarks = questions.reduce((s,q)=>s+(q.marks||0),0);
 
