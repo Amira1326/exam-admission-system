@@ -302,7 +302,7 @@ function renderQuestion(){
     optionsContainer.innerHTML=''; matchContainer.innerHTML='';
 
     if(q.type==='mcq'){
-        const letters=['أ','ب','ج','د'];
+        const letters = stage.subject==='arabic' ? ['أ','ب','ج','د'] : ['A','B','C','D'];
         (q.options||[]).forEach((opt,i)=>{
             const div=document.createElement('div');
             div.className='option'+(answers[q.id]===i?' selected':'');
